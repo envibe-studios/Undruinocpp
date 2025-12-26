@@ -1,0 +1,149 @@
+// Arduino Communication Plugin - Actor Component
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Components/ActorComponent.h"
+#include "ArduinoSerialPort.h"
+#include "ArduinoTcpClient.h"
+#include "ArduinoCommunicationComponent.generated.h"
+
+/**
+ * Communication mode selection
+ */
+UENUM(BlueprintType)
+enum class EArduinoConnectionMode : uint8
+{
+	Serial		UMETA(DisplayName = "Serial (USB)"),
+	TCP			UMETA(DisplayName = "TCP/WiFi")
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnArduinoDataReceived, const FString&, Data);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnArduinoConnectionChanged, bool, bConnected);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnArduinoError, const FString&, ErrorMessage);
+
+/**
+ * Arduino Communication Component
+ * Easy-to-use component for communicating with Arduino ESP8266
+ * Supports both Serial (USB) and TCP (WiFi) connections
+ */
+UCLASS(ClassGroup=(Arduino), meta=(BlueprintSpawnableComponent))
+class ARDUINOCOMMUNICATION_API UArduinoCommunicationComponent : public UActorComponent
+{
+	GENERATED_BODY()
+
+public:
+	UArduinoCommunicationComponent();
+
+	// UActorComponent interface
+	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	/** Connection mode (Serial or TCP) */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arduino|Connection")
+	EArduinoConnectionMode ConnectionMode = EArduinoConnectionMode::Serial;
+
+	/** Auto-connect on BeginPlay */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arduino|Connection")
+	bool bAutoConnect = false;
+
+	// === Serial Settings ===
+
+	/** COM port name (e.g., "COM3") */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arduino|Serial", meta = (EditCondition = "ConnectionMode == EArduinoConnectionMode::Serial"))
+	FString SerialPort = TEXT("COM3");
+
+	/** Serial baud rate */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arduino|Serial", meta = (EditCondition = "ConnectionMode == EArduinoConnectionMode::Serial"))
+	int32 BaudRate = 115200;
+
+	// === TCP Settings ===
+
+	/** Arduino IP address for TCP connection */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arduino|TCP", meta = (EditCondition = "ConnectionMode == EArduinoConnectionMode::TCP"))
+	FString IPAddress = TEXT("192.168.1.100");
+
+	/** TCP port number */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arduino|TCP", meta = (EditCondition = "ConnectionMode == EArduinoConnectionMode::TCP"))
+	int32 TCPPort = 80;
+
+	// === Common Settings ===
+
+	/** Line ending for messages */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arduino|Settings")
+	FString LineEnding = TEXT("\n");
+
+	// === Events ===
+
+	/** Event fired when data is received from Arduino */
+	UPROPERTY(BlueprintAssignable, Category = "Arduino|Events")
+	FOnArduinoDataReceived OnDataReceived;
+
+	/** Event fired when connection status changes */
+	UPROPERTY(BlueprintAssignable, Category = "Arduino|Events")
+	FOnArduinoConnectionChanged OnConnectionChanged;
+
+	/** Event fired when an error occurs */
+	UPROPERTY(BlueprintAssignable, Category = "Arduino|Events")
+	FOnArduinoError OnError;
+
+	// === Functions ===
+
+	/** Connect to Arduino using current settings */
+	UFUNCTION(BlueprintCallable, Category = "Arduino")
+	bool Connect();
+
+	/** Disconnect from Arduino */
+	UFUNCTION(BlueprintCallable, Category = "Arduino")
+	void Disconnect();
+
+	/** Check if currently connected */
+	UFUNCTION(BlueprintPure, Category = "Arduino")
+	bool IsConnected() const;
+
+	/** Send a text command to Arduino */
+	UFUNCTION(BlueprintCallable, Category = "Arduino")
+	bool SendCommand(const FString& Command);
+
+	/** Send a text command with line ending */
+	UFUNCTION(BlueprintCallable, Category = "Arduino")
+	bool SendLine(const FString& Command);
+
+	/** Get available serial ports */
+	UFUNCTION(BlueprintCallable, Category = "Arduino|Serial")
+	TArray<FString> GetAvailablePorts();
+
+protected:
+	/** Handle data received from serial port */
+	UFUNCTION()
+	void HandleSerialDataReceived(const FString& Data);
+
+	UFUNCTION()
+	void HandleSerialConnectionChanged(bool bConnected);
+
+	UFUNCTION()
+	void HandleSerialError(const FString& ErrorMessage);
+
+	/** Handle data received from TCP */
+	UFUNCTION()
+	void HandleTcpDataReceived(const FString& Data);
+
+	UFUNCTION()
+	void HandleTcpConnectionChanged(bool bConnected);
+
+	UFUNCTION()
+	void HandleTcpError(const FString& ErrorMessage);
+
+private:
+	/** Serial port instance */
+	UPROPERTY()
+	UArduinoSerialPort* SerialConnection;
+
+	/** TCP client instance */
+	UPROPERTY()
+	UArduinoTcpClient* TcpConnection;
+
+	/** Setup event bindings */
+	void SetupEventBindings();
+};

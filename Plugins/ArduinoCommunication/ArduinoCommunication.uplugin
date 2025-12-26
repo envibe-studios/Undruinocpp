@@ -1,0 +1,24 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "Arduino Communication",
+	"Description": "Send and receive text commands with Arduino ESP8266 via Serial or WiFi/TCP",
+	"Category": "Hardware",
+	"CreatedBy": "Unduinocpp",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": false,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "ArduinoCommunication",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}

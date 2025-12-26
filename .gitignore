@@ -1,0 +1,43 @@
+# Unreal Engine generated files
+Binaries/
+Intermediate/
+DerivedDataCache/
+Saved/
+Build/
+
+# Plugin generated files (keep Source and config)
+Plugins/**/Binaries/
+Plugins/**/Intermediate/
+
+# Backup files
+Backup/
+
+# Visual Studio
+.vs/
+*.sln
+*.vcxproj
+*.vcxproj.*
+
+# VS Code (uncomment if you want to keep settings)
+.vscode/
+
+# Unreal upgrade logs
+UpgradeLog.htm
+
+# IDE/Editor workspace files
+*.code-workspace
+
+# Visual Studio configuration
+.vsconfig
+
+# AI assistant directories
+.claude/
+.claude-flow/
+.hive-mind/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Ignore file (no longer needed)
+.ignore
