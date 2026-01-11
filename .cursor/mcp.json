@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "unrealMCP": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/home/developer/project/Plugins/UnrealMCP/Python",
+        "run",
+        "unreal_mcp_server_advanced.py"
+      ]
+    }
+  }
+}

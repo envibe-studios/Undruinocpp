@@ -21,6 +21,10 @@
 		{
 			"Name": "ArduinoCommunication",
 			"Enabled": true
+		},
+		{
+			"Name": "UnrealMCP",
+			"Enabled": true
 		}
 	]
 }
