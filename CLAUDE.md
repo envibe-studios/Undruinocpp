@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The purpose of this project is to create a reusable Unreal Engine plugin that enables bidirectional communication between Unreal Engine applications and ESP32/ESP8266 microcontrollers. This bridges the gap between game development and physical hardware, allowing developers to:
+The primary goal of this project is to create a reusable Unreal Engine plugin that enables seamless, bidirectional communication between Unreal Engine applications and ESP32/ESP8266 microcontrollers. By bridging the gap between game development and physical hardware, this plugin empowers developers to:
 
 - **Control physical devices** from within Unreal Engine (LEDs, motors, servos, relays)
 - **Read sensor data** into Unreal Engine (temperature, humidity, motion, light sensors)
@@ -11,6 +11,23 @@ The purpose of this project is to create a reusable Unreal Engine plugin that en
 - **Develop IoT applications** with Unreal Engine as the central hub
 
 The plugin supports both USB serial and WiFi TCP connections, making it flexible for wired development setups and wireless production deployments.
+
+### Why ESP32/ESP8266?
+
+The ESP32 and ESP8266 microcontrollers are ideal for this plugin because they offer:
+- **Low cost** - Affordable hardware for prototyping and production
+- **Built-in WiFi** - Native wireless connectivity without additional modules
+- **Arduino compatibility** - Easy programming with familiar Arduino IDE and libraries
+- **GPIO flexibility** - Multiple digital and analog pins for diverse hardware interfacing
+- **Active community** - Extensive documentation, libraries, and community support
+
+### Example Applications
+
+- **Escape rooms** - Trigger physical locks, lights, and effects from game logic
+- **Arcade cabinets** - Read custom button panels and control feedback devices
+- **Art installations** - Synchronize visual experiences with physical elements
+- **Training simulators** - Interface with custom control panels and haptic feedback
+- **Smart home demos** - Prototype IoT control interfaces with rich 3D visualization
 
 ## Project Overview
 
