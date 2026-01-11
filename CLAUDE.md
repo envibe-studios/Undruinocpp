@@ -56,9 +56,24 @@ Open the project in Unreal Editor 5.7 and use the Compile button, or from comman
 # Windows
 UnrealEngine\UE_5.7\Engine\Build\BatchFiles\Build.bat Unduinocpp Win64 Development "/path/to/Unduinocpp.uproject"
 
-# Generate project files
+# Linux
+/path/to/UnrealEngine/UE_5.7/Engine/Build/BatchFiles/Linux/Build.sh Unduinocpp Linux Development "/path/to/Unduinocpp.uproject"
+
+# Generate project files (Windows)
 UnrealEngine\UE_5.7\Engine\Build\BatchFiles\GenerateProjectFiles.bat "/path/to/Unduinocpp.uproject"
+
+# Generate project files (Linux)
+/path/to/UnrealEngine/UE_5.7/Engine/Build/BatchFiles/Linux/GenerateProjectFiles.sh "/path/to/Unduinocpp.uproject"
 ```
+
+### Compiling from Unreal Editor
+
+1. Open the project in Unreal Editor 5.7
+2. Click the **Compile** button in the toolbar (or press Ctrl+Alt+F11)
+3. Check the **Output Log** window for any compilation errors
+4. Fix any errors before proceeding with other tasks
+
+> **IMPORTANT FOR AI ASSISTANTS**: Before completing any task that modifies C++ code, you MUST compile the project and fix any compilation errors. Do not consider a task finished until the project compiles successfully without errors.
 
 ## Architecture
 
