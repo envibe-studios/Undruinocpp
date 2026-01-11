@@ -13,7 +13,19 @@ Send and receive text commands between Unreal Engine and Arduino ESP8266 via Ser
 
 ## Quick Start
 
-### 1. Using the Actor Component (Recommended)
+### 1. Using the Connection Test Actor (Easiest)
+
+For quick testing of your ESP32/ESP8266 connection:
+
+1. Place `AArduinoConnectionTestActor` in your level
+2. Configure connection settings on the ArduinoComponent:
+   - For Serial: Set `SerialPort` (e.g., "COM3") and `BaudRate`
+   - For TCP/WiFi: Set `ConnectionMode` to TCP, then set `IPAddress` and `TCPPort`
+3. Optionally enable `bAutoTestOnBeginPlay` for automatic testing
+4. Play the level and call `RunConnectionTest()` from Blueprint or C++
+5. Check the test results via events or status properties
+
+### 2. Using the Actor Component (Recommended)
 
 1. Add `ArduinoCommunicationComponent` to any actor
 2. Configure connection settings in the Details panel
@@ -21,7 +33,7 @@ Send and receive text commands between Unreal Engine and Arduino ESP8266 via Ser
 4. Call `Connect()` to establish connection
 5. Use `SendCommand()` or `SendLine()` to send messages
 
-### 2. Blueprint Example
+### 3. Blueprint Example
 
 ```
 Event BeginPlay
@@ -38,7 +50,7 @@ Custom Event: SendToArduino
     -> Send Line: "LED_ON"
 ```
 
-### 3. C++ Example
+### 4. C++ Example
 
 ```cpp
 // In your actor header
@@ -114,6 +126,33 @@ ArduinoComm->SendLine(TEXT("LED_ON"));
 - `OnDataReceived(FString)` - Data received from Arduino
 - `OnConnectionChanged(bool)` - Connection status changed
 - `OnError(FString)` - Error occurred
+
+### AArduinoConnectionTestActor
+
+A ready-to-use actor for testing ESP32/ESP8266 connections.
+
+**Properties:**
+- `ArduinoComponent` - The embedded communication component (configure connection settings here)
+- `bAutoTestOnBeginPlay` - Run test automatically when game starts
+- `TestTimeoutSeconds` - Timeout for test responses (default: 5 seconds)
+- `CurrentTestStatus` - Current test state (Idle, Testing, Success, Failed)
+- `LastTestMessage` - Result message from last test
+- `SuccessfulTests` / `FailedTests` - Test counters
+
+**Functions:**
+- `RunConnectionTest()` - Full test: connects (if needed) and sends PING
+- `RunPingTest()` - Send PING, expect PONG (must be connected)
+- `RunLedToggleTest()` - Send LED_TOGGLE command
+- `RunStatusTest()` - Query device status
+- `RunCustomCommandTest(Command)` - Test any custom command
+- `CancelTest()` - Cancel running test
+- `ResetTestStats()` - Reset success/failure counters
+- `GetStatusString()` - Human-readable status
+- `IsConnected()` - Check connection status
+
+**Events:**
+- `OnTestCompleted(bSuccess, Message)` - Test finished with result
+- `OnTestStatusChanged(NewStatus)` - Test state changed
 
 ### UArduinoSerialPort
 
