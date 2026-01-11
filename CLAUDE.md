@@ -1,15 +1,27 @@
 # CLAUDE.md - Project Guide for AI Assistants
 
+## Purpose
+
+The purpose of this project is to create a reusable Unreal Engine plugin that enables bidirectional communication between Unreal Engine applications and ESP32/ESP8266 microcontrollers. This bridges the gap between game development and physical hardware, allowing developers to:
+
+- **Control physical devices** from within Unreal Engine (LEDs, motors, servos, relays)
+- **Read sensor data** into Unreal Engine (temperature, humidity, motion, light sensors)
+- **Create interactive installations** where game events trigger real-world effects
+- **Build hardware prototypes** with a powerful visualization and control interface
+- **Develop IoT applications** with Unreal Engine as the central hub
+
+The plugin supports both USB serial and WiFi TCP connections, making it flexible for wired development setups and wireless production deployments.
+
 ## Project Overview
 
-This is an **Unreal Engine 5.7** project called **Unduinocpp** with a custom plugin for bidirectional communication between Unreal Engine and Arduino ESP8266 microcontrollers.
+This is an **Unreal Engine 5.7** project called **Unduinocpp** with a custom plugin for bidirectional communication between Unreal Engine and Arduino ESP32/ESP8266 microcontrollers.
 
 ## Tech Stack
 
 - **Engine**: Unreal Engine 5.7
 - **Language**: C++
 - **Build System**: Unreal Build Tool (UBT)
-- **Hardware**: Arduino ESP8266 (Serial USB or WiFi/TCP)
+- **Hardware**: Arduino ESP32/ESP8266 (Serial USB or WiFi/TCP)
 
 ## Project Structure
 
