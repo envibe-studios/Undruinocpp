@@ -39,5 +39,10 @@ UpgradeLog.htm
 .DS_Store
 Thumbs.db
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
 # Ignore file (no longer needed)
 .ignore
