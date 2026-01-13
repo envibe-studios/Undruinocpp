@@ -12,6 +12,14 @@
 #include <setupapi.h>
 #include "Windows/HideWindowsPlatformTypes.h"
 #pragma comment(lib, "setupapi.lib")
+#elif PLATFORM_LINUX || PLATFORM_MAC
+#include <fcntl.h>
+#include <termios.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+#include <dirent.h>
+#include <errno.h>
+#include <cstring>
 #endif
 
 UArduinoSerialPort::UArduinoSerialPort()
@@ -129,9 +137,97 @@ bool UArduinoSerialPort::Open(const FString& PortName, int32 BaudRate)
 
 	return true;
 
+#elif PLATFORM_LINUX || PLATFORM_MAC
+	// Open the serial port
+	int fd = open(TCHAR_TO_UTF8(*PortName), O_RDWR | O_NOCTTY | O_NONBLOCK);
+	if (fd < 0)
+	{
+		FString ErrorMsg = FString::Printf(TEXT("Failed to open port %s. Error: %s"), *PortName, UTF8_TO_TCHAR(strerror(errno)));
+		UE_LOG(LogTemp, Error, TEXT("ArduinoSerial: %s"), *ErrorMsg);
+		OnError.Broadcast(ErrorMsg);
+		return false;
+	}
+
+	// Get current port settings
+	struct termios tty;
+	if (tcgetattr(fd, &tty) != 0)
+	{
+		close(fd);
+		FString ErrorMsg = FString::Printf(TEXT("Failed to get port attributes. Error: %s"), UTF8_TO_TCHAR(strerror(errno)));
+		UE_LOG(LogTemp, Error, TEXT("ArduinoSerial: %s"), *ErrorMsg);
+		OnError.Broadcast(ErrorMsg);
+		return false;
+	}
+
+	// Set baud rate
+	speed_t BaudRateConstant;
+	switch (BaudRate)
+	{
+		case 9600:   BaudRateConstant = B9600; break;
+		case 19200:  BaudRateConstant = B19200; break;
+		case 38400:  BaudRateConstant = B38400; break;
+		case 57600:  BaudRateConstant = B57600; break;
+		case 115200: BaudRateConstant = B115200; break;
+		case 230400: BaudRateConstant = B230400; break;
+		case 460800: BaudRateConstant = B460800; break;
+		default:     BaudRateConstant = B115200; break;
+	}
+	cfsetispeed(&tty, BaudRateConstant);
+	cfsetospeed(&tty, BaudRateConstant);
+
+	// Configure port: 8N1 (8 data bits, no parity, 1 stop bit)
+	tty.c_cflag &= ~PARENB;        // No parity
+	tty.c_cflag &= ~CSTOPB;        // 1 stop bit
+	tty.c_cflag &= ~CSIZE;
+	tty.c_cflag |= CS8;            // 8 data bits
+	tty.c_cflag &= ~CRTSCTS;       // No hardware flow control
+	tty.c_cflag |= CREAD | CLOCAL; // Enable receiver, ignore modem control lines
+
+	// Raw input mode
+	tty.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
+
+	// Disable software flow control
+	tty.c_iflag &= ~(IXON | IXOFF | IXANY);
+	tty.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL);
+
+	// Raw output mode
+	tty.c_oflag &= ~OPOST;
+
+	// Non-blocking read with timeout
+	tty.c_cc[VMIN] = 0;
+	tty.c_cc[VTIME] = 1; // 100ms timeout
+
+	if (tcsetattr(fd, TCSANOW, &tty) != 0)
+	{
+		close(fd);
+		FString ErrorMsg = FString::Printf(TEXT("Failed to set port attributes. Error: %s"), UTF8_TO_TCHAR(strerror(errno)));
+		UE_LOG(LogTemp, Error, TEXT("ArduinoSerial: %s"), *ErrorMsg);
+		OnError.Broadcast(ErrorMsg);
+		return false;
+	}
+
+	// Flush any existing data
+	tcflush(fd, TCIOFLUSH);
+
+	// Store file descriptor as handle (cast to void*)
+	SerialHandle = reinterpret_cast<void*>(static_cast<intptr_t>(fd));
+	bIsOpen = true;
+	CurrentPortName = PortName;
+	CurrentBaudRate = BaudRate;
+
+	UE_LOG(LogTemp, Log, TEXT("ArduinoSerial: Opened port %s at %d baud"), *PortName, BaudRate);
+
+	// Start the read thread
+	StartReadThread();
+
+	// Broadcast connection event
+	OnConnectionChanged.Broadcast(true);
+
+	return true;
+
 #else
-	// Linux/Mac implementation placeholder
-	FString ErrorMsg = TEXT("Serial port not yet implemented for this platform");
+	// Unsupported platform
+	FString ErrorMsg = TEXT("Serial port not implemented for this platform");
 	UE_LOG(LogTemp, Error, TEXT("ArduinoSerial: %s"), *ErrorMsg);
 	OnError.Broadcast(ErrorMsg);
 	return false;
@@ -152,6 +248,13 @@ void UArduinoSerialPort::Close()
 	if (SerialHandle != nullptr)
 	{
 		CloseHandle((HANDLE)SerialHandle);
+		SerialHandle = nullptr;
+	}
+#elif PLATFORM_LINUX || PLATFORM_MAC
+	if (SerialHandle != nullptr)
+	{
+		int fd = static_cast<int>(reinterpret_cast<intptr_t>(SerialHandle));
+		close(fd);
 		SerialHandle = nullptr;
 	}
 #endif
@@ -197,6 +300,29 @@ bool UArduinoSerialPort::SendCommand(const FString& Command)
 
 	UE_LOG(LogTemp, Verbose, TEXT("ArduinoSerial: Sent: %s"), *Command);
 	return true;
+
+#elif PLATFORM_LINUX || PLATFORM_MAC
+	int fd = static_cast<int>(reinterpret_cast<intptr_t>(SerialHandle));
+
+	// Convert to UTF-8
+	FTCHARToUTF8 Converter(*Command);
+	const char* Data = Converter.Get();
+	int32 DataLength = Converter.Length();
+
+	ssize_t bytesWritten = write(fd, Data, DataLength);
+
+	if (bytesWritten < 0 || bytesWritten != DataLength)
+	{
+		FString ErrorMsg = FString::Printf(TEXT("Failed to send data. Wrote %d of %d bytes. Error: %s"),
+			(int)bytesWritten, DataLength, UTF8_TO_TCHAR(strerror(errno)));
+		UE_LOG(LogTemp, Error, TEXT("ArduinoSerial: %s"), *ErrorMsg);
+		OnError.Broadcast(ErrorMsg);
+		return false;
+	}
+
+	UE_LOG(LogTemp, Verbose, TEXT("ArduinoSerial: Sent: %s"), *Command);
+	return true;
+
 #else
 	return false;
 #endif
@@ -234,6 +360,40 @@ TArray<FString> UArduinoSerialPort::GetAvailablePorts()
 			Ports.Add(PortName);
 		}
 	}
+#elif PLATFORM_LINUX
+	// Scan for USB serial devices (/dev/ttyUSB* and /dev/ttyACM*)
+	DIR* dir = opendir("/dev");
+	if (dir)
+	{
+		struct dirent* entry;
+		while ((entry = readdir(dir)) != nullptr)
+		{
+			FString DeviceName = UTF8_TO_TCHAR(entry->d_name);
+			if (DeviceName.StartsWith(TEXT("ttyUSB")) || DeviceName.StartsWith(TEXT("ttyACM")))
+			{
+				Ports.Add(FString::Printf(TEXT("/dev/%s"), *DeviceName));
+			}
+		}
+		closedir(dir);
+	}
+	Ports.Sort();
+#elif PLATFORM_MAC
+	// Scan for USB serial devices (/dev/tty.usbserial* and /dev/tty.usbmodem*)
+	DIR* dir = opendir("/dev");
+	if (dir)
+	{
+		struct dirent* entry;
+		while ((entry = readdir(dir)) != nullptr)
+		{
+			FString DeviceName = UTF8_TO_TCHAR(entry->d_name);
+			if (DeviceName.StartsWith(TEXT("tty.usbserial")) || DeviceName.StartsWith(TEXT("tty.usbmodem")))
+			{
+				Ports.Add(FString::Printf(TEXT("/dev/%s"), *DeviceName));
+			}
+		}
+		closedir(dir);
+	}
+	Ports.Sort();
 #endif
 
 	return Ports;
@@ -326,6 +486,44 @@ uint32 FSerialReadRunnable::Run()
 		BOOL result = ReadFile(hSerial, ReadBuffer, sizeof(ReadBuffer) - 1, &bytesRead, NULL);
 
 		if (result && bytesRead > 0)
+		{
+			ReadBuffer[bytesRead] = '\0';
+
+			// Convert from UTF-8 to FString
+			FUTF8ToTCHAR Converter(ReadBuffer, bytesRead);
+			FString ReceivedText(Converter.Length(), Converter.Get());
+
+			// Add to buffer
+			Owner->ReceiveBuffer += ReceivedText;
+
+			// Process complete lines
+			FString Line;
+			while (Owner->ReceiveBuffer.Split(Owner->LineEnding, &Line, &Owner->ReceiveBuffer))
+			{
+				if (!Line.IsEmpty())
+				{
+					Owner->ReceivedDataQueue.Enqueue(Line);
+				}
+			}
+		}
+
+		// Small sleep to prevent busy waiting
+		FPlatformProcess::Sleep(0.001f);
+	}
+#elif PLATFORM_LINUX || PLATFORM_MAC
+	char ReadBuffer[256];
+
+	while (bRunning && Owner && Owner->bIsOpen && !Owner->bStopThread)
+	{
+		int fd = static_cast<int>(reinterpret_cast<intptr_t>(Owner->SerialHandle));
+		if (fd < 0)
+		{
+			break;
+		}
+
+		ssize_t bytesRead = read(fd, ReadBuffer, sizeof(ReadBuffer) - 1);
+
+		if (bytesRead > 0)
 		{
 			ReadBuffer[bytesRead] = '\0';
 

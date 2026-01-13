@@ -22,3 +22,17 @@
 2026-01-11 07:30:55,941 - mcp.server.lowlevel.server - DEBUG - [server.py:222] - Registering handler for PromptListRequest
 2026-01-11 07:30:55,941 - mcp.server.lowlevel.server - DEBUG - [server.py:239] - Registering handler for GetPromptRequest
 2026-01-11 07:30:55,941 - mcp.server.lowlevel.server - DEBUG - [server.py:267] - Registering handler for ListResourceTemplatesRequest
+2026-01-13 07:22:28,519 - mcp.server.lowlevel.server - DEBUG - [server.py:145] - Initializing server 'UnrealMCP_Advanced'
+2026-01-13 07:22:28,519 - mcp.server.lowlevel.server - DEBUG - [server.py:384] - Registering handler for ListToolsRequest
+2026-01-13 07:22:28,519 - mcp.server.lowlevel.server - DEBUG - [server.py:406] - Registering handler for CallToolRequest
+2026-01-13 07:22:28,519 - mcp.server.lowlevel.server - DEBUG - [server.py:252] - Registering handler for ListResourcesRequest
+2026-01-13 07:22:28,519 - mcp.server.lowlevel.server - DEBUG - [server.py:286] - Registering handler for ReadResourceRequest
+2026-01-13 07:22:28,519 - mcp.server.lowlevel.server - DEBUG - [server.py:222] - Registering handler for PromptListRequest
+2026-01-13 07:22:28,519 - mcp.server.lowlevel.server - DEBUG - [server.py:239] - Registering handler for GetPromptRequest
+2026-01-13 07:22:28,519 - mcp.server.lowlevel.server - DEBUG - [server.py:267] - Registering handler for ListResourceTemplatesRequest
+2026-01-13 07:22:28,552 - UnrealMCP_Advanced - INFO - [unreal_mcp_server_advanced.py:2795] - Starting Advanced MCP server with stdio transport
+2026-01-13 07:22:28,555 - asyncio - DEBUG - [selector_events.py:64] - Using selector: EpollSelector
+2026-01-13 07:22:28,556 - UnrealMCP_Advanced - INFO - [unreal_mcp_server_advanced.py:434] - UnrealMCP Advanced server starting up
+2026-01-13 07:22:28,556 - UnrealMCP_Advanced - INFO - [unreal_mcp_server_advanced.py:435] - Connection will be established lazily on first tool call
+2026-01-13 07:22:28,557 - UnrealMCP_Advanced - INFO - [unreal_mcp_server_advanced.py:429] - Unreal connection reset
+2026-01-13 07:22:28,557 - UnrealMCP_Advanced - INFO - [unreal_mcp_server_advanced.py:441] - Unreal MCP Advanced server shut down
