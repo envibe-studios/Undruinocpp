@@ -103,6 +103,12 @@ int32 UByteStreamPacketParser::ParsePackets(TArray<FBenchPacket>& OutPackets, in
 		// Broadcast event if enabled
 		if (bBroadcastPackets && OnPacketDecoded.IsBound())
 		{
+			// Debug: Log broadcast packet details every 200 packets
+			if (TotalPacketsDecoded % 200 == 0)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("PacketParser Broadcasting packet #%lld: Cycle=%d, Line=%d, Data=%d"),
+					TotalPacketsDecoded, Packet.Cycle, Packet.Line, Packet.Data);
+			}
 			OnPacketDecoded.Broadcast(Packet);
 		}
 
@@ -167,13 +173,23 @@ int32 UByteStreamPacketParser::FindStartByte(int32 StartIndex) const
 FBenchPacket UByteStreamPacketParser::DecodePacketAt(int32 Offset) const
 {
 	// Packet layout: [0xAA][cycleLo][cycleHi][line][data][0x55]
-	uint8 CycleLo = Buffer[Offset + 1];
-	uint8 CycleHi = Buffer[Offset + 2];
-	uint8 Line = Buffer[Offset + 3];
-	uint8 Data = Buffer[Offset + 4];
+	const uint8 CycleLo = Buffer[Offset + 1];
+	const uint8 CycleHi = Buffer[Offset + 2];
+	const uint8 Line = Buffer[Offset + 3];
+	const uint8 Data = Buffer[Offset + 4];
 
 	// Decode little-endian uint16 cycle
-	int32 Cycle = static_cast<int32>(CycleLo) | (static_cast<int32>(CycleHi) << 8);
+	const int32 Cycle = static_cast<int32>(CycleLo) | (static_cast<int32>(CycleHi) << 8);
+
+	// Debug: Log every 1000th packet to verify decoding
+	static int64 DebugCounter = 0;
+	if (++DebugCounter % 1000 == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PacketParser Debug [%lld]: Raw bytes [0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X] -> Cycle=%d (Lo=%d Hi=%d) Line=%d Data=%d"),
+			DebugCounter,
+			Buffer[Offset], Buffer[Offset + 1], Buffer[Offset + 2], Buffer[Offset + 3], Buffer[Offset + 4], Buffer[Offset + 5],
+			Cycle, CycleLo, CycleHi, Line, Data);
+	}
 
 	return FBenchPacket(Cycle, Line, Data);
 }
