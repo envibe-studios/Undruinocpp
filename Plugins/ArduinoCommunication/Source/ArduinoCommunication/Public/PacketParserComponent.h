@@ -126,7 +126,7 @@ protected:
 
 	/** Handler for parser packet decoded event */
 	UFUNCTION()
-	void HandlePacketDecoded(const FBenchPacket& Packet);
+	void HandlePacketDecoded(FBenchPacket Packet);
 
 	/** Handler for parser bytes dropped event */
 	UFUNCTION()

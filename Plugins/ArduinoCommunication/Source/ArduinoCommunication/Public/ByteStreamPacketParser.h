@@ -37,7 +37,7 @@ struct ARDUINOCOMMUNICATION_API FBenchPacket
 };
 
 /** Delegate fired when a packet is successfully decoded */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBenchPacketDecoded, const FBenchPacket&, Packet);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBenchPacketDecoded, FBenchPacket, Packet);
 
 /** Delegate fired when bytes are dropped (junk or buffer overflow) */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBytesDropped, int32, ByteCount);

@@ -115,7 +115,7 @@ void UPacketParserComponent::ResetStatistics()
 	}
 }
 
-void UPacketParserComponent::HandlePacketDecoded(const FBenchPacket& Packet)
+void UPacketParserComponent::HandlePacketDecoded(FBenchPacket Packet)
 {
 	// Forward to component's delegate
 	OnPacketDecoded.Broadcast(Packet);
