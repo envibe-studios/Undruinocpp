@@ -6,6 +6,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "ArduinoSerialPort.h"
 #include "ArduinoTcpClient.h"
+#include "ByteStreamPacketParser.h"
 #include "ArduinoBlueprintLibrary.generated.h"
 
 /**
@@ -53,4 +54,28 @@ public:
 	/** Create a TCP client instance */
 	UFUNCTION(BlueprintCallable, Category = "Arduino|Factory", meta = (WorldContext = "WorldContextObject"))
 	static UArduinoTcpClient* CreateTcpClient(UObject* WorldContextObject);
+
+	/** Create a byte stream packet parser instance */
+	UFUNCTION(BlueprintCallable, Category = "Arduino|Factory", meta = (WorldContext = "WorldContextObject"))
+	static UByteStreamPacketParser* CreateByteStreamPacketParser(UObject* WorldContextObject);
+
+	// === Packet Parser Test Functions ===
+
+	/**
+	 * Run a comprehensive test of the packet parser
+	 * Tests junk prefix, partial packets, split packets, and bad end markers
+	 * @param WorldContextObject - World context for object creation
+	 * @param OutTestLog - Detailed log of test results
+	 * @return true if all tests passed
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Arduino|Testing", meta = (WorldContext = "WorldContextObject"))
+	static bool RunPacketParserTest(UObject* WorldContextObject, FString& OutTestLog);
+
+	/**
+	 * Create a test byte stream with various edge cases
+	 * Useful for manual testing in Blueprint
+	 * @return Byte array containing: junk, valid packets, partial packets, bad frames
+	 */
+	UFUNCTION(BlueprintPure, Category = "Arduino|Testing")
+	static TArray<uint8> CreateTestByteStream();
 };
