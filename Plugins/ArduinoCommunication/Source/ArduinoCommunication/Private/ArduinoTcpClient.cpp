@@ -203,18 +203,28 @@ void UArduinoTcpClient::StartReceiveThread()
 	// Last resort: iterate through world contexts
 	if (!World && GEngine)
 	{
+		UWorld* FallbackWorld = nullptr;
 		for (const FWorldContext& Context : GEngine->GetWorldContexts())
 		{
-			if (Context.World() && Context.WorldType == EWorldType::Game)
+			if (Context.World())
 			{
-				World = Context.World();
-				break;
+				// Prefer Game or PIE worlds
+				if (Context.WorldType == EWorldType::Game || Context.WorldType == EWorldType::PIE)
+				{
+					World = Context.World();
+					break;
+				}
+				// Keep track of any valid world as fallback (Editor, etc.)
+				if (!FallbackWorld)
+				{
+					FallbackWorld = Context.World();
+				}
 			}
-			else if (Context.World() && Context.WorldType == EWorldType::PIE)
-			{
-				World = Context.World();
-				break;
-			}
+		}
+		// Use fallback world if no Game/PIE world was found
+		if (!World && FallbackWorld)
+		{
+			World = FallbackWorld;
 		}
 	}
 
