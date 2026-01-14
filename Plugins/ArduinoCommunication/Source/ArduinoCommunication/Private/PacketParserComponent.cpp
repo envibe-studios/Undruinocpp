@@ -46,6 +46,10 @@ void UPacketParserComponent::InitializeParser()
 		Parser->OnBytesDropped.AddDynamic(this, &UPacketParserComponent::HandleBytesDropped);
 		Parser->OnBadEndFrame.AddDynamic(this, &UPacketParserComponent::HandleBadEndFrame);
 	}
+
+	// Reset raw stream debug counters
+	RawStreamBytesCounter = 0;
+	LastRawStreamSampleAt = 0;
 }
 
 void UPacketParserComponent::IngestBytes(const TArray<uint8>& InBytes)
@@ -53,6 +57,40 @@ void UPacketParserComponent::IngestBytes(const TArray<uint8>& InBytes)
 	if (!Parser)
 	{
 		InitializeParser();
+	}
+
+	// Skip if no bytes to process
+	if (InBytes.Num() == 0)
+	{
+		return;
+	}
+
+	// Raw stream debug: Log sample of incoming bytes at ingestion layer (before parsing)
+	if (bDebugRawStream && RawStreamSampleInterval > 0)
+	{
+		RawStreamBytesCounter += InBytes.Num();
+
+		// Check if we've crossed the sample interval threshold
+		if (RawStreamBytesCounter - LastRawStreamSampleAt >= RawStreamSampleInterval)
+		{
+			LastRawStreamSampleAt = RawStreamBytesCounter;
+
+			// Build hex string of first up to 16 bytes
+			FString HexBytes;
+			int32 BytesToShow = FMath::Min(InBytes.Num(), 16);
+			for (int32 i = 0; i < BytesToShow; i++)
+			{
+				if (i > 0) HexBytes += TEXT(" ");
+				HexBytes += FString::Printf(TEXT("%02X"), InBytes[i]);
+			}
+			if (InBytes.Num() > 16)
+			{
+				HexBytes += TEXT(" ...");
+			}
+
+			UE_LOG(LogTemp, Warning, TEXT("RawStream Debug [Total: %lld bytes]: ThisChunk=%d bytes, First16=[%s]"),
+				RawStreamBytesCounter, InBytes.Num(), *HexBytes);
+		}
 	}
 
 	if (Parser)
@@ -87,6 +125,10 @@ void UPacketParserComponent::ResetParser()
 	{
 		Parser->ResetBuffer();
 	}
+
+	// Reset raw stream debug counters
+	RawStreamBytesCounter = 0;
+	LastRawStreamSampleAt = 0;
 }
 
 int32 UPacketParserComponent::GetBufferedByteCount() const

@@ -55,6 +55,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parser|Debug", meta = (EditCondition = "bDebugMode", ClampMin = "1"))
 	int32 DebugSampleInterval = 1000;
 
+	/** Enable raw stream debug to log incoming bytes at ingestion layer (before parsing) */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parser|Debug")
+	bool bDebugRawStream = false;
+
+	/** Log raw stream sample every N bytes received */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parser|Debug", meta = (EditCondition = "bDebugRawStream", ClampMin = "100"))
+	int32 RawStreamSampleInterval = 1000;
+
 	// === Events ===
 
 	/** Event fired when a packet is successfully decoded */
@@ -139,6 +147,12 @@ protected:
 	/** Internal parser instance */
 	UPROPERTY()
 	UByteStreamPacketParser* Parser;
+
+	/** Counter for raw stream debug logging */
+	int64 RawStreamBytesCounter = 0;
+
+	/** Last raw stream sample bytes for debug logging */
+	int64 LastRawStreamSampleAt = 0;
 
 	/** Handler for parser packet decoded event */
 	UFUNCTION()
