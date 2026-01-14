@@ -91,13 +91,21 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parser|Config")
 	int32 TrimToBytes = 64;
 
-	/** Maximum packets to parse per call (prevents infinite loops) */
+	/** Maximum packets to parse per call (prevents infinite loops/stalls) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parser|Config")
-	int32 MaxPacketsPerCall = 512;
+	int32 MaxPacketsPerCall = 200;
 
 	/** Whether to broadcast OnPacketDecoded during parsing */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parser|Config")
 	bool bBroadcastPackets = true;
+
+	/** Enable debug mode for sample packet logging */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parser|Debug")
+	bool bDebugMode = false;
+
+	/** Log one sample packet every N packets when debug mode is enabled */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Parser|Debug", meta = (EditCondition = "bDebugMode", ClampMin = "1"))
+	int32 DebugSampleInterval = 1000;
 
 	// === Events ===
 
@@ -159,6 +167,10 @@ public:
 
 	// === Statistics ===
 
+	/** Total bytes received since creation/reset */
+	UPROPERTY(BlueprintReadOnly, Category = "Parser|Stats")
+	int64 TotalBytesIn = 0;
+
 	/** Total packets decoded since creation/reset */
 	UPROPERTY(BlueprintReadOnly, Category = "Parser|Stats")
 	int64 TotalPacketsDecoded = 0;
@@ -170,6 +182,10 @@ public:
 	/** Total bad end frames since creation/reset */
 	UPROPERTY(BlueprintReadOnly, Category = "Parser|Stats")
 	int64 TotalBadEndFrames = 0;
+
+	/** Current buffer size in bytes */
+	UFUNCTION(BlueprintPure, Category = "Parser|Stats")
+	int32 GetBufferSize() const { return Buffer.Num(); }
 
 	/**
 	 * Reset all statistics counters
@@ -194,7 +210,7 @@ protected:
 	 * @param Offset - Buffer offset to read from
 	 * @return Decoded packet
 	 */
-	FBenchPacket DecodePacketAt(int32 Offset) const;
+	FBenchPacket DecodePacketAt(int32 Offset);
 
 	/**
 	 * Trim buffer if it exceeds maximum size

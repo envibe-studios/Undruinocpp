@@ -38,6 +38,8 @@ void UPacketParserComponent::InitializeParser()
 		Parser->TrimToBytes = TrimToBytes;
 		Parser->MaxPacketsPerCall = MaxPacketsPerCall;
 		Parser->bBroadcastPackets = true;
+		Parser->bDebugMode = bDebugMode;
+		Parser->DebugSampleInterval = DebugSampleInterval;
 
 		// Bind parser events to our handlers
 		Parser->OnPacketDecoded.AddDynamic(this, &UPacketParserComponent::HandlePacketDecoded);
@@ -92,6 +94,11 @@ int32 UPacketParserComponent::GetBufferedByteCount() const
 	return Parser ? Parser->GetBufferedByteCount() : 0;
 }
 
+int64 UPacketParserComponent::GetTotalBytesIn() const
+{
+	return Parser ? Parser->TotalBytesIn : 0;
+}
+
 int64 UPacketParserComponent::GetTotalPacketsDecoded() const
 {
 	return Parser ? Parser->TotalPacketsDecoded : 0;
@@ -107,6 +114,11 @@ int64 UPacketParserComponent::GetTotalBadEndFrames() const
 	return Parser ? Parser->TotalBadEndFrames : 0;
 }
 
+int32 UPacketParserComponent::GetBufferSize() const
+{
+	return Parser ? Parser->GetBufferSize() : 0;
+}
+
 void UPacketParserComponent::ResetStatistics()
 {
 	if (Parser)
@@ -117,14 +129,6 @@ void UPacketParserComponent::ResetStatistics()
 
 void UPacketParserComponent::HandlePacketDecoded(FBenchPacket Packet)
 {
-	// Debug: Log every 200th packet to verify forwarding
-	static int64 ForwardCounter = 0;
-	if (++ForwardCounter % 200 == 0)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("PacketParserComponent Forwarding packet #%lld: Cycle=%d, Line=%d, Data=%d"),
-			ForwardCounter, Packet.Cycle, Packet.Line, Packet.Data);
-	}
-
 	// Forward to component's delegate
 	OnPacketDecoded.Broadcast(Packet);
 }
