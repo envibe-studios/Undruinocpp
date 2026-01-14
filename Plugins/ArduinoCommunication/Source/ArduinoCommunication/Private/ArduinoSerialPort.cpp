@@ -47,7 +47,13 @@ bool UArduinoSerialPort::Open(const FString& PortName, int32 BaudRate)
 #if PLATFORM_WINDOWS
 	// Format port name for Windows
 	FString FormattedPort = PortName;
-	if (!PortName.StartsWith(TEXT("\\\\.\\")))
+
+	// Handle numeric-only input (e.g., "8" -> "COM8")
+	if (PortName.IsNumeric())
+	{
+		FormattedPort = FString::Printf(TEXT("\\\\.\\COM%s"), *PortName);
+	}
+	else if (!PortName.StartsWith(TEXT("\\\\.\\")))
 	{
 		FormattedPort = FString::Printf(TEXT("\\\\.\\%s"), *PortName);
 	}
@@ -66,7 +72,20 @@ bool UArduinoSerialPort::Open(const FString& PortName, int32 BaudRate)
 	if (hSerial == INVALID_HANDLE_VALUE)
 	{
 		DWORD error = GetLastError();
-		FString ErrorMsg = FString::Printf(TEXT("Failed to open port %s. Error code: %d"), *PortName, error);
+		FString ErrorDetails;
+		switch (error)
+		{
+			case ERROR_FILE_NOT_FOUND: // 2
+				ErrorDetails = TEXT("Port not found. Check that the device is connected and the port name is correct (e.g., COM8).");
+				break;
+			case ERROR_ACCESS_DENIED: // 5
+				ErrorDetails = TEXT("Access denied. The port may be in use by another application.");
+				break;
+			default:
+				ErrorDetails = FString::Printf(TEXT("Error code: %d"), error);
+				break;
+		}
+		FString ErrorMsg = FString::Printf(TEXT("Failed to open port %s. %s"), *FormattedPort, *ErrorDetails);
 		UE_LOG(LogTemp, Error, TEXT("ArduinoSerial: %s"), *ErrorMsg);
 		OnError.Broadcast(ErrorMsg);
 		return false;
