@@ -21,6 +21,7 @@ void UPacketParserComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		Parser->OnPacketDecoded.RemoveDynamic(this, &UPacketParserComponent::HandlePacketDecoded);
 		Parser->OnBytesDropped.RemoveDynamic(this, &UPacketParserComponent::HandleBytesDropped);
 		Parser->OnBadEndFrame.RemoveDynamic(this, &UPacketParserComponent::HandleBadEndFrame);
+		Parser->OnCrcMismatch.RemoveDynamic(this, &UPacketParserComponent::HandleCrcMismatch);
 	}
 
 	Super::EndPlay(EndPlayReason);
@@ -45,6 +46,7 @@ void UPacketParserComponent::InitializeParser()
 		Parser->OnPacketDecoded.AddDynamic(this, &UPacketParserComponent::HandlePacketDecoded);
 		Parser->OnBytesDropped.AddDynamic(this, &UPacketParserComponent::HandleBytesDropped);
 		Parser->OnBadEndFrame.AddDynamic(this, &UPacketParserComponent::HandleBadEndFrame);
+		Parser->OnCrcMismatch.AddDynamic(this, &UPacketParserComponent::HandleCrcMismatch);
 	}
 
 	// Reset raw stream debug counters
@@ -98,9 +100,10 @@ void UPacketParserComponent::IngestBytes(const TArray<uint8>& InBytes)
 		TArray<FBenchPacket> Packets;
 		int32 BytesDropped = 0;
 		int32 BadEndFrames = 0;
+		int32 CrcMismatches = 0;
 
 		// IngestAndParse will append, parse, and trigger events
-		Parser->IngestAndParse(InBytes, Packets, BytesDropped, BadEndFrames);
+		Parser->IngestAndParse(InBytes, Packets, BytesDropped, BadEndFrames, CrcMismatches);
 
 		// Note: Events are already fired from within ParsePackets via the parser's broadcasts
 	}
@@ -116,7 +119,8 @@ int32 UPacketParserComponent::FlushAndParse(TArray<FBenchPacket>& OutPackets)
 
 	int32 BytesDropped = 0;
 	int32 BadEndFrames = 0;
-	return Parser->ParsePackets(OutPackets, BytesDropped, BadEndFrames);
+	int32 CrcMismatches = 0;
+	return Parser->ParsePackets(OutPackets, BytesDropped, BadEndFrames, CrcMismatches);
 }
 
 void UPacketParserComponent::ResetParser()
@@ -156,6 +160,11 @@ int64 UPacketParserComponent::GetTotalBadEndFrames() const
 	return Parser ? Parser->TotalBadEndFrames : 0;
 }
 
+int64 UPacketParserComponent::GetTotalCrcMismatches() const
+{
+	return Parser ? Parser->TotalCrcMismatches : 0;
+}
+
 int32 UPacketParserComponent::GetBufferSize() const
 {
 	return Parser ? Parser->GetBufferSize() : 0;
@@ -185,4 +194,10 @@ void UPacketParserComponent::HandleBadEndFrame()
 {
 	// Forward to component's delegate
 	OnBadEndFrame.Broadcast();
+}
+
+void UPacketParserComponent::HandleCrcMismatch(uint8 Expected, uint8 Actual)
+{
+	// Forward to component's delegate
+	OnCrcMismatch.Broadcast(Expected, Actual);
 }

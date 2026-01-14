@@ -9,29 +9,46 @@
 
 /**
  * Decoded packet structure for bench/sensor data
- * Fixed 6-byte packet format: [0xAA][cycleLo][cycleHi][line][data][0x55]
+ * Framed packet format: [0xAA][VER][SRC][TYPE][SEQ_L][SEQ_H][LEN][PAYLOAD...][CRC][0x55]
+ *
+ * Header (6 bytes after start): VER(1), SRC(1), TYPE(1), SEQ_L(1), SEQ_H(1), LEN(1)
+ * Payload: 0..32 bytes
+ * CRC: XOR of bytes 1..(6+LEN), i.e., all header bytes and payload
+ * Total frame length: 1(start) + 6(header) + LEN(payload) + 1(CRC) + 1(end) = 9 + LEN bytes
  */
 USTRUCT(BlueprintType)
 struct ARDUINOCOMMUNICATION_API FBenchPacket
 {
 	GENERATED_BODY()
 
-	/** Cycle counter (uint16 little-endian from cycleLo | cycleHi << 8) */
+	/** Protocol version */
 	UPROPERTY(BlueprintReadOnly, Category = "Packet")
-	int32 Cycle = 0;
+	uint8 Ver = 0;
 
-	/** Line identifier */
+	/** Source identifier */
 	UPROPERTY(BlueprintReadOnly, Category = "Packet")
-	uint8 Line = 0;
+	uint8 Src = 0;
 
-	/** Data payload byte */
+	/** Packet type */
 	UPROPERTY(BlueprintReadOnly, Category = "Packet")
-	uint8 Data = 0;
+	uint8 Type = 0;
+
+	/** Sequence number (uint16 little-endian from SEQ_L | SEQ_H << 8) */
+	UPROPERTY(BlueprintReadOnly, Category = "Packet")
+	int32 Seq = 0;
+
+	/** Payload length (0..32) */
+	UPROPERTY(BlueprintReadOnly, Category = "Packet")
+	uint8 Len = 0;
+
+	/** Payload data bytes */
+	UPROPERTY(BlueprintReadOnly, Category = "Packet")
+	TArray<uint8> Payload;
 
 	FBenchPacket() = default;
 
-	FBenchPacket(int32 InCycle, uint8 InLine, uint8 InData)
-		: Cycle(InCycle), Line(InLine), Data(InData)
+	FBenchPacket(uint8 InVer, uint8 InSrc, uint8 InType, int32 InSeq, uint8 InLen, const TArray<uint8>& InPayload)
+		: Ver(InVer), Src(InSrc), Type(InType), Seq(InSeq), Len(InLen), Payload(InPayload)
 	{
 	}
 };
@@ -45,20 +62,30 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBytesDropped, int32, ByteCount);
 /** Delegate fired when a bad end frame is detected */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBadEndFrame);
 
+/** Delegate fired when a CRC mismatch is detected */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCrcMismatch, uint8, Expected, uint8, Actual);
+
 /**
  * Stateful byte stream packet parser
- * Buffers incoming byte chunks and decodes fixed-format 6-byte packets
+ * Buffers incoming byte chunks and decodes variable-length framed packets
  *
  * Packet Format:
  *   Byte 0: 0xAA (START)
- *   Byte 1: cycleLo (uint8)
- *   Byte 2: cycleHi (uint8)
- *   Byte 3: line (uint8)
- *   Byte 4: data (uint8)
- *   Byte 5: 0x55 (END)
+ *   Byte 1: VER (protocol version)
+ *   Byte 2: SRC (source identifier)
+ *   Byte 3: TYPE (packet type)
+ *   Byte 4: SEQ_L (sequence number low byte)
+ *   Byte 5: SEQ_H (sequence number high byte)
+ *   Byte 6: LEN (payload length, 0..32)
+ *   Bytes 7..(7+LEN-1): PAYLOAD (variable length)
+ *   Byte 7+LEN: CRC (XOR of bytes 1..(6+LEN))
+ *   Byte 8+LEN: 0x55 (END)
+ *
+ * Total frame size: 9 + LEN bytes
  *
  * Features:
- *   - Robust resync on malformed data
+ *   - Robust resync on malformed data by scanning for 0xAA
+ *   - CRC validation (XOR of header and payload bytes)
  *   - Bounded memory usage with configurable limits
  *   - Blueprint-safe events for decoded packets
  */
@@ -78,8 +105,17 @@ public:
 	/** End byte marker (0x55) */
 	static constexpr uint8 EndByte = 0x55;
 
-	/** Fixed packet size in bytes */
-	static constexpr int32 PacketSize = 6;
+	/** Header size in bytes (VER, SRC, TYPE, SEQ_L, SEQ_H, LEN) */
+	static constexpr int32 HeaderSize = 6;
+
+	/** Minimum frame size (START + HEADER + CRC + END, with LEN=0) */
+	static constexpr int32 MinFrameSize = 9;
+
+	/** Minimum bytes needed to read header (START + HEADER) */
+	static constexpr int32 MinBytesToReadHeader = 7;
+
+	/** Maximum payload length */
+	static constexpr int32 MaxPayloadLen = 32;
 
 	// === Configuration ===
 
@@ -121,6 +157,10 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Parser|Events")
 	FOnBadEndFrame OnBadEndFrame;
 
+	/** Event fired when a CRC mismatch is detected */
+	UPROPERTY(BlueprintAssignable, Category = "Parser|Events")
+	FOnCrcMismatch OnCrcMismatch;
+
 	// === Core API ===
 
 	/**
@@ -136,10 +176,11 @@ public:
 	 * @param OutPackets - Array to receive decoded packets
 	 * @param OutBytesDropped - Number of bytes discarded (junk/resync)
 	 * @param OutBadEndFrames - Number of bad end frame markers detected
+	 * @param OutCrcMismatches - Number of CRC validation failures
 	 * @return Number of packets successfully decoded
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Parser")
-	int32 ParsePackets(TArray<FBenchPacket>& OutPackets, int32& OutBytesDropped, int32& OutBadEndFrames);
+	int32 ParsePackets(TArray<FBenchPacket>& OutPackets, int32& OutBytesDropped, int32& OutBadEndFrames, int32& OutCrcMismatches);
 
 	/**
 	 * Append bytes and immediately parse (convenience method)
@@ -147,10 +188,11 @@ public:
 	 * @param OutPackets - Array to receive decoded packets
 	 * @param OutBytesDropped - Number of bytes discarded
 	 * @param OutBadEndFrames - Number of bad end frame markers detected
+	 * @param OutCrcMismatches - Number of CRC validation failures
 	 * @return Number of packets successfully decoded
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Parser")
-	int32 IngestAndParse(const TArray<uint8>& InBytes, TArray<FBenchPacket>& OutPackets, int32& OutBytesDropped, int32& OutBadEndFrames);
+	int32 IngestAndParse(const TArray<uint8>& InBytes, TArray<FBenchPacket>& OutPackets, int32& OutBytesDropped, int32& OutBadEndFrames, int32& OutCrcMismatches);
 
 	/**
 	 * Clear the internal buffer and reset state
@@ -183,6 +225,10 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Parser|Stats")
 	int64 TotalBadEndFrames = 0;
 
+	/** Total CRC mismatches since creation/reset */
+	UPROPERTY(BlueprintReadOnly, Category = "Parser|Stats")
+	int64 TotalCrcMismatches = 0;
+
 	/** Current buffer size in bytes */
 	UFUNCTION(BlueprintPure, Category = "Parser|Stats")
 	int32 GetBufferSize() const { return Buffer.Num(); }
@@ -206,11 +252,20 @@ protected:
 
 	/**
 	 * Decode a single packet from buffer at given offset
-	 * Assumes caller has validated there are at least PacketSize bytes available
+	 * Assumes caller has validated there are enough bytes available
 	 * @param Offset - Buffer offset to read from
+	 * @param PayloadLen - Payload length from header
 	 * @return Decoded packet
 	 */
-	FBenchPacket DecodePacketAt(int32 Offset);
+	FBenchPacket DecodePacketAt(int32 Offset, int32 PayloadLen);
+
+	/**
+	 * Compute CRC (XOR of bytes from Offset+1 to Offset+6+PayloadLen)
+	 * @param Offset - Buffer offset of START byte
+	 * @param PayloadLen - Payload length
+	 * @return Computed CRC byte
+	 */
+	uint8 ComputeCrc(int32 Offset, int32 PayloadLen) const;
 
 	/**
 	 * Trim buffer if it exceeds maximum size

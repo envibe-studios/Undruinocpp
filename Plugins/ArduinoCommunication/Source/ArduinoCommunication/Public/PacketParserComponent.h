@@ -77,6 +77,10 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Parser|Events")
 	FOnBadEndFrame OnBadEndFrame;
 
+	/** Event fired when a CRC mismatch is detected */
+	UPROPERTY(BlueprintAssignable, Category = "Parser|Events")
+	FOnCrcMismatch OnCrcMismatch;
+
 	// === Core API ===
 
 	/**
@@ -133,6 +137,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Parser|Stats")
 	int64 GetTotalBadEndFrames() const;
 
+	/** Get total CRC mismatches since creation/reset */
+	UFUNCTION(BlueprintPure, Category = "Parser|Stats")
+	int64 GetTotalCrcMismatches() const;
+
 	/** Get current buffer size in bytes */
 	UFUNCTION(BlueprintPure, Category = "Parser|Stats")
 	int32 GetBufferSize() const;
@@ -165,6 +173,10 @@ protected:
 	/** Handler for parser bad end frame event */
 	UFUNCTION()
 	void HandleBadEndFrame();
+
+	/** Handler for parser CRC mismatch event */
+	UFUNCTION()
+	void HandleCrcMismatch(uint8 Expected, uint8 Actual);
 
 	/** Initialize the parser with component settings */
 	void InitializeParser();
