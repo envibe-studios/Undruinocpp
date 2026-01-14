@@ -19,6 +19,8 @@ enum class EArduinoConnectionMode : uint8
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnArduinoDataReceived, const FString&, Data);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnArduinoByteReceived, const TArray<uint8>&, Bytes);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnArduinoLineReceived, const FString&, Line);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnArduinoConnectionChanged, bool, bConnected);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnArduinoError, const FString&, ErrorMessage);
 
@@ -76,9 +78,17 @@ public:
 
 	// === Events ===
 
-	/** Event fired when data is received from Arduino */
+	/** Event fired when data is received from Arduino (legacy, same as OnLineReceived) */
 	UPROPERTY(BlueprintAssignable, Category = "Arduino|Events")
 	FOnArduinoDataReceived OnDataReceived;
+
+	/** Event fired when raw bytes are received from Arduino (before line parsing) */
+	UPROPERTY(BlueprintAssignable, Category = "Arduino|Events")
+	FOnArduinoByteReceived OnByteReceived;
+
+	/** Event fired when a complete line is received from Arduino (parsed by LineEnding) */
+	UPROPERTY(BlueprintAssignable, Category = "Arduino|Events")
+	FOnArduinoLineReceived OnLineReceived;
 
 	/** Event fired when connection status changes */
 	UPROPERTY(BlueprintAssignable, Category = "Arduino|Events")
@@ -120,6 +130,12 @@ protected:
 	void HandleSerialDataReceived(const FString& Data);
 
 	UFUNCTION()
+	void HandleSerialByteReceived(const TArray<uint8>& Bytes);
+
+	UFUNCTION()
+	void HandleSerialLineReceived(const FString& Line);
+
+	UFUNCTION()
 	void HandleSerialConnectionChanged(bool bConnected);
 
 	UFUNCTION()
@@ -128,6 +144,12 @@ protected:
 	/** Handle data received from TCP */
 	UFUNCTION()
 	void HandleTcpDataReceived(const FString& Data);
+
+	UFUNCTION()
+	void HandleTcpByteReceived(const TArray<uint8>& Bytes);
+
+	UFUNCTION()
+	void HandleTcpLineReceived(const FString& Line);
 
 	UFUNCTION()
 	void HandleTcpConnectionChanged(bool bConnected);

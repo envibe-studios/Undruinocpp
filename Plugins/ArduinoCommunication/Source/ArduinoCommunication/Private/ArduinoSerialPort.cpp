@@ -463,10 +463,19 @@ void UArduinoSerialPort::StopReadThread()
 
 void UArduinoSerialPort::ProcessReceivedData()
 {
+	// Process raw bytes
+	TArray<uint8> Bytes;
+	while (ReceivedBytesQueue.Dequeue(Bytes))
+	{
+		OnByteReceived.Broadcast(Bytes);
+	}
+
+	// Process complete lines
 	FString Data;
 	while (ReceivedDataQueue.Dequeue(Data))
 	{
 		OnDataReceived.Broadcast(Data);
+		OnLineReceived.Broadcast(Data);
 	}
 }
 
@@ -506,6 +515,11 @@ uint32 FSerialReadRunnable::Run()
 
 		if (result && bytesRead > 0)
 		{
+			// Enqueue raw bytes for OnByteReceived
+			TArray<uint8> RawBytes;
+			RawBytes.Append((uint8*)ReadBuffer, bytesRead);
+			Owner->ReceivedBytesQueue.Enqueue(RawBytes);
+
 			ReadBuffer[bytesRead] = '\0';
 
 			// Convert from UTF-8 to FString
@@ -544,6 +558,11 @@ uint32 FSerialReadRunnable::Run()
 
 		if (bytesRead > 0)
 		{
+			// Enqueue raw bytes for OnByteReceived
+			TArray<uint8> RawBytes;
+			RawBytes.Append((uint8*)ReadBuffer, bytesRead);
+			Owner->ReceivedBytesQueue.Enqueue(RawBytes);
+
 			ReadBuffer[bytesRead] = '\0';
 
 			// Convert from UTF-8 to FString

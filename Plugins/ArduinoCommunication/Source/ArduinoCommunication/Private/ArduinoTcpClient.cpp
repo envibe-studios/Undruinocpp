@@ -223,10 +223,19 @@ void UArduinoTcpClient::StopReceiveThread()
 
 void UArduinoTcpClient::ProcessReceivedData()
 {
+	// Process raw bytes
+	TArray<uint8> Bytes;
+	while (ReceivedBytesQueue.Dequeue(Bytes))
+	{
+		OnByteReceived.Broadcast(Bytes);
+	}
+
+	// Process complete lines
 	FString Data;
 	while (ReceivedDataQueue.Dequeue(Data))
 	{
 		OnDataReceived.Broadcast(Data);
+		OnLineReceived.Broadcast(Data);
 	}
 }
 
@@ -269,6 +278,11 @@ uint32 FTcpReceiveRunnable::Run()
 			{
 				if (BytesRead > 0)
 				{
+					// Enqueue raw bytes for OnByteReceived
+					TArray<uint8> RawBytes;
+					RawBytes.Append(ReadBuffer, BytesRead);
+					Owner->ReceivedBytesQueue.Enqueue(RawBytes);
+
 					ReadBuffer[BytesRead] = '\0';
 
 					// Convert from UTF-8 to FString

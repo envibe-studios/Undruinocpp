@@ -8,6 +8,8 @@
 #include "ArduinoSerialPort.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSerialDataReceived, const FString&, Data);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSerialByteReceived, const TArray<uint8>&, Bytes);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSerialLineReceived, const FString&, Line);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSerialConnectionChanged, bool, bConnected);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSerialError, const FString&, ErrorMessage);
 
@@ -48,9 +50,17 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Arduino|Serial")
 	static TArray<FString> GetAvailablePorts();
 
-	/** Event fired when data is received from Arduino */
+	/** Event fired when data is received from Arduino (legacy, same as OnLineReceived) */
 	UPROPERTY(BlueprintAssignable, Category = "Arduino|Serial|Events")
 	FOnSerialDataReceived OnDataReceived;
+
+	/** Event fired when raw bytes are received from Arduino (before line parsing) */
+	UPROPERTY(BlueprintAssignable, Category = "Arduino|Serial|Events")
+	FOnSerialByteReceived OnByteReceived;
+
+	/** Event fired when a complete line is received from Arduino (parsed by LineEnding) */
+	UPROPERTY(BlueprintAssignable, Category = "Arduino|Serial|Events")
+	FOnSerialLineReceived OnLineReceived;
 
 	/** Event fired when connection status changes */
 	UPROPERTY(BlueprintAssignable, Category = "Arduino|Serial|Events")
@@ -100,8 +110,11 @@ private:
 	/** Buffer for incomplete lines */
 	FString ReceiveBuffer;
 
-	/** Thread-safe queue for received data */
+	/** Thread-safe queue for received lines */
 	TQueue<FString> ReceivedDataQueue;
+
+	/** Thread-safe queue for received raw bytes */
+	TQueue<TArray<uint8>> ReceivedBytesQueue;
 
 	/** Critical section for thread safety */
 	FCriticalSection DataCriticalSection;

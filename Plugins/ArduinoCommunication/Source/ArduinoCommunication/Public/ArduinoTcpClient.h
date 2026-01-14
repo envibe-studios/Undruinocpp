@@ -11,6 +11,8 @@
 #include "ArduinoTcpClient.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTcpDataReceived, const FString&, Data);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTcpByteReceived, const TArray<uint8>&, Bytes);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTcpLineReceived, const FString&, Line);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTcpConnectionChanged, bool, bConnected);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTcpError, const FString&, ErrorMessage);
 
@@ -55,9 +57,17 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Arduino|TCP")
 	int32 GetPort() const { return CurrentPort; }
 
-	/** Event fired when data is received from Arduino */
+	/** Event fired when data is received from Arduino (legacy, same as OnLineReceived) */
 	UPROPERTY(BlueprintAssignable, Category = "Arduino|TCP|Events")
 	FOnTcpDataReceived OnDataReceived;
+
+	/** Event fired when raw bytes are received from Arduino (before line parsing) */
+	UPROPERTY(BlueprintAssignable, Category = "Arduino|TCP|Events")
+	FOnTcpByteReceived OnByteReceived;
+
+	/** Event fired when a complete line is received from Arduino (parsed by LineEnding) */
+	UPROPERTY(BlueprintAssignable, Category = "Arduino|TCP|Events")
+	FOnTcpLineReceived OnLineReceived;
 
 	/** Event fired when connection status changes */
 	UPROPERTY(BlueprintAssignable, Category = "Arduino|TCP|Events")
@@ -111,8 +121,11 @@ private:
 	/** Buffer for incomplete lines */
 	FString ReceiveBuffer;
 
-	/** Thread-safe queue for received data */
+	/** Thread-safe queue for received lines */
 	TQueue<FString> ReceivedDataQueue;
+
+	/** Thread-safe queue for received raw bytes */
+	TQueue<TArray<uint8>> ReceivedBytesQueue;
 
 	/** Critical section for thread safety */
 	FCriticalSection DataCriticalSection;

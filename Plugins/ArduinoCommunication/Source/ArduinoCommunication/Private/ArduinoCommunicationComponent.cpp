@@ -43,6 +43,8 @@ void UArduinoCommunicationComponent::SetupEventBindings()
 	if (SerialConnection)
 	{
 		SerialConnection->OnDataReceived.AddDynamic(this, &UArduinoCommunicationComponent::HandleSerialDataReceived);
+		SerialConnection->OnByteReceived.AddDynamic(this, &UArduinoCommunicationComponent::HandleSerialByteReceived);
+		SerialConnection->OnLineReceived.AddDynamic(this, &UArduinoCommunicationComponent::HandleSerialLineReceived);
 		SerialConnection->OnConnectionChanged.AddDynamic(this, &UArduinoCommunicationComponent::HandleSerialConnectionChanged);
 		SerialConnection->OnError.AddDynamic(this, &UArduinoCommunicationComponent::HandleSerialError);
 		SerialConnection->LineEnding = LineEnding;
@@ -51,6 +53,8 @@ void UArduinoCommunicationComponent::SetupEventBindings()
 	if (TcpConnection)
 	{
 		TcpConnection->OnDataReceived.AddDynamic(this, &UArduinoCommunicationComponent::HandleTcpDataReceived);
+		TcpConnection->OnByteReceived.AddDynamic(this, &UArduinoCommunicationComponent::HandleTcpByteReceived);
+		TcpConnection->OnLineReceived.AddDynamic(this, &UArduinoCommunicationComponent::HandleTcpLineReceived);
 		TcpConnection->OnConnectionChanged.AddDynamic(this, &UArduinoCommunicationComponent::HandleTcpConnectionChanged);
 		TcpConnection->OnError.AddDynamic(this, &UArduinoCommunicationComponent::HandleTcpError);
 		TcpConnection->LineEnding = LineEnding;
@@ -160,6 +164,16 @@ void UArduinoCommunicationComponent::HandleSerialDataReceived(const FString& Dat
 	OnDataReceived.Broadcast(Data);
 }
 
+void UArduinoCommunicationComponent::HandleSerialByteReceived(const TArray<uint8>& Bytes)
+{
+	OnByteReceived.Broadcast(Bytes);
+}
+
+void UArduinoCommunicationComponent::HandleSerialLineReceived(const FString& Line)
+{
+	OnLineReceived.Broadcast(Line);
+}
+
 void UArduinoCommunicationComponent::HandleSerialConnectionChanged(bool bConnected)
 {
 	OnConnectionChanged.Broadcast(bConnected);
@@ -173,6 +187,16 @@ void UArduinoCommunicationComponent::HandleSerialError(const FString& ErrorMessa
 void UArduinoCommunicationComponent::HandleTcpDataReceived(const FString& Data)
 {
 	OnDataReceived.Broadcast(Data);
+}
+
+void UArduinoCommunicationComponent::HandleTcpByteReceived(const TArray<uint8>& Bytes)
+{
+	OnByteReceived.Broadcast(Bytes);
+}
+
+void UArduinoCommunicationComponent::HandleTcpLineReceived(const FString& Line)
+{
+	OnLineReceived.Broadcast(Line);
 }
 
 void UArduinoCommunicationComponent::HandleTcpConnectionChanged(bool bConnected)
