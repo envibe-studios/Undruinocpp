@@ -185,9 +185,42 @@ void UArduinoTcpClient::StartReceiveThread()
 	ReceiveThread = FRunnableThread::Create(ReceiveRunnable, TEXT("ArduinoTcpReceiveThread"));
 
 	// Set up timer to process received data on game thread
-	if (GEngine && GEngine->GetWorld())
+	// Try multiple methods to get a valid world for the timer
+	UWorld* World = nullptr;
+
+	// First, try to get world from our outer chain
+	if (UObject* Outer = GetOuter())
 	{
-		GEngine->GetWorld()->GetTimerManager().SetTimer(
+		World = Outer->GetWorld();
+	}
+
+	// Fallback to GEngine's world
+	if (!World && GEngine)
+	{
+		World = GEngine->GetWorld();
+	}
+
+	// Last resort: iterate through world contexts
+	if (!World && GEngine)
+	{
+		for (const FWorldContext& Context : GEngine->GetWorldContexts())
+		{
+			if (Context.World() && Context.WorldType == EWorldType::Game)
+			{
+				World = Context.World();
+				break;
+			}
+			else if (Context.World() && Context.WorldType == EWorldType::PIE)
+			{
+				World = Context.World();
+				break;
+			}
+		}
+	}
+
+	if (World)
+	{
+		World->GetTimerManager().SetTimer(
 			ProcessTimerHandle,
 			this,
 			&UArduinoTcpClient::ProcessReceivedData,
@@ -195,16 +228,44 @@ void UArduinoTcpClient::StartReceiveThread()
 			true
 		);
 	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ArduinoTcp: Could not find a valid world for timer. Delegates may not fire."));
+	}
 }
 
 void UArduinoTcpClient::StopReceiveThread()
 {
 	bStopThread = true;
 
-	// Clear timer
-	if (GEngine && GEngine->GetWorld())
+	// Clear timer - try multiple methods to get a valid world
+	UWorld* World = nullptr;
+
+	if (UObject* Outer = GetOuter())
 	{
-		GEngine->GetWorld()->GetTimerManager().ClearTimer(ProcessTimerHandle);
+		World = Outer->GetWorld();
+	}
+
+	if (!World && GEngine)
+	{
+		World = GEngine->GetWorld();
+	}
+
+	if (!World && GEngine)
+	{
+		for (const FWorldContext& Context : GEngine->GetWorldContexts())
+		{
+			if (Context.World())
+			{
+				World = Context.World();
+				break;
+			}
+		}
+	}
+
+	if (World)
+	{
+		World->GetTimerManager().ClearTimer(ProcessTimerHandle);
 	}
 
 	if (ReceiveThread != nullptr)
