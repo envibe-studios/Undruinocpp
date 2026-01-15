@@ -471,3 +471,39 @@ bool UArduinoBlueprintLibrary::RunPacketParserTest(UObject* WorldContextObject, 
 
 	return bAllPassed;
 }
+
+// === Bitwise Operation Functions ===
+
+int32 UArduinoBlueprintLibrary::BitwiseShiftLeft(int32 Value, int32 Shift)
+{
+	// Clamp shift to valid range (0-31 for int32)
+	Shift = FMath::Clamp(Shift, 0, 31);
+	return Value << Shift;
+}
+
+int32 UArduinoBlueprintLibrary::BitwiseShiftRight(int32 Value, int32 Shift)
+{
+	// Clamp shift to valid range (0-31 for int32)
+	Shift = FMath::Clamp(Shift, 0, 31);
+	return Value >> Shift;
+}
+
+int32 UArduinoBlueprintLibrary::BitwiseAND(int32 A, int32 B)
+{
+	return A & B;
+}
+
+int32 UArduinoBlueprintLibrary::BitwiseOR(int32 A, int32 B)
+{
+	return A | B;
+}
+
+int32 UArduinoBlueprintLibrary::BitwiseXOR(int32 A, int32 B)
+{
+	return A ^ B;
+}
+
+int32 UArduinoBlueprintLibrary::BitwiseNOT(int32 Value)
+{
+	return ~Value;
+}
