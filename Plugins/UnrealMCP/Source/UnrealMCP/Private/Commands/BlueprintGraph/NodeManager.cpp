@@ -5,6 +5,7 @@
 #include "Commands/BlueprintGraph/Nodes/CastingNodes.h"
 #include "Commands/BlueprintGraph/Nodes/AnimationNodes.h"
 #include "Commands/BlueprintGraph/Nodes/SpecializedNodes.h"
+#include "Commands/BlueprintGraph/Nodes/MathNodes.h"
 #include "Engine/Blueprint.h"
 #include "EdGraph/EdGraph.h"
 #include "EdGraphSchema_K2.h"
@@ -207,6 +208,31 @@ TSharedPtr<FJsonObject> FBlueprintNodeManager::AddNode(const TSharedPtr<FJsonObj
 	else if (NodeType.Equals(TEXT("Knot"), ESearchCase::IgnoreCase))
 	{
 		NewNode = FSpecializedNodeCreator::CreateKnotNode(Graph, NodeParams);
+	}
+	// Math Nodes - Bitwise Operations
+	else if (NodeType.Equals(TEXT("BitwiseShiftLeft"), ESearchCase::IgnoreCase))
+	{
+		NewNode = FMathNodeCreator::CreateBitwiseShiftLeftNode(Graph, NodeParams);
+	}
+	else if (NodeType.Equals(TEXT("BitwiseShiftRight"), ESearchCase::IgnoreCase))
+	{
+		NewNode = FMathNodeCreator::CreateBitwiseShiftRightNode(Graph, NodeParams);
+	}
+	else if (NodeType.Equals(TEXT("BitwiseAnd"), ESearchCase::IgnoreCase))
+	{
+		NewNode = FMathNodeCreator::CreateBitwiseAndNode(Graph, NodeParams);
+	}
+	else if (NodeType.Equals(TEXT("BitwiseOr"), ESearchCase::IgnoreCase))
+	{
+		NewNode = FMathNodeCreator::CreateBitwiseOrNode(Graph, NodeParams);
+	}
+	else if (NodeType.Equals(TEXT("BitwiseXor"), ESearchCase::IgnoreCase))
+	{
+		NewNode = FMathNodeCreator::CreateBitwiseXorNode(Graph, NodeParams);
+	}
+	else if (NodeType.Equals(TEXT("BitwiseNot"), ESearchCase::IgnoreCase))
+	{
+		NewNode = FMathNodeCreator::CreateBitwiseNotNode(Graph, NodeParams);
 	}
 	// Event nodes (kept for backward compatibility - should use add_event_node)
 	else if (NodeType.Equals(TEXT("Event"), ESearchCase::IgnoreCase))
