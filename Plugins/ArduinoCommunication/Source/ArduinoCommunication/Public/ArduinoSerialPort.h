@@ -94,9 +94,21 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category = "Arduino|Serial|RawTap")
 	bool bShowRawTapOnScreen = false;
 
+	/** Enable poll mode fallback (reads on game thread timer instead of worker thread) */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category = "Arduino|Serial|RawTap")
+	bool bUsePollMode = false;
+
+	/** Enable verbose diagnostic logging for all serial operations */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category = "Arduino|Serial|RawTap")
+	bool bVerboseDiagnostics = true;
+
 	/** Set all raw tap options at once */
 	UFUNCTION(BlueprintCallable, Category = "Arduino|Serial|RawTap")
 	void SetRawTapOptions(bool bDump, bool bBypass, bool bOnScreen);
+
+	/** Set serial raw tap options including poll mode */
+	UFUNCTION(BlueprintCallable, Category = "Arduino|Serial|RawTap")
+	void SetSerialRawTapOptions(bool bDump, bool bBypass, bool bOnScreen, bool bPollMode, bool bVerbose);
 
 	/** Total bytes read from serial port since connection opened */
 	UPROPERTY(BlueprintReadOnly, Category = "Arduino|Serial|RawTap")
@@ -125,6 +137,14 @@ public:
 	/** Reset raw tap counters to zero */
 	UFUNCTION(BlueprintCallable, Category = "Arduino|Serial|RawTap")
 	void ResetRawTapCounters();
+
+	/** Number of zero-byte reads (read returned 0 bytes) */
+	UPROPERTY(BlueprintReadOnly, Category = "Arduino|Serial|RawTap")
+	int64 ZeroByteReads = 0;
+
+	/** Last error code from read operation (0 = success) */
+	UPROPERTY(BlueprintReadOnly, Category = "Arduino|Serial|RawTap")
+	int32 LastReadError = 0;
 
 protected:
 	/** Process incoming data on the game thread */
@@ -173,8 +193,23 @@ private:
 	/** Timer handle for processing received data */
 	FTimerHandle ProcessTimerHandle;
 
+	/** Timer handle for poll mode reading */
+	FTimerHandle PollTimerHandle;
+
+	/** Timer handle for unconditional 1-second stats logging */
+	FTimerHandle StatsTimerHandle;
+
 	/** Critical section for raw tap counter thread safety */
 	FCriticalSection RawTapCriticalSection;
+
+	/** Poll mode read function (called from game thread timer) */
+	void PollRead();
+
+	/** Update and display on-screen debug stats (called from game thread) */
+	void UpdateOnScreenDebug();
+
+	/** Log periodic stats unconditionally (called once per second from game thread) */
+	void LogPeriodicStats();
 
 	/** Process raw tap diagnostics for a read chunk (called from read thread) */
 	void ProcessRawTap(const uint8* Buffer, int32 BytesRead);

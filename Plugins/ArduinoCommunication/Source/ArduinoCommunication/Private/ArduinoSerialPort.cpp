@@ -30,6 +30,8 @@ UArduinoSerialPort::UArduinoSerialPort()
 	, ReadRunnable(nullptr)
 	, bStopThread(false)
 {
+	// ============== DIAGNOSTIC LOG ==============
+	UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: SerialPort object CREATED - RawTap diagnostics available"));
 }
 
 UArduinoSerialPort::~UArduinoSerialPort()
@@ -39,6 +41,15 @@ UArduinoSerialPort::~UArduinoSerialPort()
 
 bool UArduinoSerialPort::Open(const FString& PortName, int32 BaudRate)
 {
+	// ============== DIAGNOSTIC LOG ==============
+	UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: OpenPort START - Port=%s Baud=%d"), *PortName, BaudRate);
+	UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: RawTap settings - Dump=%s Bypass=%s OnScreen=%s PollMode=%s Verbose=%s"),
+		bDumpRawSerial ? TEXT("ON") : TEXT("OFF"),
+		bBypassParser ? TEXT("ON") : TEXT("OFF"),
+		bShowRawTapOnScreen ? TEXT("ON") : TEXT("OFF"),
+		bUsePollMode ? TEXT("ON") : TEXT("OFF"),
+		bVerboseDiagnostics ? TEXT("ON") : TEXT("OFF"));
+
 	if (bIsOpen)
 	{
 		Close();
@@ -86,6 +97,8 @@ bool UArduinoSerialPort::Open(const FString& PortName, int32 BaudRate)
 				break;
 		}
 		FString ErrorMsg = FString::Printf(TEXT("Failed to open port %s. %s"), *FormattedPort, *ErrorDetails);
+		// ============== DIAGNOSTIC LOG ==============
+		UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: OpenPort FAIL - Port=%s GetLastError=%d"), *FormattedPort, error);
 		UE_LOG(LogTemp, Error, TEXT("ArduinoSerial: %s"), *ErrorMsg);
 		OnError.Broadcast(ErrorMsg);
 		return false;
@@ -121,25 +134,51 @@ bool UArduinoSerialPort::Open(const FString& PortName, int32 BaudRate)
 		return false;
 	}
 
-	// Set timeouts
+	// Set timeouts - configured to return regularly for debugging
+	// ReadIntervalTimeout: max time between bytes (ms)
+	// ReadTotalTimeoutMultiplier: per-byte timeout multiplier
+	// ReadTotalTimeoutConstant: constant added to total timeout
 	COMMTIMEOUTS timeouts = { 0 };
-	timeouts.ReadIntervalTimeout = 50;
-	timeouts.ReadTotalTimeoutConstant = 50;
-	timeouts.ReadTotalTimeoutMultiplier = 10;
+	timeouts.ReadIntervalTimeout = 1;           // Return quickly between bytes
+	timeouts.ReadTotalTimeoutConstant = 10;     // 10ms constant timeout
+	timeouts.ReadTotalTimeoutMultiplier = 0;    // No per-byte multiplier
 	timeouts.WriteTotalTimeoutConstant = 50;
 	timeouts.WriteTotalTimeoutMultiplier = 10;
 
+	UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: COMMTIMEOUTS - ReadInterval=%d ReadConstant=%d ReadMult=%d WriteConstant=%d WriteMult=%d"),
+		timeouts.ReadIntervalTimeout, timeouts.ReadTotalTimeoutConstant, timeouts.ReadTotalTimeoutMultiplier,
+		timeouts.WriteTotalTimeoutConstant, timeouts.WriteTotalTimeoutMultiplier);
+
 	if (!SetCommTimeouts(hSerial, &timeouts))
 	{
+		DWORD error = GetLastError();
 		CloseHandle(hSerial);
-		FString ErrorMsg = TEXT("Failed to set serial port timeouts");
+		FString ErrorMsg = FString::Printf(TEXT("Failed to set serial port timeouts (error=%d)"), error);
 		UE_LOG(LogTemp, Error, TEXT("ArduinoSerial: %s"), *ErrorMsg);
 		OnError.Broadcast(ErrorMsg);
 		return false;
 	}
+	UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: SetCommTimeouts SUCCESS"));
 
-	// Clear any existing data
-	PurgeComm(hSerial, PURGE_RXCLEAR | PURGE_TXCLEAR);
+	// Clear any existing data in buffers
+	BOOL purgeResult = PurgeComm(hSerial, PURGE_RXCLEAR | PURGE_TXCLEAR);
+	UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: PurgeComm(RXCLEAR|TXCLEAR) result=%s err=%d"),
+		purgeResult ? TEXT("OK") : TEXT("FAIL"), purgeResult ? 0 : GetLastError());
+
+	// Get and log modem status (DTR/RTS/CTS/DSR)
+	DWORD modemStatus = 0;
+	if (GetCommModemStatus(hSerial, &modemStatus))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: ModemStatus CTS=%d DSR=%d RING=%d RLSD=%d"),
+			(modemStatus & MS_CTS_ON) ? 1 : 0,
+			(modemStatus & MS_DSR_ON) ? 1 : 0,
+			(modemStatus & MS_RING_ON) ? 1 : 0,
+			(modemStatus & MS_RLSD_ON) ? 1 : 0);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: GetCommModemStatus FAILED err=%d"), GetLastError());
+	}
 
 	SerialHandle = hSerial;
 	bIsOpen = true;
@@ -149,9 +188,11 @@ bool UArduinoSerialPort::Open(const FString& PortName, int32 BaudRate)
 	// Reset raw tap counters for fresh connection
 	ResetRawTapCounters();
 
+	// ============== DIAGNOSTIC LOG ==============
+	UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: OpenPort SUCCESS - Port=%s Baud=%d Handle=0x%p"), *PortName, BaudRate, hSerial);
 	UE_LOG(LogTemp, Log, TEXT("ArduinoSerial: Opened port %s at %d baud"), *PortName, BaudRate);
 
-	// Start the read thread
+	// Start the read thread (or poll mode)
 	StartReadThread();
 
 	// Broadcast connection event
@@ -240,9 +281,11 @@ bool UArduinoSerialPort::Open(const FString& PortName, int32 BaudRate)
 	// Reset raw tap counters for fresh connection
 	ResetRawTapCounters();
 
+	// ============== DIAGNOSTIC LOG ==============
+	UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: OpenPort SUCCESS - Port=%s Baud=%d fd=%d"), *PortName, BaudRate, fd);
 	UE_LOG(LogTemp, Log, TEXT("ArduinoSerial: Opened port %s at %d baud"), *PortName, BaudRate);
 
-	// Start the read thread
+	// Start the read thread (or poll mode)
 	StartReadThread();
 
 	// Broadcast connection event
@@ -426,9 +469,10 @@ TArray<FString> UArduinoSerialPort::GetAvailablePorts()
 
 void UArduinoSerialPort::StartReadThread()
 {
+	// ============== DIAGNOSTIC LOG ==============
+	UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: StartReadThread - PollMode=%s"), bUsePollMode ? TEXT("ON") : TEXT("OFF"));
+
 	bStopThread = false;
-	ReadRunnable = new FSerialReadRunnable(this);
-	ReadThread = FRunnableThread::Create(ReadRunnable, TEXT("ArduinoSerialReadThread"));
 
 	// Set up timer to process received data on game thread
 	// Try multiple methods to get a valid world for the timer
@@ -474,24 +518,81 @@ void UArduinoSerialPort::StartReadThread()
 		}
 	}
 
-	if (World)
+	if (!World)
 	{
-		World->GetTimerManager().SetTimer(
-			ProcessTimerHandle,
-			this,
-			&UArduinoSerialPort::ProcessReceivedData,
-			0.016f, // ~60 FPS
-			true
-		);
+		UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: WARNING - No valid world found for timers! Delegates and on-screen debug may not work."));
+	}
+
+	if (bUsePollMode)
+	{
+		// POLL MODE: Read on game thread timer instead of worker thread
+		UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: Starting POLL MODE - Reading on game thread timer (10ms interval)"));
+
+		if (World)
+		{
+			// Poll timer - reads serial data every 10ms on game thread
+			World->GetTimerManager().SetTimer(
+				PollTimerHandle,
+				this,
+				&UArduinoSerialPort::PollRead,
+				0.010f, // 10ms poll interval
+				true
+			);
+			UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: Poll timer STARTED"));
+
+			// Process timer for data/delegates
+			World->GetTimerManager().SetTimer(
+				ProcessTimerHandle,
+				this,
+				&UArduinoSerialPort::ProcessReceivedData,
+				0.016f, // ~60 FPS
+				true
+			);
+			UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: Process timer STARTED"));
+		}
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ArduinoSerial: Could not find a valid world for timer. Delegates may not fire."));
+		// THREAD MODE: Read on worker thread (original behavior)
+		UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: Starting THREAD MODE - Reading on worker thread"));
+
+		ReadRunnable = new FSerialReadRunnable(this);
+		ReadThread = FRunnableThread::Create(ReadRunnable, TEXT("ArduinoSerialReadThread"));
+		UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: Read thread STARTED"));
+
+		if (World)
+		{
+			World->GetTimerManager().SetTimer(
+				ProcessTimerHandle,
+				this,
+				&UArduinoSerialPort::ProcessReceivedData,
+				0.016f, // ~60 FPS
+				true
+			);
+			UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: Process timer STARTED"));
+		}
 	}
+
+	// ============== UNCONDITIONAL 1-SECOND STATS TIMER ==============
+	// This timer runs regardless of bShowRawTapOnScreen to confirm pump activity
+	if (World)
+	{
+		World->GetTimerManager().SetTimer(
+			StatsTimerHandle,
+			this,
+			&UArduinoSerialPort::LogPeriodicStats,
+			1.0f, // Once per second
+			true
+		);
+		UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: 1-second stats timer STARTED (unconditional)"));
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: ========== READ PUMP STARTED =========="));
 }
 
 void UArduinoSerialPort::StopReadThread()
 {
+	UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: StopReadThread - Stopping read operations"));
 	bStopThread = true;
 
 	// Clear timer - try multiple methods to get a valid world
@@ -522,6 +623,8 @@ void UArduinoSerialPort::StopReadThread()
 	if (World)
 	{
 		World->GetTimerManager().ClearTimer(ProcessTimerHandle);
+		World->GetTimerManager().ClearTimer(PollTimerHandle);
+		World->GetTimerManager().ClearTimer(StatsTimerHandle);
 	}
 
 	if (ReadThread != nullptr)
@@ -536,12 +639,14 @@ void UArduinoSerialPort::StopReadThread()
 		delete ReadRunnable;
 		ReadRunnable = nullptr;
 	}
+
+	UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: StopReadThread - Final stats: %s"), *GetRawTapStats());
 }
 
 FString UArduinoSerialPort::GetRawTapStats() const
 {
-	return FString::Printf(TEXT("BytesReadTotal=%lld ReadsCount=%lld LastReadSize=%d StartByteHits=%lld LastByteTime=%.3f"),
-		BytesReadTotal, ReadsCount, LastReadSize, StartByteHits, LastByteTime);
+	return FString::Printf(TEXT("BytesReadTotal=%lld ReadsCount=%lld LastReadSize=%d StartByteHits=%lld ZeroByteReads=%lld LastReadError=%d LastByteTime=%.3f"),
+		BytesReadTotal, ReadsCount, LastReadSize, StartByteHits, ZeroByteReads, LastReadError, LastByteTime);
 }
 
 void UArduinoSerialPort::ResetRawTapCounters()
@@ -551,7 +656,10 @@ void UArduinoSerialPort::ResetRawTapCounters()
 	ReadsCount = 0;
 	LastReadSize = 0;
 	StartByteHits = 0;
+	ZeroByteReads = 0;
+	LastReadError = 0;
 	LastByteTime = 0.0;
+	UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: Counters RESET"));
 }
 
 void UArduinoSerialPort::SetRawTapOptions(bool bDump, bool bBypass, bool bOnScreen)
@@ -560,10 +668,26 @@ void UArduinoSerialPort::SetRawTapOptions(bool bDump, bool bBypass, bool bOnScre
 	bBypassParser = bBypass;
 	bShowRawTapOnScreen = bOnScreen;
 
-	UE_LOG(LogTemp, Log, TEXT("ArduinoSerial: RawTap options set - Dump=%s Bypass=%s OnScreen=%s"),
-		bDumpRawSerial ? TEXT("true") : TEXT("false"),
-		bBypassParser ? TEXT("true") : TEXT("false"),
-		bShowRawTapOnScreen ? TEXT("true") : TEXT("false"));
+	UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: SetRawTapOptions - Dump=%s Bypass=%s OnScreen=%s"),
+		bDump ? TEXT("ON") : TEXT("OFF"),
+		bBypass ? TEXT("ON") : TEXT("OFF"),
+		bOnScreen ? TEXT("ON") : TEXT("OFF"));
+}
+
+void UArduinoSerialPort::SetSerialRawTapOptions(bool bDump, bool bBypass, bool bOnScreen, bool bPollMode, bool bVerbose)
+{
+	bDumpRawSerial = bDump;
+	bBypassParser = bBypass;
+	bShowRawTapOnScreen = bOnScreen;
+	bUsePollMode = bPollMode;
+	bVerboseDiagnostics = bVerbose;
+
+	UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: SetSerialRawTapOptions - Dump=%s Bypass=%s OnScreen=%s PollMode=%s Verbose=%s"),
+		bDump ? TEXT("ON") : TEXT("OFF"),
+		bBypass ? TEXT("ON") : TEXT("OFF"),
+		bOnScreen ? TEXT("ON") : TEXT("OFF"),
+		bPollMode ? TEXT("ON") : TEXT("OFF"),
+		bVerbose ? TEXT("ON") : TEXT("OFF"));
 }
 
 FString UArduinoSerialPort::FormatHexDump(const uint8* Buffer, int32 BytesRead, int32 MaxBytes)
@@ -604,12 +728,16 @@ FString UArduinoSerialPort::FormatAsciiView(const uint8* Buffer, int32 BytesRead
 void UArduinoSerialPort::ProcessRawTap(const uint8* Buffer, int32 BytesRead)
 {
 	// Update counters (thread-safe)
+	int64 LocalReadsCount = 0;
+	int64 LocalBytesTotal = 0;
+	int64 LocalStartHits = 0;
 	{
 		FScopeLock Lock(&RawTapCriticalSection);
 		BytesReadTotal += BytesRead;
 		ReadsCount++;
 		LastReadSize = BytesRead;
 		LastByteTime = FPlatformTime::Seconds();
+		LastReadError = 0; // Successful read
 
 		// Count 0xAA start bytes
 		for (int32 i = 0; i < BytesRead; ++i)
@@ -619,37 +747,44 @@ void UArduinoSerialPort::ProcessRawTap(const uint8* Buffer, int32 BytesRead)
 				StartByteHits++;
 			}
 		}
+
+		LocalReadsCount = ReadsCount;
+		LocalBytesTotal = BytesReadTotal;
+		LocalStartHits = StartByteHits;
 	}
 
-	// Log stats periodically (every read when dumping, otherwise every 100 reads)
-	bool bShouldLogStats = bDumpRawSerial || ((ReadsCount % 100) == 0);
+	// Always log stats with Warning level (visible by default in Output Log)
+	// Log every read when dumping, otherwise every 50 reads, always first 5 reads
+	bool bShouldLogStats = bDumpRawSerial || bVerboseDiagnostics || (LocalReadsCount <= 5) || ((LocalReadsCount % 50) == 0);
 	if (bShouldLogStats)
 	{
-		UE_LOG(LogTemp, Log, TEXT("ArduinoRawTap: bytesReadTotal=%lld readsCount=%lld lastReadSize=%d startByteHits=%lld"),
-			BytesReadTotal, ReadsCount, LastReadSize, StartByteHits);
+		UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: [READ #%lld] bytesRead=%d bytesTotal=%lld startByteHits=%lld"),
+			LocalReadsCount, BytesRead, LocalBytesTotal, LocalStartHits);
 	}
 
-	// Hex dump if enabled
+	// Hex dump if enabled - use Warning level for visibility
 	if (bDumpRawSerial)
 	{
 		FString HexDump = FormatHexDump(Buffer, BytesRead);
 		FString AsciiView = FormatAsciiView(Buffer, BytesRead);
-		UE_LOG(LogTemp, Log, TEXT("RAW[%d]: %s"), BytesRead, *HexDump);
-		UE_LOG(LogTemp, Log, TEXT("ASCII: %s"), *AsciiView);
+		UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: RAW[%d]: %s"), BytesRead, *HexDump);
+		UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: ASCII: %s"), *AsciiView);
 	}
 
 	// On-screen debug display (must execute on game thread)
+	// Use a stable key (1001) so it updates in place instead of scrolling
 	if (bShowRawTapOnScreen && GEngine)
 	{
-		FString DebugStr = FString::Printf(TEXT("RawTap: bytes=%lld reads=%lld last=%d 0xAA=%lld"),
-			BytesReadTotal, ReadsCount, LastReadSize, StartByteHits);
+		FString DebugStr = FString::Printf(TEXT("ArduinoRawTap: bytes=%lld reads=%lld last=%d 0xAA=%lld"),
+			LocalBytesTotal, LocalReadsCount, BytesRead, LocalStartHits);
 
-		// Queue for game thread display
+		// Queue for game thread display with stable key
 		AsyncTask(ENamedThreads::GameThread, [DebugStr]()
 		{
 			if (GEngine)
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Cyan, DebugStr);
+				// Key 1001 = stable position, Duration 2.0 = visible for 2 seconds
+				GEngine->AddOnScreenDebugMessage(1001, 2.0f, FColor::Cyan, DebugStr);
 			}
 		});
 	}
@@ -670,6 +805,189 @@ void UArduinoSerialPort::ProcessReceivedData()
 	{
 		OnDataReceived.Broadcast(Data);
 		OnLineReceived.Broadcast(Data);
+	}
+
+	// Update on-screen debug if enabled (this runs on game thread)
+	if (bShowRawTapOnScreen && GEngine)
+	{
+		FString DebugStr = FString::Printf(TEXT("ArduinoRawTap: bytes=%lld reads=%lld last=%d 0xAA=%lld zeros=%lld err=%d"),
+			BytesReadTotal, ReadsCount, LastReadSize, StartByteHits, ZeroByteReads, LastReadError);
+		GEngine->AddOnScreenDebugMessage(1001, 0.1f, FColor::Cyan, DebugStr);
+	}
+}
+
+void UArduinoSerialPort::PollRead()
+{
+	// POLL MODE: Read serial data on game thread (called from timer)
+	if (!bIsOpen || SerialHandle == nullptr)
+	{
+		return;
+	}
+
+	static int64 PollTickCount = 0;
+	PollTickCount++;
+
+	// Log poll ticks when verbose
+	if (bVerboseDiagnostics && (PollTickCount <= 5 || (PollTickCount % 100) == 0))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: PollTick #%lld"), PollTickCount);
+	}
+
+#if PLATFORM_WINDOWS
+	uint8 ReadBuffer[256];
+	HANDLE hSerial = (HANDLE)SerialHandle;
+
+	if (hSerial == nullptr || hSerial == INVALID_HANDLE_VALUE)
+	{
+		return;
+	}
+
+	DWORD bytesRead = 0;
+	BOOL result = ReadFile(hSerial, ReadBuffer, sizeof(ReadBuffer) - 1, &bytesRead, NULL);
+	DWORD lastError = result ? 0 : GetLastError();
+
+	if (bVerboseDiagnostics && (PollTickCount <= 5 || bytesRead > 0))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: PollRead result=%s bytes=%d err=%d"),
+			result ? TEXT("OK") : TEXT("FAIL"), bytesRead, lastError);
+	}
+
+	if (result && bytesRead > 0)
+	{
+		// Process raw tap diagnostics
+		ProcessRawTap(ReadBuffer, static_cast<int32>(bytesRead));
+
+		// Enqueue raw bytes for OnByteReceived
+		TArray<uint8> RawBytes;
+		RawBytes.Append(ReadBuffer, bytesRead);
+		ReceivedBytesQueue.Enqueue(RawBytes);
+
+		// If bypass parser mode is enabled, skip all line parsing
+		if (!bBypassParser)
+		{
+			ReadBuffer[bytesRead] = 0;
+			FUTF8ToTCHAR Converter(reinterpret_cast<const char*>(ReadBuffer), bytesRead);
+			FString ReceivedText(Converter.Length(), Converter.Get());
+			ReceiveBuffer += ReceivedText;
+
+			FString Line;
+			while (ReceiveBuffer.Split(LineEnding, &Line, &ReceiveBuffer))
+			{
+				if (!Line.IsEmpty())
+				{
+					ReceivedDataQueue.Enqueue(Line);
+				}
+			}
+		}
+	}
+	else if (result && bytesRead == 0)
+	{
+		FScopeLock Lock(&RawTapCriticalSection);
+		ZeroByteReads++;
+		ReadsCount++;
+	}
+	else if (!result)
+	{
+		FScopeLock Lock(&RawTapCriticalSection);
+		LastReadError = static_cast<int32>(lastError);
+		ReadsCount++;
+	}
+
+#elif PLATFORM_LINUX || PLATFORM_MAC
+	uint8 ReadBuffer[256];
+	int fd = static_cast<int>(reinterpret_cast<intptr_t>(SerialHandle));
+
+	if (fd < 0)
+	{
+		return;
+	}
+
+	ssize_t bytesRead = read(fd, ReadBuffer, sizeof(ReadBuffer) - 1);
+	int lastError = (bytesRead < 0) ? errno : 0;
+
+	if (bVerboseDiagnostics && (PollTickCount <= 5 || bytesRead > 0))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: PollRead bytes=%d err=%d"),
+			(int)bytesRead, lastError);
+	}
+
+	if (bytesRead > 0)
+	{
+		ProcessRawTap(ReadBuffer, static_cast<int32>(bytesRead));
+
+		TArray<uint8> RawBytes;
+		RawBytes.Append(ReadBuffer, bytesRead);
+		ReceivedBytesQueue.Enqueue(RawBytes);
+
+		if (!bBypassParser)
+		{
+			ReadBuffer[bytesRead] = 0;
+			FUTF8ToTCHAR Converter(reinterpret_cast<const char*>(ReadBuffer), bytesRead);
+			FString ReceivedText(Converter.Length(), Converter.Get());
+			ReceiveBuffer += ReceivedText;
+
+			FString Line;
+			while (ReceiveBuffer.Split(LineEnding, &Line, &ReceiveBuffer))
+			{
+				if (!Line.IsEmpty())
+				{
+					ReceivedDataQueue.Enqueue(Line);
+				}
+			}
+		}
+	}
+	else if (bytesRead == 0)
+	{
+		FScopeLock Lock(&RawTapCriticalSection);
+		ZeroByteReads++;
+		ReadsCount++;
+	}
+	else if (bytesRead < 0 && lastError != EAGAIN && lastError != EWOULDBLOCK)
+	{
+		FScopeLock Lock(&RawTapCriticalSection);
+		LastReadError = lastError;
+		ReadsCount++;
+	}
+#endif
+}
+
+void UArduinoSerialPort::UpdateOnScreenDebug()
+{
+	// Called from game thread timer to update on-screen stats
+	if (bShowRawTapOnScreen && GEngine)
+	{
+		FString DebugStr = FString::Printf(TEXT("ArduinoRawTap: bytes=%lld reads=%lld last=%d 0xAA=%lld zeros=%lld err=%d"),
+			BytesReadTotal, ReadsCount, LastReadSize, StartByteHits, ZeroByteReads, LastReadError);
+		GEngine->AddOnScreenDebugMessage(1001, 1.1f, FColor::Cyan, DebugStr);
+	}
+}
+
+void UArduinoSerialPort::LogPeriodicStats()
+{
+	// ============== UNCONDITIONAL 1-SECOND STATS ==============
+	// This runs every second regardless of settings to confirm the pump is alive
+	static int64 StatsTickCount = 0;
+	StatsTickCount++;
+
+	double TimeSinceLastByte = (LastByteTime > 0.0) ? (FPlatformTime::Seconds() - LastByteTime) : -1.0;
+
+	// Always log with Warning level for visibility
+	UE_LOG(LogTemp, Warning, TEXT("RAWTAP STATS [%lld]: bytesTotal=%lld readsCount=%lld lastReadSize=%d startByteHits=%lld zeroByteReads=%lld lastErr=%d timeSinceLastByte=%.2fs"),
+		StatsTickCount,
+		BytesReadTotal,
+		ReadsCount,
+		LastReadSize,
+		StartByteHits,
+		ZeroByteReads,
+		LastReadError,
+		TimeSinceLastByte);
+
+	// Always update on-screen display if enabled
+	if (bShowRawTapOnScreen && GEngine)
+	{
+		FString DebugStr = FString::Printf(TEXT("RawTap[%lld]: bytes=%lld reads=%lld last=%d 0xAA=%lld zeros=%lld err=%d since=%.1fs"),
+			StatsTickCount, BytesReadTotal, ReadsCount, LastReadSize, StartByteHits, ZeroByteReads, LastReadError, TimeSinceLastByte);
+		GEngine->AddOnScreenDebugMessage(1001, 1.1f, FColor::Cyan, DebugStr);
 	}
 }
 
@@ -693,20 +1011,47 @@ bool FSerialReadRunnable::Init()
 
 uint32 FSerialReadRunnable::Run()
 {
+	UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: ========== READ THREAD STARTED =========="));
+	UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: Thread ID=%d Owner=%p bIsOpen=%s"),
+		FPlatformTLS::GetCurrentThreadId(), Owner, (Owner && Owner->bIsOpen) ? TEXT("true") : TEXT("false"));
+
 #if PLATFORM_WINDOWS
 	// Use uint8 buffer to treat as raw bytes (not char/string)
 	uint8 ReadBuffer[256];
+	int64 ReadTickCount = 0;
+	double LastLogTime = FPlatformTime::Seconds();
 
 	while (bRunning && Owner && Owner->bIsOpen && !Owner->bStopThread)
 	{
 		HANDLE hSerial = (HANDLE)Owner->SerialHandle;
 		if (hSerial == nullptr || hSerial == INVALID_HANDLE_VALUE)
 		{
+			UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: Read thread - Invalid handle (nullptr=%s INVALID=%s), exiting"),
+				(hSerial == nullptr) ? TEXT("yes") : TEXT("no"),
+				(hSerial == INVALID_HANDLE_VALUE) ? TEXT("yes") : TEXT("no"));
 			break;
 		}
 
 		DWORD bytesRead = 0;
 		BOOL result = ReadFile(hSerial, ReadBuffer, sizeof(ReadBuffer) - 1, &bytesRead, NULL);
+		DWORD lastError = result ? 0 : GetLastError();
+		ReadTickCount++;
+
+		// ============== LOG EVERY READ ATTEMPT ==============
+		// Log first 10 reads, then every 100th, and always when bytes > 0 or error
+		double Now = FPlatformTime::Seconds();
+		bool bShouldLog = (ReadTickCount <= 10) ||
+		                  ((ReadTickCount % 100) == 0) ||
+		                  (bytesRead > 0) ||
+		                  (!result) ||
+		                  (Now - LastLogTime >= 1.0);  // At least once per second
+
+		if (bShouldLog)
+		{
+			LastLogTime = Now;
+			UE_LOG(LogTemp, Warning, TEXT("SERIAL READ: tick=%lld ok=%d bytes=%d err=%d"),
+				ReadTickCount, result ? 1 : 0, bytesRead, lastError);
+		}
 
 		if (result && bytesRead > 0)
 		{
@@ -744,23 +1089,69 @@ uint32 FSerialReadRunnable::Run()
 				}
 			}
 		}
+		else if (result && bytesRead == 0)
+		{
+			// Zero-byte read - track this
+			FScopeLock Lock(&Owner->RawTapCriticalSection);
+			Owner->ZeroByteReads++;
+			Owner->ReadsCount++;
+		}
+		else if (!result)
+		{
+			// Read error - track this
+			FScopeLock Lock(&Owner->RawTapCriticalSection);
+			Owner->LastReadError = static_cast<int32>(lastError);
+			Owner->ReadsCount++;
+		}
 
 		// Small sleep to prevent busy waiting
 		FPlatformProcess::Sleep(0.001f);
 	}
+
+	// Log exit reason
+	UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: ========== READ THREAD EXITING =========="));
+	UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: Exit reason: bRunning=%s Owner=%p bIsOpen=%s bStopThread=%s totalTicks=%lld"),
+		bRunning ? TEXT("true") : TEXT("false"),
+		Owner,
+		(Owner && Owner->bIsOpen) ? TEXT("true") : TEXT("false"),
+		(Owner && Owner->bStopThread) ? TEXT("true") : TEXT("false"),
+		ReadTickCount);
+
 #elif PLATFORM_LINUX || PLATFORM_MAC
 	// Use uint8 buffer to treat as raw bytes (not char/string)
 	uint8 ReadBuffer[256];
+	int64 ReadTickCount = 0;
+	double LastLogTime = FPlatformTime::Seconds();
+
+	UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: ========== READ THREAD STARTED (Linux/Mac) =========="));
 
 	while (bRunning && Owner && Owner->bIsOpen && !Owner->bStopThread)
 	{
 		int fd = static_cast<int>(reinterpret_cast<intptr_t>(Owner->SerialHandle));
 		if (fd < 0)
 		{
+			UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: Read thread - Invalid fd=%d, exiting"), fd);
 			break;
 		}
 
 		ssize_t bytesRead = read(fd, ReadBuffer, sizeof(ReadBuffer) - 1);
+		int lastError = (bytesRead < 0) ? errno : 0;
+		ReadTickCount++;
+
+		// ============== LOG EVERY READ ATTEMPT ==============
+		double Now = FPlatformTime::Seconds();
+		bool bShouldLog = (ReadTickCount <= 10) ||
+		                  ((ReadTickCount % 100) == 0) ||
+		                  (bytesRead > 0) ||
+		                  (lastError != 0 && lastError != EAGAIN && lastError != EWOULDBLOCK) ||
+		                  (Now - LastLogTime >= 1.0);
+
+		if (bShouldLog)
+		{
+			LastLogTime = Now;
+			UE_LOG(LogTemp, Warning, TEXT("SERIAL READ: tick=%lld bytes=%d err=%d"),
+				ReadTickCount, (int)bytesRead, lastError);
+		}
 
 		if (bytesRead > 0)
 		{
@@ -798,10 +1189,33 @@ uint32 FSerialReadRunnable::Run()
 				}
 			}
 		}
+		else if (bytesRead == 0)
+		{
+			// Zero-byte read - track this
+			FScopeLock Lock(&Owner->RawTapCriticalSection);
+			Owner->ZeroByteReads++;
+			Owner->ReadsCount++;
+		}
+		else if (bytesRead < 0 && lastError != EAGAIN && lastError != EWOULDBLOCK)
+		{
+			// Read error (not just "would block") - track this
+			FScopeLock Lock(&Owner->RawTapCriticalSection);
+			Owner->LastReadError = lastError;
+			Owner->ReadsCount++;
+		}
 
 		// Small sleep to prevent busy waiting
 		FPlatformProcess::Sleep(0.001f);
 	}
+
+	// Log exit reason
+	UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: ========== READ THREAD EXITING (Linux/Mac) =========="));
+	UE_LOG(LogTemp, Warning, TEXT("ArduinoRawTap: Exit reason: bRunning=%s Owner=%p bIsOpen=%s bStopThread=%s totalTicks=%lld"),
+		bRunning ? TEXT("true") : TEXT("false"),
+		Owner,
+		(Owner && Owner->bIsOpen) ? TEXT("true") : TEXT("false"),
+		(Owner && Owner->bStopThread) ? TEXT("true") : TEXT("false"),
+		ReadTickCount);
 #endif
 
 	return 0;
