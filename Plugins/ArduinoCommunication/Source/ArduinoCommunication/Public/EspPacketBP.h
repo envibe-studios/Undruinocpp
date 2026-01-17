@@ -86,14 +86,16 @@ struct ARDUINOCOMMUNICATION_API FJackStateData
 
 /**
  * Weapon Tag payload data
- * Len = 6: [Side (1), UID (4, LE), Button (1)]
+ * Len = 6: [Side (1), UID (4, LE), Present (1)]
+ * Side: 0 = PORT, 1 = STARBOARD
+ * Present: 1 = inserted, 0 = removed
  */
 USTRUCT(BlueprintType)
 struct ARDUINOCOMMUNICATION_API FWeaponTagData
 {
 	GENERATED_BODY()
 
-	/** Which side (0 = left, 1 = right, etc.) */
+	/** Which side (0 = PORT, 1 = STARBOARD) */
 	UPROPERTY(BlueprintReadOnly, Category = "ESP|Payload")
 	uint8 Side = 0;
 
@@ -101,13 +103,13 @@ struct ARDUINOCOMMUNICATION_API FWeaponTagData
 	UPROPERTY(BlueprintReadOnly, Category = "ESP|Payload")
 	int64 UID = 0;
 
-	/** Button state or ID */
+	/** Present state: true = inserted, false = removed */
 	UPROPERTY(BlueprintReadOnly, Category = "ESP|Payload")
-	uint8 Button = 0;
+	bool bPresent = false;
 
 	FWeaponTagData() = default;
-	FWeaponTagData(uint8 InSide, int64 InUID, uint8 InButton)
-		: Side(InSide), UID(InUID), Button(InButton) {}
+	FWeaponTagData(uint8 InSide, int64 InUID, bool InPresent)
+		: Side(InSide), UID(InUID), bPresent(InPresent) {}
 };
 
 /**
@@ -133,32 +135,43 @@ struct ARDUINOCOMMUNICATION_API FReloadTagData
 
 /**
  * Weapon IMU payload data
- * Len = 6: [Side (1), Pitch (2, LE signed), Yaw (2, LE signed), Buttons (1)]
+ * Len = 10: [Side (1), qx_i16 (2, LE), qy_i16 (2, LE), qz_i16 (2, LE), qw_i16 (2, LE), Buttons (1)]
+ * Side: 0 = PORT, 1 = STARBOARD
+ * Quaternion components: int16 values divided by 32767 to get float range [-1.0, 1.0]
+ * Buttons: bitfield (bit0 = trigger pressed)
  */
 USTRUCT(BlueprintType)
 struct ARDUINOCOMMUNICATION_API FWeaponImuData
 {
 	GENERATED_BODY()
 
-	/** Which side (0 = left, 1 = right, etc.) */
+	/** Which side (0 = PORT, 1 = STARBOARD) */
 	UPROPERTY(BlueprintReadOnly, Category = "ESP|Payload")
 	uint8 Side = 0;
 
-	/** Pitch angle (signed, typically -180 to 180 scaled) */
+	/** Quaternion X component (normalized, -1.0 to 1.0) */
 	UPROPERTY(BlueprintReadOnly, Category = "ESP|Payload")
-	int32 Pitch = 0;
+	float QuatX = 0.0f;
 
-	/** Yaw angle (signed, typically -180 to 180 scaled) */
+	/** Quaternion Y component (normalized, -1.0 to 1.0) */
 	UPROPERTY(BlueprintReadOnly, Category = "ESP|Payload")
-	int32 Yaw = 0;
+	float QuatY = 0.0f;
 
-	/** Button bitmask */
+	/** Quaternion Z component (normalized, -1.0 to 1.0) */
+	UPROPERTY(BlueprintReadOnly, Category = "ESP|Payload")
+	float QuatZ = 0.0f;
+
+	/** Quaternion W component (normalized, -1.0 to 1.0) */
+	UPROPERTY(BlueprintReadOnly, Category = "ESP|Payload")
+	float QuatW = 0.0f;
+
+	/** Button bitmask (bit0 = trigger pressed) */
 	UPROPERTY(BlueprintReadOnly, Category = "ESP|Payload")
 	uint8 Buttons = 0;
 
 	FWeaponImuData() = default;
-	FWeaponImuData(uint8 InSide, int32 InPitch, int32 InYaw, uint8 InButtons)
-		: Side(InSide), Pitch(InPitch), Yaw(InYaw), Buttons(InButtons) {}
+	FWeaponImuData(uint8 InSide, float InQuatX, float InQuatY, float InQuatZ, float InQuatW, uint8 InButtons)
+		: Side(InSide), QuatX(InQuatX), QuatY(InQuatY), QuatZ(InQuatZ), QuatW(InQuatW), Buttons(InButtons) {}
 };
 
 // ============================================================================
@@ -277,7 +290,9 @@ public:
 
 	/**
 	 * Parse Weapon Tag payload (Type = 4)
-	 * Expected Len = 6: [Side, UID (4 bytes LE), Button]
+	 * Expected Len = 6: [Side, UID (4 bytes LE), Present]
+	 * Side: 0 = PORT, 1 = STARBOARD
+	 * Present: 1 = inserted, 0 = removed
 	 * @param Payload - Raw payload bytes from packet
 	 * @param OutData - Parsed weapon tag data
 	 * @return true if payload was valid and parsed successfully
@@ -299,12 +314,15 @@ public:
 
 	/**
 	 * Parse Weapon IMU payload (Type = 6)
-	 * Expected Len = 6: [Side, Pitch_L, Pitch_H, Yaw_L, Yaw_H, Buttons]
+	 * Expected Len = 10: [Side, qx_i16 LE, qy_i16 LE, qz_i16 LE, qw_i16 LE, Buttons]
+	 * Side: 0 = PORT, 1 = STARBOARD
+	 * Quaternion components: int16 values divided by 32767 to get float range [-1.0, 1.0]
+	 * Buttons: bitfield (bit0 = trigger pressed)
 	 * @param Payload - Raw payload bytes from packet
 	 * @param OutData - Parsed weapon IMU data
 	 * @return true if payload was valid and parsed successfully
 	 */
 	UFUNCTION(BlueprintPure, Category = "ESP|Parsers",
-		meta = (DisplayName = "Parse Weapon IMU Payload", Keywords = "imu gyro accelerometer"))
+		meta = (DisplayName = "Parse Weapon IMU Payload", Keywords = "imu gyro accelerometer quaternion"))
 	static bool ParseWeaponImuPayload(const TArray<uint8>& Payload, FWeaponImuData& OutData);
 };

@@ -143,9 +143,12 @@ bool UEspPacketBP::ParseJackStatePayload(const TArray<uint8>& Payload, FJackStat
 
 bool UEspPacketBP::ParseWeaponTagPayload(const TArray<uint8>& Payload, FWeaponTagData& OutData)
 {
-	// Expected Len = 6: [Side, UID (4 bytes LE), Button]
+	// Expected Len = 6: [Side, UID (4 bytes LE), Present]
+	// Side: 0 = PORT, 1 = STARBOARD
+	// Present: 1 = inserted, 0 = removed
 	if (Payload.Num() != 6)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("WEAPON_TAG (Type 4) dropped: unexpected LEN=%d, expected 6"), Payload.Num());
 		OutData = FWeaponTagData();
 		return false;
 	}
@@ -161,7 +164,8 @@ bool UEspPacketBP::ParseWeaponTagPayload(const TArray<uint8>& Payload, FWeaponTa
 		return false;
 	}
 
-	OutData.Button = Payload[5];
+	// Present byte: 1 = inserted, 0 = removed
+	OutData.bPresent = (Payload[5] != 0);
 	return true;
 }
 
@@ -190,29 +194,40 @@ bool UEspPacketBP::ParseReloadTagPayload(const TArray<uint8>& Payload, FReloadTa
 
 bool UEspPacketBP::ParseWeaponImuPayload(const TArray<uint8>& Payload, FWeaponImuData& OutData)
 {
-	// Expected Len = 6: [Side, Pitch_L, Pitch_H, Yaw_L, Yaw_H, Buttons]
-	if (Payload.Num() != 6)
+	// Expected Len = 10: [Side, qx_i16 LE, qy_i16 LE, qz_i16 LE, qw_i16 LE, Buttons]
+	// Side: 0 = PORT, 1 = STARBOARD
+	// Quaternion components: int16 values divided by 32767 to get float range [-1.0, 1.0]
+	// Buttons: bitfield (bit0 = trigger pressed)
+	if (Payload.Num() != 10)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("WEAPON_IMU (Type 6) dropped: unexpected LEN=%d, expected 10"), Payload.Num());
 		OutData = FWeaponImuData();
 		return false;
 	}
 
 	OutData.Side = Payload[0];
 
-	// Read signed int16 for Pitch (offset 1)
-	bool bOkPitch;
-	OutData.Pitch = ReadInt16LE(Payload, 1, bOkPitch);
+	// Read signed int16 for each quaternion component and convert to float
+	constexpr float QuatScale = 32767.0f;
 
-	// Read signed int16 for Yaw (offset 3)
-	bool bOkYaw;
-	OutData.Yaw = ReadInt16LE(Payload, 3, bOkYaw);
+	bool bOkQx, bOkQy, bOkQz, bOkQw;
+	int32 RawQx = ReadInt16LE(Payload, 1, bOkQx);
+	int32 RawQy = ReadInt16LE(Payload, 3, bOkQy);
+	int32 RawQz = ReadInt16LE(Payload, 5, bOkQz);
+	int32 RawQw = ReadInt16LE(Payload, 7, bOkQw);
 
-	if (!bOkPitch || !bOkYaw)
+	if (!bOkQx || !bOkQy || !bOkQz || !bOkQw)
 	{
 		OutData = FWeaponImuData();
 		return false;
 	}
 
-	OutData.Buttons = Payload[5];
+	// Convert int16 to normalized float by dividing by 32767
+	OutData.QuatX = static_cast<float>(RawQx) / QuatScale;
+	OutData.QuatY = static_cast<float>(RawQy) / QuatScale;
+	OutData.QuatZ = static_cast<float>(RawQz) / QuatScale;
+	OutData.QuatW = static_cast<float>(RawQw) / QuatScale;
+
+	OutData.Buttons = Payload[9];
 	return true;
 }
