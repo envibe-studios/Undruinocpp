@@ -359,6 +359,12 @@ bool UArduinoSerialPort::SendLine(const FString& Command)
 	return SendCommand(Command + LineEnding);
 }
 
+bool UArduinoSerialPort::WriteAsciiLine(const FString& Line)
+{
+	// Always append \n regardless of LineEnding setting
+	return SendCommand(Line + TEXT("\n"));
+}
+
 TArray<FString> UArduinoSerialPort::GetAvailablePorts()
 {
 	TArray<FString> Ports;

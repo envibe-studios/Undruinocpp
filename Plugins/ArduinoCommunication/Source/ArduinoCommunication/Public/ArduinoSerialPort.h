@@ -46,6 +46,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Arduino|Serial")
 	bool SendLine(const FString& Command);
 
+	/** Write an ASCII line with explicit \n terminator (for commands like !jack_start\n) */
+	UFUNCTION(BlueprintCallable, Category = "Arduino|Serial")
+	bool WriteAsciiLine(const FString& Line);
+
 	/** Get list of available COM ports */
 	UFUNCTION(BlueprintCallable, Category = "Arduino|Serial")
 	static TArray<FString> GetAvailablePorts();
