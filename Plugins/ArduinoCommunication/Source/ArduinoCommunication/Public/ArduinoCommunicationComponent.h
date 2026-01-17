@@ -76,6 +76,20 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arduino|Settings")
 	FString LineEnding = TEXT("\n");
 
+	// === Raw Tap Diagnostics (Serial Only) ===
+
+	/** Enable hex dump of raw serial bytes (up to first 32 bytes per read) - Serial mode only */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arduino|Serial|RawTap", meta = (EditCondition = "ConnectionMode == EArduinoConnectionMode::Serial"))
+	bool bDumpRawSerial = false;
+
+	/** Bypass the line parser entirely - only show raw hex dumps + counters - Serial mode only */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arduino|Serial|RawTap", meta = (EditCondition = "ConnectionMode == EArduinoConnectionMode::Serial"))
+	bool bBypassParser = false;
+
+	/** Enable on-screen debug display of raw tap statistics - Serial mode only */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arduino|Serial|RawTap", meta = (EditCondition = "ConnectionMode == EArduinoConnectionMode::Serial"))
+	bool bShowRawTapOnScreen = false;
+
 	// === Events ===
 
 	/** Event fired when data is received from Arduino (legacy, same as OnLineReceived) */
@@ -123,6 +137,24 @@ public:
 	/** Get available serial ports */
 	UFUNCTION(BlueprintCallable, Category = "Arduino|Serial")
 	TArray<FString> GetAvailablePorts();
+
+	// === Raw Tap Functions (Serial Only) ===
+
+	/** Set raw tap diagnostic options for serial connection */
+	UFUNCTION(BlueprintCallable, Category = "Arduino|Serial|RawTap")
+	void SetSerialRawTapOptions(bool bDump, bool bBypass, bool bOnScreen);
+
+	/** Reset raw tap counters to zero */
+	UFUNCTION(BlueprintCallable, Category = "Arduino|Serial|RawTap")
+	void ResetSerialRawTapCounters();
+
+	/** Get raw tap statistics as formatted string */
+	UFUNCTION(BlueprintCallable, Category = "Arduino|Serial|RawTap")
+	FString GetSerialRawTapStats() const;
+
+	/** Get direct access to the serial port object (advanced use) */
+	UFUNCTION(BlueprintCallable, Category = "Arduino|Serial")
+	UArduinoSerialPort* GetSerialPort() const { return SerialConnection; }
 
 protected:
 	/** Handle data received from serial port */

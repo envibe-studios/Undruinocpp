@@ -17,7 +17,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSerialError, const FString&, Erro
  * Serial Port Communication for Arduino ESP8266
  * Handles bidirectional text communication over COM ports
  */
-UCLASS(BlueprintType, Blueprintable)
+UCLASS(BlueprintType, Blueprintable, Config=Game)
 class ARDUINOCOMMUNICATION_API UArduinoSerialPort : public UObject
 {
 	GENERATED_BODY()
@@ -83,16 +83,20 @@ public:
 	// ============================================================
 
 	/** Enable hex dump of raw serial bytes (up to first 32 bytes per read) */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arduino|Serial|RawTap")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category = "Arduino|Serial|RawTap")
 	bool bDumpRawSerial = false;
 
 	/** Bypass the line parser entirely - only show raw hex dumps + counters */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arduino|Serial|RawTap")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category = "Arduino|Serial|RawTap")
 	bool bBypassParser = false;
 
 	/** Enable on-screen debug display of raw tap statistics */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arduino|Serial|RawTap")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category = "Arduino|Serial|RawTap")
 	bool bShowRawTapOnScreen = false;
+
+	/** Set all raw tap options at once */
+	UFUNCTION(BlueprintCallable, Category = "Arduino|Serial|RawTap")
+	void SetRawTapOptions(bool bDump, bool bBypass, bool bOnScreen);
 
 	/** Total bytes read from serial port since connection opened */
 	UPROPERTY(BlueprintReadOnly, Category = "Arduino|Serial|RawTap")

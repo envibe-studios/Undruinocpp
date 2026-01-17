@@ -48,6 +48,11 @@ void UArduinoCommunicationComponent::SetupEventBindings()
 		SerialConnection->OnConnectionChanged.AddDynamic(this, &UArduinoCommunicationComponent::HandleSerialConnectionChanged);
 		SerialConnection->OnError.AddDynamic(this, &UArduinoCommunicationComponent::HandleSerialError);
 		SerialConnection->LineEnding = LineEnding;
+
+		// Copy raw tap settings from component to serial port
+		SerialConnection->bDumpRawSerial = bDumpRawSerial;
+		SerialConnection->bBypassParser = bBypassParser;
+		SerialConnection->bShowRawTapOnScreen = bShowRawTapOnScreen;
 	}
 
 	if (TcpConnection)
@@ -207,4 +212,35 @@ void UArduinoCommunicationComponent::HandleTcpConnectionChanged(bool bConnected)
 void UArduinoCommunicationComponent::HandleTcpError(const FString& ErrorMessage)
 {
 	OnError.Broadcast(ErrorMessage);
+}
+
+void UArduinoCommunicationComponent::SetSerialRawTapOptions(bool bDump, bool bBypass, bool bOnScreen)
+{
+	// Update component properties
+	bDumpRawSerial = bDump;
+	bBypassParser = bBypass;
+	bShowRawTapOnScreen = bOnScreen;
+
+	// Apply to serial port if it exists
+	if (SerialConnection)
+	{
+		SerialConnection->SetRawTapOptions(bDump, bBypass, bOnScreen);
+	}
+}
+
+void UArduinoCommunicationComponent::ResetSerialRawTapCounters()
+{
+	if (SerialConnection)
+	{
+		SerialConnection->ResetRawTapCounters();
+	}
+}
+
+FString UArduinoCommunicationComponent::GetSerialRawTapStats() const
+{
+	if (SerialConnection)
+	{
+		return SerialConnection->GetRawTapStats();
+	}
+	return TEXT("Serial port not initialized");
 }

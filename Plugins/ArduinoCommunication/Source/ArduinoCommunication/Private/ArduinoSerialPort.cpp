@@ -554,6 +554,18 @@ void UArduinoSerialPort::ResetRawTapCounters()
 	LastByteTime = 0.0;
 }
 
+void UArduinoSerialPort::SetRawTapOptions(bool bDump, bool bBypass, bool bOnScreen)
+{
+	bDumpRawSerial = bDump;
+	bBypassParser = bBypass;
+	bShowRawTapOnScreen = bOnScreen;
+
+	UE_LOG(LogTemp, Log, TEXT("ArduinoSerial: RawTap options set - Dump=%s Bypass=%s OnScreen=%s"),
+		bDumpRawSerial ? TEXT("true") : TEXT("false"),
+		bBypassParser ? TEXT("true") : TEXT("false"),
+		bShowRawTapOnScreen ? TEXT("true") : TEXT("false"));
+}
+
 FString UArduinoSerialPort::FormatHexDump(const uint8* Buffer, int32 BytesRead, int32 MaxBytes)
 {
 	FString HexStr;
