@@ -78,6 +78,50 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arduino|Serial")
 	int32 BufferSize = 4096;
 
+	// ============================================================
+	// RAW TAP DIAGNOSTICS - Debug serial byte flow before parsing
+	// ============================================================
+
+	/** Enable hex dump of raw serial bytes (up to first 32 bytes per read) */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arduino|Serial|RawTap")
+	bool bDumpRawSerial = false;
+
+	/** Bypass the line parser entirely - only show raw hex dumps + counters */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arduino|Serial|RawTap")
+	bool bBypassParser = false;
+
+	/** Enable on-screen debug display of raw tap statistics */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Arduino|Serial|RawTap")
+	bool bShowRawTapOnScreen = false;
+
+	/** Total bytes read from serial port since connection opened */
+	UPROPERTY(BlueprintReadOnly, Category = "Arduino|Serial|RawTap")
+	int64 BytesReadTotal = 0;
+
+	/** Total number of read operations since connection opened */
+	UPROPERTY(BlueprintReadOnly, Category = "Arduino|Serial|RawTap")
+	int64 ReadsCount = 0;
+
+	/** Size of the last successful read operation */
+	UPROPERTY(BlueprintReadOnly, Category = "Arduino|Serial|RawTap")
+	int32 LastReadSize = 0;
+
+	/** Number of 0xAA start bytes detected in raw stream */
+	UPROPERTY(BlueprintReadOnly, Category = "Arduino|Serial|RawTap")
+	int64 StartByteHits = 0;
+
+	/** Timestamp of last byte received (FPlatformTime::Seconds) */
+	UPROPERTY(BlueprintReadOnly, Category = "Arduino|Serial|RawTap")
+	double LastByteTime = 0.0;
+
+	/** Get raw tap statistics as formatted string */
+	UFUNCTION(BlueprintCallable, Category = "Arduino|Serial|RawTap")
+	FString GetRawTapStats() const;
+
+	/** Reset raw tap counters to zero */
+	UFUNCTION(BlueprintCallable, Category = "Arduino|Serial|RawTap")
+	void ResetRawTapCounters();
+
 protected:
 	/** Process incoming data on the game thread */
 	void ProcessReceivedData();
@@ -124,6 +168,18 @@ private:
 
 	/** Timer handle for processing received data */
 	FTimerHandle ProcessTimerHandle;
+
+	/** Critical section for raw tap counter thread safety */
+	FCriticalSection RawTapCriticalSection;
+
+	/** Process raw tap diagnostics for a read chunk (called from read thread) */
+	void ProcessRawTap(const uint8* Buffer, int32 BytesRead);
+
+	/** Format bytes as hex dump string */
+	static FString FormatHexDump(const uint8* Buffer, int32 BytesRead, int32 MaxBytes = 32);
+
+	/** Format bytes as ASCII view (non-printables as '.') */
+	static FString FormatAsciiView(const uint8* Buffer, int32 BytesRead, int32 MaxBytes = 32);
 
 	friend class FSerialReadRunnable;
 };

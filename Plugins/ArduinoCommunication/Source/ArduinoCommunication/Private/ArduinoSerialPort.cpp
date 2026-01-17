@@ -146,6 +146,9 @@ bool UArduinoSerialPort::Open(const FString& PortName, int32 BaudRate)
 	CurrentPortName = PortName;
 	CurrentBaudRate = BaudRate;
 
+	// Reset raw tap counters for fresh connection
+	ResetRawTapCounters();
+
 	UE_LOG(LogTemp, Log, TEXT("ArduinoSerial: Opened port %s at %d baud"), *PortName, BaudRate);
 
 	// Start the read thread
@@ -233,6 +236,9 @@ bool UArduinoSerialPort::Open(const FString& PortName, int32 BaudRate)
 	bIsOpen = true;
 	CurrentPortName = PortName;
 	CurrentBaudRate = BaudRate;
+
+	// Reset raw tap counters for fresh connection
+	ResetRawTapCounters();
 
 	UE_LOG(LogTemp, Log, TEXT("ArduinoSerial: Opened port %s at %d baud"), *PortName, BaudRate);
 
@@ -532,6 +538,111 @@ void UArduinoSerialPort::StopReadThread()
 	}
 }
 
+FString UArduinoSerialPort::GetRawTapStats() const
+{
+	return FString::Printf(TEXT("BytesReadTotal=%lld ReadsCount=%lld LastReadSize=%d StartByteHits=%lld LastByteTime=%.3f"),
+		BytesReadTotal, ReadsCount, LastReadSize, StartByteHits, LastByteTime);
+}
+
+void UArduinoSerialPort::ResetRawTapCounters()
+{
+	FScopeLock Lock(&const_cast<UArduinoSerialPort*>(this)->RawTapCriticalSection);
+	BytesReadTotal = 0;
+	ReadsCount = 0;
+	LastReadSize = 0;
+	StartByteHits = 0;
+	LastByteTime = 0.0;
+}
+
+FString UArduinoSerialPort::FormatHexDump(const uint8* Buffer, int32 BytesRead, int32 MaxBytes)
+{
+	FString HexStr;
+	int32 Count = FMath::Min(BytesRead, MaxBytes);
+	for (int32 i = 0; i < Count; ++i)
+	{
+		HexStr += FString::Printf(TEXT("%02X "), Buffer[i]);
+	}
+	if (BytesRead > MaxBytes)
+	{
+		HexStr += TEXT("...");
+	}
+	return HexStr;
+}
+
+FString UArduinoSerialPort::FormatAsciiView(const uint8* Buffer, int32 BytesRead, int32 MaxBytes)
+{
+	FString AsciiStr;
+	int32 Count = FMath::Min(BytesRead, MaxBytes);
+	for (int32 i = 0; i < Count; ++i)
+	{
+		uint8 Byte = Buffer[i];
+		// Printable ASCII range: 0x20 (space) to 0x7E (~)
+		if (Byte >= 0x20 && Byte <= 0x7E)
+		{
+			AsciiStr += static_cast<TCHAR>(Byte);
+		}
+		else
+		{
+			AsciiStr += TEXT('.');
+		}
+	}
+	return AsciiStr;
+}
+
+void UArduinoSerialPort::ProcessRawTap(const uint8* Buffer, int32 BytesRead)
+{
+	// Update counters (thread-safe)
+	{
+		FScopeLock Lock(&RawTapCriticalSection);
+		BytesReadTotal += BytesRead;
+		ReadsCount++;
+		LastReadSize = BytesRead;
+		LastByteTime = FPlatformTime::Seconds();
+
+		// Count 0xAA start bytes
+		for (int32 i = 0; i < BytesRead; ++i)
+		{
+			if (Buffer[i] == 0xAA)
+			{
+				StartByteHits++;
+			}
+		}
+	}
+
+	// Log stats periodically (every read when dumping, otherwise every 100 reads)
+	bool bShouldLogStats = bDumpRawSerial || ((ReadsCount % 100) == 0);
+	if (bShouldLogStats)
+	{
+		UE_LOG(LogTemp, Log, TEXT("ArduinoRawTap: bytesReadTotal=%lld readsCount=%lld lastReadSize=%d startByteHits=%lld"),
+			BytesReadTotal, ReadsCount, LastReadSize, StartByteHits);
+	}
+
+	// Hex dump if enabled
+	if (bDumpRawSerial)
+	{
+		FString HexDump = FormatHexDump(Buffer, BytesRead);
+		FString AsciiView = FormatAsciiView(Buffer, BytesRead);
+		UE_LOG(LogTemp, Log, TEXT("RAW[%d]: %s"), BytesRead, *HexDump);
+		UE_LOG(LogTemp, Log, TEXT("ASCII: %s"), *AsciiView);
+	}
+
+	// On-screen debug display (must execute on game thread)
+	if (bShowRawTapOnScreen && GEngine)
+	{
+		FString DebugStr = FString::Printf(TEXT("RawTap: bytes=%lld reads=%lld last=%d 0xAA=%lld"),
+			BytesReadTotal, ReadsCount, LastReadSize, StartByteHits);
+
+		// Queue for game thread display
+		AsyncTask(ENamedThreads::GameThread, [DebugStr]()
+		{
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Cyan, DebugStr);
+			}
+		});
+	}
+}
+
 void UArduinoSerialPort::ProcessReceivedData()
 {
 	// Process raw bytes
@@ -571,7 +682,8 @@ bool FSerialReadRunnable::Init()
 uint32 FSerialReadRunnable::Run()
 {
 #if PLATFORM_WINDOWS
-	char ReadBuffer[256];
+	// Use uint8 buffer to treat as raw bytes (not char/string)
+	uint8 ReadBuffer[256];
 
 	while (bRunning && Owner && Owner->bIsOpen && !Owner->bStopThread)
 	{
@@ -586,27 +698,37 @@ uint32 FSerialReadRunnable::Run()
 
 		if (result && bytesRead > 0)
 		{
+			// ============================================================
+			// RAW TAP - Process raw bytes FIRST (before any conversions)
+			// ============================================================
+			Owner->ProcessRawTap(ReadBuffer, static_cast<int32>(bytesRead));
+
 			// Enqueue raw bytes for OnByteReceived
 			TArray<uint8> RawBytes;
-			RawBytes.Append((uint8*)ReadBuffer, bytesRead);
+			RawBytes.Append(ReadBuffer, bytesRead);
 			Owner->ReceivedBytesQueue.Enqueue(RawBytes);
 
-			ReadBuffer[bytesRead] = '\0';
-
-			// Convert from UTF-8 to FString
-			FUTF8ToTCHAR Converter(ReadBuffer, bytesRead);
-			FString ReceivedText(Converter.Length(), Converter.Get());
-
-			// Add to buffer
-			Owner->ReceiveBuffer += ReceivedText;
-
-			// Process complete lines
-			FString Line;
-			while (Owner->ReceiveBuffer.Split(Owner->LineEnding, &Line, &Owner->ReceiveBuffer))
+			// If bypass parser mode is enabled, skip all line parsing
+			if (!Owner->bBypassParser)
 			{
-				if (!Line.IsEmpty())
+				// Null-terminate for string conversion (safe - buffer is 256, max read is 255)
+				ReadBuffer[bytesRead] = 0;
+
+				// Convert from UTF-8 to FString
+				FUTF8ToTCHAR Converter(reinterpret_cast<const char*>(ReadBuffer), bytesRead);
+				FString ReceivedText(Converter.Length(), Converter.Get());
+
+				// Add to buffer
+				Owner->ReceiveBuffer += ReceivedText;
+
+				// Process complete lines
+				FString Line;
+				while (Owner->ReceiveBuffer.Split(Owner->LineEnding, &Line, &Owner->ReceiveBuffer))
 				{
-					Owner->ReceivedDataQueue.Enqueue(Line);
+					if (!Line.IsEmpty())
+					{
+						Owner->ReceivedDataQueue.Enqueue(Line);
+					}
 				}
 			}
 		}
@@ -615,7 +737,8 @@ uint32 FSerialReadRunnable::Run()
 		FPlatformProcess::Sleep(0.001f);
 	}
 #elif PLATFORM_LINUX || PLATFORM_MAC
-	char ReadBuffer[256];
+	// Use uint8 buffer to treat as raw bytes (not char/string)
+	uint8 ReadBuffer[256];
 
 	while (bRunning && Owner && Owner->bIsOpen && !Owner->bStopThread)
 	{
@@ -629,27 +752,37 @@ uint32 FSerialReadRunnable::Run()
 
 		if (bytesRead > 0)
 		{
+			// ============================================================
+			// RAW TAP - Process raw bytes FIRST (before any conversions)
+			// ============================================================
+			Owner->ProcessRawTap(ReadBuffer, static_cast<int32>(bytesRead));
+
 			// Enqueue raw bytes for OnByteReceived
 			TArray<uint8> RawBytes;
-			RawBytes.Append((uint8*)ReadBuffer, bytesRead);
+			RawBytes.Append(ReadBuffer, bytesRead);
 			Owner->ReceivedBytesQueue.Enqueue(RawBytes);
 
-			ReadBuffer[bytesRead] = '\0';
-
-			// Convert from UTF-8 to FString
-			FUTF8ToTCHAR Converter(ReadBuffer, bytesRead);
-			FString ReceivedText(Converter.Length(), Converter.Get());
-
-			// Add to buffer
-			Owner->ReceiveBuffer += ReceivedText;
-
-			// Process complete lines
-			FString Line;
-			while (Owner->ReceiveBuffer.Split(Owner->LineEnding, &Line, &Owner->ReceiveBuffer))
+			// If bypass parser mode is enabled, skip all line parsing
+			if (!Owner->bBypassParser)
 			{
-				if (!Line.IsEmpty())
+				// Null-terminate for string conversion (safe - buffer is 256, max read is 255)
+				ReadBuffer[bytesRead] = 0;
+
+				// Convert from UTF-8 to FString
+				FUTF8ToTCHAR Converter(reinterpret_cast<const char*>(ReadBuffer), bytesRead);
+				FString ReceivedText(Converter.Length(), Converter.Get());
+
+				// Add to buffer
+				Owner->ReceiveBuffer += ReceivedText;
+
+				// Process complete lines
+				FString Line;
+				while (Owner->ReceiveBuffer.Split(Owner->LineEnding, &Line, &Owner->ReceiveBuffer))
 				{
-					Owner->ReceivedDataQueue.Enqueue(Line);
+					if (!Line.IsEmpty())
+					{
+						Owner->ReceivedDataQueue.Enqueue(Line);
+					}
 				}
 			}
 		}
