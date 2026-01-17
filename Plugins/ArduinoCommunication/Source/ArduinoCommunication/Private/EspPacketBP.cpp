@@ -223,18 +223,59 @@ bool UEspPacketBP::ParseWeaponImuPayload(const TArray<uint8>& Payload, FWeaponIm
 	}
 
 	// Convert int16 to normalized float by dividing by 32767
-	OutData.QuatX = static_cast<float>(RawQx) / QuatScale;
-	OutData.QuatY = static_cast<float>(RawQy) / QuatScale;
-	OutData.QuatZ = static_cast<float>(RawQz) / QuatScale;
-	OutData.QuatW = static_cast<float>(RawQw) / QuatScale;
+	float Qx = static_cast<float>(RawQx) / QuatScale;
+	float Qy = static_cast<float>(RawQy) / QuatScale;
+	float Qz = static_cast<float>(RawQz) / QuatScale;
+	float Qw = static_cast<float>(RawQw) / QuatScale;
 
-	// Convert quaternion to Euler angles (FVector) for use with FRotator
-	// FQuat uses (X, Y, Z, W) order
-	FQuat Quat(OutData.QuatX, OutData.QuatY, OutData.QuatZ, OutData.QuatW);
-	FRotator Rotator = Quat.Rotator();
-	// Output as FVector: X=Pitch, Y=Yaw, Z=Roll (in degrees)
-	OutData.EulerAngles = FVector(Rotator.Pitch, Rotator.Yaw, Rotator.Roll);
+	// Use SetFromQuaternion to set quaternion as source-of-truth and derive unwound Euler angles
+	FQuat Quat(Qx, Qy, Qz, Qw);
+	OutData.SetFromQuaternion(Quat);
 
 	OutData.Buttons = Payload[9];
+	return true;
+}
+
+FVector UEspPacketBP::SmoothEulerAngles(const FVector& NewAngles, const FVector& PreviousAngles)
+{
+	// Apply shortest-path smoothing by finding the delta that minimizes wrap-around jumps
+	// For each axis, if the difference exceeds 180 degrees, adjust by 360 degrees
+
+	auto ShortestPathAngle = [](float NewAngle, float PreviousAngle) -> float
+	{
+		// Compute the difference
+		float Delta = NewAngle - PreviousAngle;
+
+		// If delta is greater than 180, we wrapped around and should go the other way
+		while (Delta > 180.0f)
+		{
+			Delta -= 360.0f;
+		}
+		while (Delta < -180.0f)
+		{
+			Delta += 360.0f;
+		}
+
+		// Return the previous angle plus the shortest delta
+		return PreviousAngle + Delta;
+	};
+
+	return FVector(
+		ShortestPathAngle(NewAngles.X, PreviousAngles.X),  // Pitch
+		ShortestPathAngle(NewAngles.Y, PreviousAngles.Y),  // Yaw
+		ShortestPathAngle(NewAngles.Z, PreviousAngles.Z)   // Roll
+	);
+}
+
+bool UEspPacketBP::ParseWeaponImuPayloadSmoothed(const TArray<uint8>& Payload, const FWeaponImuData& PreviousData, FWeaponImuData& OutData)
+{
+	// First parse normally
+	if (!ParseWeaponImuPayload(Payload, OutData))
+	{
+		return false;
+	}
+
+	// Apply shortest-path smoothing to Euler angles relative to previous frame
+	OutData.EulerAngles = SmoothEulerAngles(OutData.EulerAngles, PreviousData.EulerAngles);
 	return true;
 }

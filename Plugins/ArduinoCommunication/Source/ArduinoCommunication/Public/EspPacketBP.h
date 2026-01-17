@@ -139,6 +139,9 @@ struct ARDUINOCOMMUNICATION_API FReloadTagData
  * Side: 0 = PORT, 1 = STARBOARD
  * Quaternion components: int16 values divided by 32767 to get float range [-1.0, 1.0]
  * Buttons: bitfield (bit0 = trigger pressed)
+ *
+ * The quaternion is stored as the source-of-truth. EulerAngles is derived from the quaternion
+ * with normalization applied to prevent wrap flips at 180/360 degree boundaries.
  */
 USTRUCT(BlueprintType)
 struct ARDUINOCOMMUNICATION_API FWeaponImuData
@@ -165,7 +168,8 @@ struct ARDUINOCOMMUNICATION_API FWeaponImuData
 	UPROPERTY(BlueprintReadOnly, Category = "ESP|Payload")
 	float QuatW = 0.0f;
 
-	/** Euler angles as Vector3 for use with FRotator (X=Pitch, Y=Yaw, Z=Roll in degrees) */
+	/** Euler angles as Vector3 for use with FRotator (X=Pitch, Y=Yaw, Z=Roll in degrees)
+	 *  Derived from quaternion with UnwindDegrees applied to prevent wrap flips */
 	UPROPERTY(BlueprintReadOnly, Category = "ESP|Payload")
 	FVector EulerAngles = FVector::ZeroVector;
 
@@ -176,6 +180,29 @@ struct ARDUINOCOMMUNICATION_API FWeaponImuData
 	FWeaponImuData() = default;
 	FWeaponImuData(uint8 InSide, float InQuatX, float InQuatY, float InQuatZ, float InQuatW, uint8 InButtons, FVector InEulerAngles = FVector::ZeroVector)
 		: Side(InSide), QuatX(InQuatX), QuatY(InQuatY), QuatZ(InQuatZ), QuatW(InQuatW), EulerAngles(InEulerAngles), Buttons(InButtons) {}
+
+	/** Get the quaternion as an FQuat (source-of-truth) */
+	FQuat GetQuaternion() const
+	{
+		return FQuat(QuatX, QuatY, QuatZ, QuatW);
+	}
+
+	/** Set from quaternion, updating all derived values with unwound Euler angles */
+	void SetFromQuaternion(const FQuat& InQuat)
+	{
+		QuatX = InQuat.X;
+		QuatY = InQuat.Y;
+		QuatZ = InQuat.Z;
+		QuatW = InQuat.W;
+
+		// Convert to rotator and unwind to prevent wrap flips
+		FRotator Rotator = InQuat.Rotator();
+		EulerAngles = FVector(
+			FMath::UnwindDegrees(Rotator.Pitch),
+			FMath::UnwindDegrees(Rotator.Yaw),
+			FMath::UnwindDegrees(Rotator.Roll)
+		);
+	}
 };
 
 // ============================================================================
@@ -329,4 +356,31 @@ public:
 	UFUNCTION(BlueprintPure, Category = "ESP|Parsers",
 		meta = (DisplayName = "Parse Weapon IMU Payload", Keywords = "imu gyro accelerometer quaternion"))
 	static bool ParseWeaponImuPayload(const TArray<uint8>& Payload, FWeaponImuData& OutData);
+
+	// ========================================================================
+	// Euler Angle Smoothing Helpers
+	// ========================================================================
+
+	/**
+	 * Apply shortest-path delta smoothing to Euler angles to prevent wrap flips
+	 * Given previous Euler angles, adjusts new angles to take the shortest rotational path
+	 * @param NewAngles - The new Euler angles (X=Pitch, Y=Yaw, Z=Roll in degrees)
+	 * @param PreviousAngles - The previous frame's Euler angles
+	 * @return Adjusted Euler angles that take the shortest path from previous
+	 */
+	UFUNCTION(BlueprintPure, Category = "ESP|IMU",
+		meta = (DisplayName = "Smooth Euler Angles", Keywords = "euler rotation smooth interpolate"))
+	static FVector SmoothEulerAngles(const FVector& NewAngles, const FVector& PreviousAngles);
+
+	/**
+	 * Parse Weapon IMU payload with shortest-path smoothing relative to previous data
+	 * Use this when you need frame-to-frame continuity without angle jumps
+	 * @param Payload - Raw payload bytes from packet
+	 * @param PreviousData - The previous frame's IMU data (for smoothing)
+	 * @param OutData - Parsed weapon IMU data with smoothed Euler angles
+	 * @return true if payload was valid and parsed successfully
+	 */
+	UFUNCTION(BlueprintPure, Category = "ESP|Parsers",
+		meta = (DisplayName = "Parse Weapon IMU Payload (Smoothed)", Keywords = "imu gyro accelerometer quaternion smooth"))
+	static bool ParseWeaponImuPayloadSmoothed(const TArray<uint8>& Payload, const FWeaponImuData& PreviousData, FWeaponImuData& OutData);
 };
