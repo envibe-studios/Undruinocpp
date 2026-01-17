@@ -100,7 +100,7 @@ public:
 
 	/** Enable verbose diagnostic logging for all serial operations */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Config, Category = "Arduino|Serial|RawTap")
-	bool bVerboseDiagnostics = true;
+	bool bVerboseDiagnostics = false;
 
 	/** Set all raw tap options at once */
 	UFUNCTION(BlueprintCallable, Category = "Arduino|Serial|RawTap")
