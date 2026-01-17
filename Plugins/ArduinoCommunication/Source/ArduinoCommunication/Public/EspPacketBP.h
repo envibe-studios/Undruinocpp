@@ -165,13 +165,17 @@ struct ARDUINOCOMMUNICATION_API FWeaponImuData
 	UPROPERTY(BlueprintReadOnly, Category = "ESP|Payload")
 	float QuatW = 0.0f;
 
+	/** Euler angles as Vector3 for use with FRotator (X=Pitch, Y=Yaw, Z=Roll in degrees) */
+	UPROPERTY(BlueprintReadOnly, Category = "ESP|Payload")
+	FVector EulerAngles = FVector::ZeroVector;
+
 	/** Button bitmask (bit0 = trigger pressed) */
 	UPROPERTY(BlueprintReadOnly, Category = "ESP|Payload")
 	uint8 Buttons = 0;
 
 	FWeaponImuData() = default;
-	FWeaponImuData(uint8 InSide, float InQuatX, float InQuatY, float InQuatZ, float InQuatW, uint8 InButtons)
-		: Side(InSide), QuatX(InQuatX), QuatY(InQuatY), QuatZ(InQuatZ), QuatW(InQuatW), Buttons(InButtons) {}
+	FWeaponImuData(uint8 InSide, float InQuatX, float InQuatY, float InQuatZ, float InQuatW, uint8 InButtons, FVector InEulerAngles = FVector::ZeroVector)
+		: Side(InSide), QuatX(InQuatX), QuatY(InQuatY), QuatZ(InQuatZ), QuatW(InQuatW), EulerAngles(InEulerAngles), Buttons(InButtons) {}
 };
 
 // ============================================================================

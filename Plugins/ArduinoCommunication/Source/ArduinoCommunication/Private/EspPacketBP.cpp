@@ -228,6 +228,13 @@ bool UEspPacketBP::ParseWeaponImuPayload(const TArray<uint8>& Payload, FWeaponIm
 	OutData.QuatZ = static_cast<float>(RawQz) / QuatScale;
 	OutData.QuatW = static_cast<float>(RawQw) / QuatScale;
 
+	// Convert quaternion to Euler angles (FVector) for use with FRotator
+	// FQuat uses (X, Y, Z, W) order
+	FQuat Quat(OutData.QuatX, OutData.QuatY, OutData.QuatZ, OutData.QuatW);
+	FRotator Rotator = Quat.Rotator();
+	// Output as FVector: X=Pitch, Y=Yaw, Z=Roll (in degrees)
+	OutData.EulerAngles = FVector(Rotator.Pitch, Rotator.Yaw, Rotator.Roll);
+
 	OutData.Buttons = Payload[9];
 	return true;
 }
