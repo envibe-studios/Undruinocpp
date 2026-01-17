@@ -112,7 +112,7 @@ struct ARDUINOCOMMUNICATION_API FWeaponTagData
 
 /**
  * Reload Tag payload data
- * Len = 4: [UID (4, LE)]
+ * Len = 5: [UID (4, LE), Present (1)]
  */
 USTRUCT(BlueprintType)
 struct ARDUINOCOMMUNICATION_API FReloadTagData
@@ -123,8 +123,12 @@ struct ARDUINOCOMMUNICATION_API FReloadTagData
 	UPROPERTY(BlueprintReadOnly, Category = "ESP|Payload")
 	int64 UID = 0;
 
+	/** Present state: true = inserted, false = removed */
+	UPROPERTY(BlueprintReadOnly, Category = "ESP|Payload")
+	bool bPresent = false;
+
 	FReloadTagData() = default;
-	FReloadTagData(int64 InUID) : UID(InUID) {}
+	FReloadTagData(int64 InUID, bool InPresent) : UID(InUID), bPresent(InPresent) {}
 };
 
 /**
@@ -284,7 +288,7 @@ public:
 
 	/**
 	 * Parse Reload Tag payload (Type = 5)
-	 * Expected Len = 4: [UID (4 bytes LE)]
+	 * Expected Len = 5: [UID (4 bytes LE), Present (1 byte: 1=inserted, 0=removed)]
 	 * @param Payload - Raw payload bytes from packet
 	 * @param OutData - Parsed reload tag data
 	 * @return true if payload was valid and parsed successfully

@@ -167,8 +167,8 @@ bool UEspPacketBP::ParseWeaponTagPayload(const TArray<uint8>& Payload, FWeaponTa
 
 bool UEspPacketBP::ParseReloadTagPayload(const TArray<uint8>& Payload, FReloadTagData& OutData)
 {
-	// Expected Len = 4: [UID (4 bytes LE)]
-	if (Payload.Num() != 4)
+	// Expected Len = 5: [UID (4 bytes LE), Present (1 byte)]
+	if (Payload.Num() != 5)
 	{
 		OutData = FReloadTagData();
 		return false;
@@ -181,6 +181,9 @@ bool UEspPacketBP::ParseReloadTagPayload(const TArray<uint8>& Payload, FReloadTa
 		OutData = FReloadTagData();
 		return false;
 	}
+
+	// Present byte: 1 = inserted, 0 = removed
+	OutData.bPresent = (Payload[4] != 0);
 
 	return true;
 }
