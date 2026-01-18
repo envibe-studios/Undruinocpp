@@ -88,40 +88,102 @@ UK2Node_Event* FEventManager::CreateEventNode(UEdGraph* Graph, const FString& Ev
 	UK2Node_Event* ExistingNode = FindExistingEventNode(Graph, EventName);
 	if (ExistingNode)
 	{
-		UE_LOG(LogTemp, Display, TEXT("F18: Using existing event node '%s' (ID: %s)"),
+		UE_LOG(LogTemp, Display, TEXT("EventManager: Using existing event node '%s' (ID: %s)"),
 			*EventName, *ExistingNode->NodeGuid.ToString());
 		return ExistingNode;
 	}
 
 	// Create new event node
-	UK2Node_Event* EventNode = nullptr;
-	UClass* BlueprintClass = Blueprint->GeneratedClass;
-
-	if (!BlueprintClass)
+	UK2Node_Event* EventNode = NewObject<UK2Node_Event>(Graph);
+	if (!EventNode)
 	{
-		UE_LOG(LogTemp, Error, TEXT("F18: Blueprint has no generated class"));
+		UE_LOG(LogTemp, Error, TEXT("EventManager: Failed to create UK2Node_Event object"));
 		return nullptr;
 	}
 
-	UFunction* EventFunction = BlueprintClass->FindFunctionByName(FName(*EventName));
-
-	if (EventFunction)
+	// Handle built-in Actor events (BeginPlay, Tick, etc.)
+	// These events use ReceiveBeginPlay/ReceiveTick internally
+	if (EventName.Equals(TEXT("ReceiveBeginPlay"), ESearchCase::IgnoreCase) ||
+	    EventName.Equals(TEXT("BeginPlay"), ESearchCase::IgnoreCase))
 	{
-		EventNode = NewObject<UK2Node_Event>(Graph);
-		EventNode->EventReference.SetExternalMember(FName(*EventName), BlueprintClass);
-		EventNode->NodePosX = static_cast<int32>(Position.X);
-		EventNode->NodePosY = static_cast<int32>(Position.Y);
-		Graph->AddNode(EventNode, true);
-		EventNode->PostPlacedNewNode();
-		EventNode->AllocateDefaultPins();
-
-		UE_LOG(LogTemp, Display, TEXT("F18: Created new event node '%s' (ID: %s)"),
-			*EventName, *EventNode->NodeGuid.ToString());
+		EventNode->EventReference.SetExternalDelegateMember(FName(TEXT("ReceiveBeginPlay")));
+		EventNode->bOverrideFunction = true;
+		UE_LOG(LogTemp, Display, TEXT("EventManager: Creating BeginPlay event node"));
+	}
+	else if (EventName.Equals(TEXT("ReceiveTick"), ESearchCase::IgnoreCase) ||
+	         EventName.Equals(TEXT("Tick"), ESearchCase::IgnoreCase))
+	{
+		EventNode->EventReference.SetExternalDelegateMember(FName(TEXT("ReceiveTick")));
+		EventNode->bOverrideFunction = true;
+		UE_LOG(LogTemp, Display, TEXT("EventManager: Creating Tick event node"));
+	}
+	else if (EventName.Equals(TEXT("ReceiveActorBeginOverlap"), ESearchCase::IgnoreCase) ||
+	         EventName.Equals(TEXT("ActorBeginOverlap"), ESearchCase::IgnoreCase))
+	{
+		EventNode->EventReference.SetExternalDelegateMember(FName(TEXT("ReceiveActorBeginOverlap")));
+		EventNode->bOverrideFunction = true;
+		UE_LOG(LogTemp, Display, TEXT("EventManager: Creating ActorBeginOverlap event node"));
+	}
+	else if (EventName.Equals(TEXT("ReceiveActorEndOverlap"), ESearchCase::IgnoreCase) ||
+	         EventName.Equals(TEXT("ActorEndOverlap"), ESearchCase::IgnoreCase))
+	{
+		EventNode->EventReference.SetExternalDelegateMember(FName(TEXT("ReceiveActorEndOverlap")));
+		EventNode->bOverrideFunction = true;
+		UE_LOG(LogTemp, Display, TEXT("EventManager: Creating ActorEndOverlap event node"));
+	}
+	else if (EventName.Equals(TEXT("ReceiveDestroyed"), ESearchCase::IgnoreCase) ||
+	         EventName.Equals(TEXT("Destroyed"), ESearchCase::IgnoreCase))
+	{
+		EventNode->EventReference.SetExternalDelegateMember(FName(TEXT("ReceiveDestroyed")));
+		EventNode->bOverrideFunction = true;
+		UE_LOG(LogTemp, Display, TEXT("EventManager: Creating Destroyed event node"));
+	}
+	else if (EventName.Equals(TEXT("ReceiveHit"), ESearchCase::IgnoreCase) ||
+	         EventName.Equals(TEXT("Hit"), ESearchCase::IgnoreCase))
+	{
+		EventNode->EventReference.SetExternalDelegateMember(FName(TEXT("ReceiveHit")));
+		EventNode->bOverrideFunction = true;
+		UE_LOG(LogTemp, Display, TEXT("EventManager: Creating Hit event node"));
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("F18: Failed to find function for event name: %s"), *EventName);
+		// For custom events, try to find the function in the blueprint class
+		UClass* BlueprintClass = Blueprint->GeneratedClass;
+		if (BlueprintClass)
+		{
+			UFunction* EventFunction = BlueprintClass->FindFunctionByName(FName(*EventName));
+			if (EventFunction)
+			{
+				EventNode->EventReference.SetExternalMember(FName(*EventName), BlueprintClass);
+				UE_LOG(LogTemp, Display, TEXT("EventManager: Creating custom event node '%s'"), *EventName);
+			}
+			else
+			{
+				// Treat as a custom event name
+				EventNode->CustomFunctionName = FName(*EventName);
+				UE_LOG(LogTemp, Display, TEXT("EventManager: Creating new custom event '%s'"), *EventName);
+			}
+		}
+		else
+		{
+			// No generated class yet, create as custom event
+			EventNode->CustomFunctionName = FName(*EventName);
+			UE_LOG(LogTemp, Display, TEXT("EventManager: Creating new custom event '%s' (no generated class)"), *EventName);
+		}
 	}
+
+	// Set position
+	EventNode->NodePosX = static_cast<int32>(Position.X);
+	EventNode->NodePosY = static_cast<int32>(Position.Y);
+
+	// Add to graph and initialize
+	Graph->AddNode(EventNode, true, false);
+	EventNode->CreateNewGuid();
+	EventNode->PostPlacedNewNode();
+	EventNode->AllocateDefaultPins();
+
+	UE_LOG(LogTemp, Display, TEXT("EventManager: Created event node '%s' (ID: %s)"),
+		*EventName, *EventNode->NodeGuid.ToString());
 
 	return EventNode;
 }
@@ -133,12 +195,51 @@ UK2Node_Event* FEventManager::FindExistingEventNode(UEdGraph* Graph, const FStri
 		return nullptr;
 	}
 
+	// Normalize event name - map friendly names to internal names
+	FString InternalName = EventName;
+	if (EventName.Equals(TEXT("BeginPlay"), ESearchCase::IgnoreCase))
+	{
+		InternalName = TEXT("ReceiveBeginPlay");
+	}
+	else if (EventName.Equals(TEXT("Tick"), ESearchCase::IgnoreCase))
+	{
+		InternalName = TEXT("ReceiveTick");
+	}
+	else if (EventName.Equals(TEXT("ActorBeginOverlap"), ESearchCase::IgnoreCase))
+	{
+		InternalName = TEXT("ReceiveActorBeginOverlap");
+	}
+	else if (EventName.Equals(TEXT("ActorEndOverlap"), ESearchCase::IgnoreCase))
+	{
+		InternalName = TEXT("ReceiveActorEndOverlap");
+	}
+	else if (EventName.Equals(TEXT("Destroyed"), ESearchCase::IgnoreCase))
+	{
+		InternalName = TEXT("ReceiveDestroyed");
+	}
+	else if (EventName.Equals(TEXT("Hit"), ESearchCase::IgnoreCase))
+	{
+		InternalName = TEXT("ReceiveHit");
+	}
+
 	for (UEdGraphNode* Node : Graph->Nodes)
 	{
 		UK2Node_Event* EventNode = Cast<UK2Node_Event>(Node);
-		if (EventNode && EventNode->EventReference.GetMemberName() == FName(*EventName))
+		if (EventNode)
 		{
-			return EventNode;
+			FName MemberName = EventNode->EventReference.GetMemberName();
+			// Check both the provided name and the internal name
+			if (MemberName.ToString().Equals(EventName, ESearchCase::IgnoreCase) ||
+			    MemberName.ToString().Equals(InternalName, ESearchCase::IgnoreCase))
+			{
+				return EventNode;
+			}
+			// Also check CustomFunctionName for custom events
+			if (!EventNode->CustomFunctionName.IsNone() &&
+			    EventNode->CustomFunctionName.ToString().Equals(EventName, ESearchCase::IgnoreCase))
+			{
+				return EventNode;
+			}
 		}
 	}
 

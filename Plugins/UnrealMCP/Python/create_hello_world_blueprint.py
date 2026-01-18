@@ -157,11 +157,13 @@ def create_hello_world_blueprint():
     print("=" * 60)
 
     # Step 1: Create the Blueprint in Content/Blueprints folder
+    # The folder_path uses Unreal Engine's internal path format:
+    # /Game/ corresponds to the Content folder in the project
     print("\n[Step 1] Creating Blueprint...")
     result = client.send_command("create_blueprint", {
         "name": blueprint_name,
         "parent_class": "Actor",
-        "folder_path": "/Game/Blueprints/"
+        "folder_path": "Blueprints/"  # Will be prefixed with /Game/ automatically
     })
 
     if result.get("success") == False:
