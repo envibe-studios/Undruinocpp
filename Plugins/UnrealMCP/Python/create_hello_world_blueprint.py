@@ -156,14 +156,15 @@ def create_hello_world_blueprint():
     print("Creating Hello World Blueprint")
     print("=" * 60)
 
-    # Step 1: Create the Blueprint
+    # Step 1: Create the Blueprint in Content/Blueprints folder
     print("\n[Step 1] Creating Blueprint...")
     result = client.send_command("create_blueprint", {
         "name": blueprint_name,
-        "parent_class": "Actor"
+        "parent_class": "Actor",
+        "folder_path": "/Game/Blueprints/"
     })
 
-    if result.get("status") == "error":
+    if result.get("success") == False:
         # Check if blueprint already exists
         if "already exists" in result.get("error", ""):
             print(f"Blueprint {blueprint_name} already exists, continuing...")
@@ -182,16 +183,15 @@ def create_hello_world_blueprint():
         "pos_y": 0
     })
 
-    if result.get("status") == "error":
+    if result.get("success") == False:
         print(f"Error adding event node: {result.get('error')}")
         # Continue anyway - might already exist
     else:
         print(f"Event node added: {result}")
 
-    # Get the event node ID from the result
-    event_node_id = None
-    if result.get("status") == "success" and result.get("result"):
-        event_node_id = result["result"].get("node_id")
+    # Get the event node ID from the result (directly in the response, not nested in 'result')
+    event_node_id = result.get("node_id")
+    print(f"  Event node ID: {event_node_id}")
 
     # Step 3: Add Print String node
     print("\n[Step 3] Adding Print String node...")
@@ -205,16 +205,15 @@ def create_hello_world_blueprint():
         }
     })
 
-    if result.get("status") == "error":
+    if result.get("success") == False:
         print(f"Error adding print node: {result.get('error')}")
         return False
     else:
         print(f"Print node added: {result}")
 
-    # Get the print node ID
-    print_node_id = None
-    if result.get("status") == "success" and result.get("result"):
-        print_node_id = result["result"].get("node_id")
+    # Get the print node ID (directly in the response, not nested in 'result')
+    print_node_id = result.get("node_id")
+    print(f"  Print node ID: {print_node_id}")
 
     # Step 4: Connect the nodes
     if event_node_id and print_node_id:
@@ -227,7 +226,7 @@ def create_hello_world_blueprint():
             "target_pin_name": "execute"  # Execution input pin
         })
 
-        if result.get("status") == "error":
+        if result.get("success") == False:
             print(f"Error connecting nodes: {result.get('error')}")
             # Try alternative pin names
             print("Trying alternative pin names...")
@@ -238,7 +237,7 @@ def create_hello_world_blueprint():
                 "target_node_id": print_node_id,
                 "target_pin_name": "Execute"
             })
-            if result.get("status") == "error":
+            if result.get("success") == False:
                 print(f"Still failed: {result.get('error')}")
         else:
             print(f"Nodes connected: {result}")
@@ -253,7 +252,7 @@ def create_hello_world_blueprint():
         "blueprint_name": blueprint_name
     })
 
-    if result.get("status") == "error":
+    if result.get("success") == False:
         print(f"Error compiling: {result.get('error')}")
     else:
         print(f"Blueprint compiled: {result}")
@@ -262,7 +261,7 @@ def create_hello_world_blueprint():
     print("\n[Step 6] Saving all assets to disk...")
     result = client.send_command("save_all", {})
 
-    if result.get("status") == "error":
+    if result.get("success") == False:
         print(f"Error saving: {result.get('error')}")
     else:
         print(f"Assets saved: {result}")
@@ -281,7 +280,7 @@ def test_connection():
     client = UnrealMCPClient()
     result = client.send_command("ping", {})
 
-    if result.get("status") == "success":
+    if result.get("success") == True or result.get("message") == "pong":
         print("Connection successful! Unreal Editor is responding.")
         return True
     else:

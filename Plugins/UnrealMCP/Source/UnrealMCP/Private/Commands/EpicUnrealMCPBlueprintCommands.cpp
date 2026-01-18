@@ -114,8 +114,23 @@ TSharedPtr<FJsonObject> FEpicUnrealMCPBlueprintCommands::HandleCreateBlueprint(c
         return FEpicUnrealMCPCommonUtils::CreateErrorResponse(TEXT("Missing 'name' parameter"));
     }
 
-    // Check if blueprint already exists
-    FString PackagePath = TEXT("/Game/Blueprints/");
+    // Get optional folder path parameter, default to /Game/Blueprints/
+    FString PackagePath;
+    if (!Params->TryGetStringField(TEXT("folder_path"), PackagePath))
+    {
+        PackagePath = TEXT("/Game/Blueprints/");
+    }
+
+    // Ensure the path starts with /Game/ and ends with /
+    if (!PackagePath.StartsWith(TEXT("/Game/")))
+    {
+        PackagePath = TEXT("/Game/") + PackagePath;
+    }
+    if (!PackagePath.EndsWith(TEXT("/")))
+    {
+        PackagePath += TEXT("/");
+    }
+
     FString AssetName = BlueprintName;
     if (UEditorAssetLibrary::DoesAssetExist(PackagePath + AssetName))
     {
