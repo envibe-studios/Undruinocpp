@@ -22,6 +22,7 @@
 #include "Engine/BlueprintGeneratedClass.h"
 #include "EditorAssetLibrary.h"
 #include "Commands/EpicUnrealMCPBlueprintCommands.h"
+#include "FileHelpers.h"
 
 FEpicUnrealMCPEditorCommands::FEpicUnrealMCPEditorCommands()
 {
@@ -315,10 +316,16 @@ TSharedPtr<FJsonObject> FEpicUnrealMCPEditorCommands::HandleSpawnBlueprintActor(
 TSharedPtr<FJsonObject> FEpicUnrealMCPEditorCommands::HandleSaveAll(const TSharedPtr<FJsonObject>& Params)
 {
     // Save all dirty packages (modified assets including blueprints)
-    UEditorAssetLibrary::SaveLoadedAssets();
+    // Parameters: bPromptUserToSave, bSaveMapPackages, bSaveContentPackages, bFastSave
+    bool bSuccess = FEditorFileUtils::SaveDirtyPackages(
+        false,  // Don't prompt user
+        true,   // Save map packages
+        true,   // Save content packages
+        true    // Fast save (don't prompt for checkout)
+    );
 
     TSharedPtr<FJsonObject> ResultObj = MakeShared<FJsonObject>();
-    ResultObj->SetBoolField(TEXT("success"), true);
-    ResultObj->SetStringField(TEXT("message"), TEXT("All modified assets saved"));
+    ResultObj->SetBoolField(TEXT("success"), bSuccess);
+    ResultObj->SetStringField(TEXT("message"), bSuccess ? TEXT("All modified assets saved") : TEXT("Some assets may not have been saved"));
     return ResultObj;
 }
