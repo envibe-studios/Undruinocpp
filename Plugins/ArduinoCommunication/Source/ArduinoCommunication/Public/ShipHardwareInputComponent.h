@@ -99,7 +99,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
  *   3. Bind to the events you need in Blueprint
  *   4. Ensure UAndySerialSubsystem has the port registered and started
  */
-UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent), BlueprintType, Blueprintable)
+UCLASS(ClassGroup=(Hardware), meta=(BlueprintSpawnableComponent), BlueprintType, Blueprintable)
 class ARDUINOCOMMUNICATION_API UShipHardwareInputComponent : public UActorComponent
 {
 	GENERATED_BODY()
