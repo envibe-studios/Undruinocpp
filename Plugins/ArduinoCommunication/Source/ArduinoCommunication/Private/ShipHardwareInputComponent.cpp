@@ -161,7 +161,8 @@ void UShipHardwareInputComponent::OnFrameParsedHandler(FName InShipId, uint8 Src
 			{
 				bool bTriggerHeld = (ImuData.Buttons & 0x01) != 0;
 				FQuat Orientation = ImuData.GetQuaternion();
-				OnWeaponImu.Broadcast(Src, Orientation, bTriggerHeld);
+				FVector EulerAngles = ImuData.EulerAngles;
+				OnWeaponImu.Broadcast(Src, Type, Seq, Orientation, EulerAngles, bTriggerHeld, Payload);
 			}
 		}
 		break;
@@ -173,7 +174,17 @@ void UShipHardwareInputComponent::OnFrameParsedHandler(FName InShipId, uint8 Src
 			{
 				// Convert direction bool to delta: right/clockwise = +1, left/counter-clockwise = -1
 				int32 Delta = WheelData.bRight ? 1 : -1;
-				OnWheelTurn.Broadcast(Src, Delta);
+				OnWheelTurn.Broadcast(Src, Type, Seq, WheelData.WheelIndex, Delta, Payload);
+			}
+		}
+		break;
+
+	case EEspMsgType::JackState:
+		{
+			FJackStateData JackData;
+			if (UEspPacketBP::ParseJackStatePayload(Payload, JackData))
+			{
+				OnJackState.Broadcast(Src, Type, Seq, JackData.State, Payload);
 			}
 		}
 		break;
@@ -183,7 +194,7 @@ void UShipHardwareInputComponent::OnFrameParsedHandler(FName InShipId, uint8 Src
 			FWeaponTagData TagData;
 			if (UEspPacketBP::ParseWeaponTagPayload(Payload, TagData))
 			{
-				OnWeaponTag.Broadcast(Src, TagData.UID, TagData.bPresent);
+				OnWeaponTag.Broadcast(Src, Type, Seq, TagData.UID, TagData.bPresent, Payload);
 			}
 		}
 		break;
@@ -193,7 +204,7 @@ void UShipHardwareInputComponent::OnFrameParsedHandler(FName InShipId, uint8 Src
 			FReloadTagData TagData;
 			if (UEspPacketBP::ParseReloadTagPayload(Payload, TagData))
 			{
-				OnReloadTag.Broadcast(Src, TagData.UID, TagData.bPresent);
+				OnReloadTag.Broadcast(Src, Type, Seq, TagData.UID, TagData.bPresent, Payload);
 			}
 		}
 		break;

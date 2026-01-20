@@ -13,56 +13,102 @@ class UAndySerialSubsystem;
 
 // ============================================================================
 // Event Delegates - Friendly Blueprint events for ship hardware input
+// All delegates include the same fields as OnFrameParsed for consistency
 // ============================================================================
 
 /**
  * Event fired when weapon IMU data is received
  * @param Src - Source identifier from the packet
+ * @param Type - Packet type (EEspMsgType::WeaponImu = 6)
+ * @param Seq - Sequence number from the packet
  * @param Orientation - Weapon orientation as quaternion
+ * @param EulerAngles - Euler angles (X=Pitch, Y=Yaw, Z=Roll in degrees)
  * @param bTriggerHeld - True if trigger button is pressed
+ * @param Payload - Raw payload bytes
  */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_SevenParams(
 	FOnWeaponImu,
 	uint8, Src,
+	uint8, Type,
+	int32, Seq,
 	FQuat, Orientation,
-	bool, bTriggerHeld
+	FVector, EulerAngles,
+	bool, bTriggerHeld,
+	const TArray<uint8>&, Payload
 );
 
 /**
  * Event fired when wheel turn input is received
  * @param Src - Source identifier from the packet
- * @param Delta - Turn delta (+1 or -1 for direction)
+ * @param Type - Packet type (EEspMsgType::WheelTurn = 1)
+ * @param Seq - Sequence number from the packet
+ * @param WheelIndex - Index of the wheel (0-based)
+ * @param Delta - Turn delta (+1 for right/clockwise, -1 for left/counter-clockwise)
+ * @param Payload - Raw payload bytes
  */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(
 	FOnWheelTurn,
 	uint8, Src,
-	int32, Delta
+	uint8, Type,
+	int32, Seq,
+	uint8, WheelIndex,
+	int32, Delta,
+	const TArray<uint8>&, Payload
+);
+
+/**
+ * Event fired when jack state changes
+ * @param Src - Source identifier from the packet
+ * @param Type - Packet type (EEspMsgType::JackState = 3)
+ * @param Seq - Sequence number from the packet
+ * @param State - Jack state value
+ * @param Payload - Raw payload bytes
+ */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FiveParams(
+	FOnJackState,
+	uint8, Src,
+	uint8, Type,
+	int32, Seq,
+	uint8, State,
+	const TArray<uint8>&, Payload
 );
 
 /**
  * Event fired when weapon tag is inserted or removed
  * @param Src - Source identifier from the packet
+ * @param Type - Packet type (EEspMsgType::WeaponTag = 4)
+ * @param Seq - Sequence number from the packet
  * @param TagId - RFID/NFC tag unique identifier
  * @param bInserted - True if tag was inserted, false if removed
+ * @param Payload - Raw payload bytes
  */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(
 	FOnWeaponTag,
 	uint8, Src,
+	uint8, Type,
+	int32, Seq,
 	int64, TagId,
-	bool, bInserted
+	bool, bInserted,
+	const TArray<uint8>&, Payload
 );
 
 /**
  * Event fired when reload tag is inserted or removed
  * @param Src - Source identifier from the packet
+ * @param Type - Packet type (EEspMsgType::ReloadTag = 5)
+ * @param Seq - Sequence number from the packet
  * @param TagId - RFID/NFC tag unique identifier
  * @param bInserted - True if tag was inserted, false if removed
+ * @param Payload - Raw payload bytes
  */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(
 	FOnReloadTag,
 	uint8, Src,
+	uint8, Type,
+	int32, Seq,
 	int64, TagId,
-	bool, bInserted
+	bool, bInserted,
+	const TArray<uint8>&, Payload
 );
 
 /**
@@ -89,6 +135,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
  * Exposed Events:
  * - OnWeaponImu: IMU orientation + trigger state from weapon controllers
  * - OnWheelTurn: Rotary encoder input from steering/helm wheels
+ * - OnJackState: Jack plug insertion/removal state
  * - OnWeaponTag: RFID/NFC weapon tag insertion/removal
  * - OnReloadTag: RFID/NFC reload tag insertion/removal
  * - OnShipConnectionChanged: ESP32 connection status
@@ -99,7 +146,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
  *   3. Bind to the events you need in Blueprint
  *   4. Ensure UAndySerialSubsystem has the port registered and started
  */
-UCLASS(ClassGroup=(Hardware), meta=(BlueprintSpawnableComponent), BlueprintType, Blueprintable)
+UCLASS(ClassGroup=(Common), meta=(BlueprintSpawnableComponent), BlueprintType, Blueprintable)
 class ARDUINOCOMMUNICATION_API UShipHardwareInputComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -119,13 +166,17 @@ public:
 
 	// === Events ===
 
-	/** Event fired when weapon IMU data is received (orientation + trigger) */
+	/** Event fired when weapon IMU data is received (orientation + euler angles + trigger) */
 	UPROPERTY(BlueprintAssignable, Category = "Ship Hardware|Events")
 	FOnWeaponImu OnWeaponImu;
 
-	/** Event fired when wheel turn input is received */
+	/** Event fired when wheel turn input is received (includes WheelIndex) */
 	UPROPERTY(BlueprintAssignable, Category = "Ship Hardware|Events")
 	FOnWheelTurn OnWheelTurn;
+
+	/** Event fired when jack state changes */
+	UPROPERTY(BlueprintAssignable, Category = "Ship Hardware|Events")
+	FOnJackState OnJackState;
 
 	/** Event fired when weapon tag is inserted or removed */
 	UPROPERTY(BlueprintAssignable, Category = "Ship Hardware|Events")
