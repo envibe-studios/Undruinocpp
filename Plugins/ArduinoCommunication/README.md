@@ -187,6 +187,148 @@ Static utility functions:
 3. **No response**: Check firewall settings
 4. **Disconnects**: Verify WiFi signal strength
 
+## Multi-Ship Architecture (AndySerialSubsystem)
+
+For games with multiple ships, each with its own ESP32 "Andy" hub, use the `UAndySerialSubsystem` GameInstanceSubsystem. This provides centralized management of multiple serial ports that persist across level loads.
+
+### Architecture Overview
+
+```
+UAndySerialSubsystem (GameInstanceSubsystem)
+├── TMap<FName, FAndyPortConnection>
+│   ├── "ShipA" -> SerialPort, Parser, EventHandler
+│   └── "ShipB" -> SerialPort, Parser, EventHandler
+└── Events: OnFrameParsed, OnConnectionChanged
+
+UShipHardwareInputComponent (ActorComponent on Ship Pawn)
+├── ShipId: "ShipA"
+├── Filters events by ShipId
+└── Events: OnWeaponImu, OnWheelTurn, OnWeaponTag, OnReloadTag
+```
+
+### Blueprint Usage - Setting Up Ports
+
+```
+// In your GameMode or persistent manager Blueprint:
+
+Event BeginPlay
+    -> Get Game Instance Subsystem (UAndySerialSubsystem)
+    -> Add Port (ShipId: "ShipA", PortName: "COM3", BaudRate: 115200)
+    -> Add Port (ShipId: "ShipB", PortName: "COM4", BaudRate: 115200)
+    -> Start All
+```
+
+### Blueprint Usage - Ship Actor with Hardware Input
+
+```
+// On your Ship Pawn/Actor:
+
+1. Add Component -> Ship Hardware Input Component
+2. Set ShipId = "ShipA" (must match port registration)
+3. Bind events in Event Graph:
+
+Event On Weapon Imu (Src, Orientation, bTriggerHeld)
+    -> Set Actor Rotation from Quaternion
+    -> Branch on bTriggerHeld -> Fire Weapon
+
+Event On Wheel Turn (Src, Delta)
+    -> Add to Steering Angle (Delta * SteeringSensitivity)
+
+Event On Weapon Tag (Src, TagId, bInserted)
+    -> Branch on bInserted
+        -> True: Equip Weapon by TagId
+        -> False: Holster Weapon
+
+Event On Reload Tag (Src, TagId, bInserted)
+    -> Branch on bInserted
+        -> True: Start Reload
+```
+
+### C++ Usage
+
+```cpp
+// Get the subsystem
+UAndySerialSubsystem* AndySub = GetGameInstance()->GetSubsystem<UAndySerialSubsystem>();
+
+// Register ports
+AndySub->AddPort(FName("ShipA"), TEXT("COM3"), 115200);
+AndySub->AddPort(FName("ShipB"), TEXT("COM4"), 115200);
+
+// Start all ports
+AndySub->StartAll();
+
+// Check connection status
+if (AndySub->IsConnected(FName("ShipA")))
+{
+    // Send data
+    AndySub->SendLine(FName("ShipA"), TEXT("!calibrate"));
+}
+
+// In your Ship Actor, add the component:
+UPROPERTY(VisibleAnywhere)
+UShipHardwareInputComponent* HardwareInput;
+
+// Constructor
+HardwareInput = CreateDefaultSubobject<UShipHardwareInputComponent>(TEXT("HardwareInput"));
+HardwareInput->ShipId = FName("ShipA");
+
+// BeginPlay - bind events
+HardwareInput->OnWeaponImu.AddDynamic(this, &AMyShip::HandleWeaponImu);
+HardwareInput->OnWheelTurn.AddDynamic(this, &AMyShip::HandleWheelTurn);
+
+void AMyShip::HandleWeaponImu(uint8 Src, FQuat Orientation, bool bTriggerHeld)
+{
+    WeaponMesh->SetWorldRotation(Orientation.Rotator());
+    if (bTriggerHeld) FireWeapon();
+}
+
+void AMyShip::HandleWheelTurn(uint8 Src, int32 Delta)
+{
+    SteeringAngle += Delta * SteeringSensitivity;
+}
+```
+
+### UAndySerialSubsystem API
+
+**Port Management:**
+- `AddPort(FName ShipId, FString PortName, int32 BaudRate)` - Register a new serial port
+- `RemovePort(FName ShipId)` - Remove and close a port
+- `StartAll()` - Open all registered ports
+- `StopAll()` - Close all ports
+- `IsConnected(FName ShipId)` - Check if a port is connected
+- `GetAllShipIds()` - Get list of registered ship IDs
+
+**Data Transmission:**
+- `SendBytes(FName ShipId, TArray<uint8> Data)` - Send raw bytes
+- `SendLine(FName ShipId, FString Line)` - Send text with newline
+
+**Events:**
+- `OnFrameParsed(FName ShipId, uint8 Src, uint8 Type, int32 Seq, TArray<uint8> Payload)` - Parsed packet received
+- `OnConnectionChanged(FName ShipId, bool bConnected)` - Connection status changed
+
+### UShipHardwareInputComponent API
+
+**Configuration:**
+- `ShipId` - Must match the ShipId in UAndySerialSubsystem
+- `bServerOnly` - If true, only processes events on server (default: true)
+
+**Status:**
+- `IsConnected()` - Check if this ship's port is connected
+- `GetSerialSubsystem()` - Get reference to the subsystem
+
+**Events:**
+- `OnWeaponImu(uint8 Src, FQuat Orientation, bool bTriggerHeld)` - IMU orientation data
+- `OnWheelTurn(uint8 Src, int32 Delta)` - Rotary encoder turn (+1/-1)
+- `OnWeaponTag(uint8 Src, int64 TagId, bool bInserted)` - Weapon RFID tag
+- `OnReloadTag(uint8 Src, int64 TagId, bool bInserted)` - Reload RFID tag
+- `OnShipConnectionChanged(bool bConnected)` - Connection status for this ship
+
+### Thread Safety
+
+- Serial reading happens on background threads
+- All delegate broadcasts are marshaled to the game thread via `AsyncTask(ENamedThreads::GameThread, ...)`
+- Each port has its own independent parser instance (no shared state)
+
 ## License
 
 MIT License - Use freely in your projects.
