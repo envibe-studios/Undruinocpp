@@ -83,6 +83,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hover Thruster|Physics", meta = (ClampMin = "0.0"))
 	float AngularDamping = 2.0f;
 
+	/** Pitch stabilization factor - damping based on thruster's vertical velocity from rotation. Higher values reduce pitch wobble during acceleration. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hover Thruster|Physics", meta = (ClampMin = "0.0"))
+	float PitchStabilization = 500.0f;
+
 	/** How far to trace for ground detection (multiplier of HoverHeight) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hover Thruster|Physics", meta = (ClampMin = "1.0", ClampMax = "10.0"))
 	float TraceDistanceMultiplier = 2.0f;

@@ -440,9 +440,23 @@ FVector UHoverThrusterComponent::CalculateHoverForce(float DeltaTime)
 		return FVector::ZeroVector;
 	}
 
-	FVector Velocity = RootPrimitive->GetPhysicsLinearVelocity();
-	float VerticalVelocity = FVector::DotProduct(Velocity, LastGroundNormal);
-	float DampingForce = -VerticalVelocity * HoverDamping;
+	// Get linear velocity at thruster location (includes rotational contribution)
+	FVector ThrusterLocation = GetComponentLocation();
+	FVector CenterOfMass = RootPrimitive->GetCenterOfMass();
+	FVector AngularVelocityRad = RootPrimitive->GetPhysicsAngularVelocityInRadians();
+	FVector RadiusVector = ThrusterLocation - CenterOfMass;
+
+	// Linear velocity at thruster point = linear velocity + (angular velocity x radius)
+	FVector LinearVelocity = RootPrimitive->GetPhysicsLinearVelocity();
+	FVector RotationalVelocity = FVector::CrossProduct(AngularVelocityRad, RadiusVector);
+	FVector VelocityAtThruster = LinearVelocity + RotationalVelocity;
+
+	// Vertical velocity includes both linear motion and rotational contribution (pitch/roll)
+	float VerticalVelocity = FVector::DotProduct(VelocityAtThruster, LastGroundNormal);
+
+	// Combined damping: standard damping + pitch stabilization for rotational component
+	float RotationalVerticalSpeed = FVector::DotProduct(RotationalVelocity, LastGroundNormal);
+	float DampingForce = -VerticalVelocity * HoverDamping - RotationalVerticalSpeed * PitchStabilization;
 
 	// Total force
 	float TotalForce = SpringForce + DampingForce;
