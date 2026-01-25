@@ -18,6 +18,7 @@ public class ArduinoCommunication : ModuleRules
 
 		PrivateIncludePaths.AddRange(
 			new string[] {
+				System.IO.Path.Combine(ModuleDirectory, "../../../..", "Source/Unduinocpp")
 			}
 		);
 
@@ -35,6 +36,7 @@ public class ArduinoCommunication : ModuleRules
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
+				"Unduinocpp"
 			}
 		);
 

@@ -464,6 +464,36 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Firing|Scanner")
 	void CancelScan();
 
+	// ============================================================================
+	// WEAPON MAG INTEGRATION
+	// ============================================================================
+
+	/**
+	 * Apply weapon magazine configuration to this firing component
+	 * Updates firing mode, damage, rate of fire, spread, bullets per shot, max ammo, and range
+	 * @param FiringMode - The firing mode type (0=Bullet, 1=TractorBeam, 2=Scanner)
+	 * @param Damage - Bullet damage
+	 * @param RateOfFire - Rounds per second
+	 * @param SpreadAngle - Bullet spread in degrees
+	 * @param BulletsPerShot - Bullets per trigger pull
+	 * @param MaxAmmo - Maximum ammo capacity
+	 * @param Range - Firing range in cm
+	 * @param TractorPullForce - Pull force for tractor beam mode
+	 * @param ScanDuration - Scan duration for scanner mode
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Firing|Weapon Mag")
+	void ApplyWeaponMagConfig(
+		uint8 FiringMode,
+		float Damage,
+		float RateOfFire,
+		float SpreadAngle,
+		int32 BulletsPerShot,
+		int32 MaxAmmo,
+		float Range,
+		float TractorPullForce,
+		float ScanDuration
+	);
+
 protected:
 	// ============================================================================
 	// INTERNAL PROCESSING

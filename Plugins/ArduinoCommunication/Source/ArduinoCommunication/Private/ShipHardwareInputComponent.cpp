@@ -3,6 +3,7 @@
 #include "ShipHardwareInputComponent.h"
 #include "AndySerialSubsystem.h"
 #include "EspPacketBP.h"
+#include "FiringComponent.h"
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
 #include "GameFramework/Actor.h"
@@ -202,6 +203,12 @@ void UShipHardwareInputComponent::OnFrameParsedHandler(FName InShipId, uint8 Src
 				{
 					WeaponTagInsertedState.Add(TagData.UID, TagData.bPresent);
 					EvtTagChanged.Broadcast(TagData.UID, TagData.bPresent);
+
+					// Auto-apply weapon mag configuration when tag is inserted
+					if (bAutoApplyWeaponMag && TagData.bPresent)
+					{
+						ApplyWeaponMagByTagId(TagData.UID);
+					}
 				}
 			}
 		}
@@ -235,4 +242,59 @@ void UShipHardwareInputComponent::OnConnectionChangedHandler(FName InShipId, boo
 
 	UE_LOG(LogTemp, Log, TEXT("ShipHardwareInputComponent: ShipId '%s' connection changed: %s"),
 		*ShipId.ToString(), bConnected ? TEXT("Connected") : TEXT("Disconnected"));
+}
+
+// ============================================================================
+// WEAPON MAG FUNCTIONS
+// ============================================================================
+
+bool UShipHardwareInputComponent::FindWeaponMagByTagId(int64 TagId, FWeaponMag& OutWeaponMag) const
+{
+	for (const FWeaponMag& Mag : WeaponMags)
+	{
+		if (Mag.TagId == TagId)
+		{
+			OutWeaponMag = Mag;
+			return true;
+		}
+	}
+	return false;
+}
+
+bool UShipHardwareInputComponent::ApplyWeaponMag(const FWeaponMag& WeaponMag)
+{
+	if (!FiringComponent)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ShipHardwareInputComponent: Cannot apply WeaponMag - FiringComponent not set"));
+		return false;
+	}
+
+	FiringComponent->ApplyWeaponMagConfig(
+		WeaponMag.FiringMode,
+		WeaponMag.Damage,
+		WeaponMag.RateOfFire,
+		WeaponMag.SpreadAngle,
+		WeaponMag.BulletsPerShot,
+		WeaponMag.MaxAmmo,
+		WeaponMag.Range,
+		WeaponMag.TractorPullForce,
+		WeaponMag.ScanDuration
+	);
+
+	UE_LOG(LogTemp, Log, TEXT("ShipHardwareInputComponent: Applied WeaponMag '%s' (TagId: %lld)"),
+		*WeaponMag.WeaponName.ToString(), WeaponMag.TagId);
+
+	return true;
+}
+
+bool UShipHardwareInputComponent::ApplyWeaponMagByTagId(int64 TagId)
+{
+	FWeaponMag FoundMag;
+	if (FindWeaponMagByTagId(TagId, FoundMag))
+	{
+		return ApplyWeaponMag(FoundMag);
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("ShipHardwareInputComponent: No WeaponMag found for TagId: %lld"), TagId);
+	return false;
 }

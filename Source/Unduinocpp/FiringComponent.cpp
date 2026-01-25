@@ -724,3 +724,47 @@ FVector UFiringComponent::ApplySpread(const FVector& Direction, float SpreadAngl
 
 	return SpreadDirection.GetSafeNormal();
 }
+
+// ============================================================================
+// WEAPON MAG INTEGRATION
+// ============================================================================
+
+void UFiringComponent::ApplyWeaponMagConfig(
+	uint8 FiringMode,
+	float Damage,
+	float RateOfFire,
+	float SpreadAngle,
+	int32 BulletsPerShot,
+	int32 MaxAmmo,
+	float Range,
+	float TractorPullForce,
+	float ScanDuration
+)
+{
+	// Set the firing mode
+	EFiringModeType NewMode = static_cast<EFiringModeType>(FMath::Clamp(static_cast<int32>(FiringMode), 0, 3));
+	SetFiringMode(NewMode);
+
+	// Apply bullet mode config
+	BulletConfig.Damage = Damage;
+	BulletConfig.RateOfFire = FMath::Max(0.1f, RateOfFire);
+	BulletConfig.SpreadAngle = FMath::Clamp(SpreadAngle, 0.0f, 45.0f);
+	BulletConfig.BulletsPerShot = FMath::Max(1, BulletsPerShot);
+	BulletConfig.MaxAmmo = FMath::Max(1, MaxAmmo);
+	BulletConfig.CurrentAmmo = BulletConfig.MaxAmmo; // Reload to full
+	BulletConfig.Range = FMath::Max(0.0f, Range);
+
+	// Apply tractor beam config
+	TractorBeamConfig.PullForce = FMath::Max(0.0f, TractorPullForce);
+	TractorBeamConfig.Range = FMath::Max(0.0f, Range);
+
+	// Apply scanner config
+	ScannerConfig.ScanDuration = FMath::Max(0.1f, ScanDuration);
+	ScannerConfig.Range = FMath::Max(0.0f, Range);
+
+	// Broadcast ammo changed event since we reloaded
+	OnAmmoChanged.Broadcast(BulletConfig.CurrentAmmo, BulletConfig.MaxAmmo);
+
+	UE_LOG(LogTemp, Log, TEXT("FiringComponent: Applied WeaponMag config - Mode: %d, Damage: %.1f, RoF: %.1f, Ammo: %d"),
+		static_cast<int32>(NewMode), Damage, RateOfFire, MaxAmmo);
+}
