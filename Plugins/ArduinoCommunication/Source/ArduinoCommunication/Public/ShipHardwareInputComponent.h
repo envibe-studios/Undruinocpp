@@ -121,6 +121,17 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
 );
 
 /**
+ * Event fired when weapon tag Inserted state changes (transition only)
+ * @param TagId - RFID/NFC tag unique identifier
+ * @param bInserted - New inserted state (true = inserted, false = removed)
+ */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
+	FEvtTagChanged,
+	int64, TagId,
+	bool, bInserted
+);
+
+/**
  * Ship Hardware Input Component
  *
  * Provides a clean interface between hardware input from an ESP32 "Andy" hub
@@ -190,6 +201,10 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Ship Hardware|Events")
 	FOnShipConnectionChanged OnShipConnectionChanged;
 
+	/** Event fired when weapon tag Inserted state changes (fires only on transitions) */
+	UPROPERTY(BlueprintAssignable, Category = "Ship Hardware|Events")
+	FEvtTagChanged EvtTagChanged;
+
 	// === Status ===
 
 	/**
@@ -229,6 +244,9 @@ private:
 
 	/** Whether we are currently bound to subsystem events */
 	bool bIsBound = false;
+
+	/** Track previous weapon tag inserted state for change detection (keyed by TagId) */
+	TMap<int64, bool> WeaponTagInsertedState;
 
 	/** Bind to the subsystem's delegates */
 	void BindToSubsystem();

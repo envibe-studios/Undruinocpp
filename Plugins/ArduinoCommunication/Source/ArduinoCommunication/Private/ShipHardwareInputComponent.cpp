@@ -195,6 +195,14 @@ void UShipHardwareInputComponent::OnFrameParsedHandler(FName InShipId, uint8 Src
 			if (UEspPacketBP::ParseWeaponTagPayload(Payload, TagData))
 			{
 				OnWeaponTag.Broadcast(Src, Type, Seq, TagData.UID, TagData.bPresent, Payload);
+
+				// Check if the Inserted state has changed and fire EvtTagChanged if so
+				bool* PreviousState = WeaponTagInsertedState.Find(TagData.UID);
+				if (!PreviousState || *PreviousState != TagData.bPresent)
+				{
+					WeaponTagInsertedState.Add(TagData.UID, TagData.bPresent);
+					EvtTagChanged.Broadcast(TagData.UID, TagData.bPresent);
+				}
 			}
 		}
 		break;
