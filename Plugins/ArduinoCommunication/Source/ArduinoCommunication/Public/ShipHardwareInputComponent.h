@@ -186,11 +186,13 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
  * Event fired when weapon tag Inserted state changes (transition only)
  * @param TagId - RFID/NFC tag unique identifier
  * @param bInserted - New inserted state (true = inserted, false = removed)
+ * @param ReaderIndex - Which RFID reader triggered the event (0=Port Weapon, 1=Starboard Weapon, 2=Reload Box)
  */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(
 	FEvtTagChanged,
 	int64, TagId,
-	bool, bInserted
+	bool, bInserted,
+	uint8, ReaderIndex
 );
 
 /**
@@ -350,6 +352,9 @@ private:
 
 	/** Track previous weapon tag inserted state for change detection (keyed by TagId) */
 	TMap<int64, bool> WeaponTagInsertedState;
+
+	/** Track previous reload tag inserted state for change detection (keyed by TagId) */
+	TMap<int64, bool> ReloadTagInsertedState;
 
 	/** Bind to the subsystem's delegates */
 	void BindToSubsystem();

@@ -202,7 +202,8 @@ void UShipHardwareInputComponent::OnFrameParsedHandler(FName InShipId, uint8 Src
 				if (!PreviousState || *PreviousState != TagData.bPresent)
 				{
 					WeaponTagInsertedState.Add(TagData.UID, TagData.bPresent);
-					EvtTagChanged.Broadcast(TagData.UID, TagData.bPresent);
+					// ReaderIndex: 0=Port Weapon, 1=Starboard Weapon (from TagData.Side)
+					EvtTagChanged.Broadcast(TagData.UID, TagData.bPresent, TagData.Side);
 
 					// Auto-apply weapon mag configuration when tag is inserted
 					if (bAutoApplyWeaponMag && TagData.bPresent)
@@ -220,6 +221,21 @@ void UShipHardwareInputComponent::OnFrameParsedHandler(FName InShipId, uint8 Src
 			if (UEspPacketBP::ParseReloadTagPayload(Payload, TagData))
 			{
 				OnReloadTag.Broadcast(Src, Type, Seq, TagData.UID, TagData.bPresent, Payload);
+
+				// Check if the Inserted state has changed and fire EvtTagChanged if so
+				bool* PreviousState = ReloadTagInsertedState.Find(TagData.UID);
+				if (!PreviousState || *PreviousState != TagData.bPresent)
+				{
+					ReloadTagInsertedState.Add(TagData.UID, TagData.bPresent);
+					// ReaderIndex: 2=Reload Box
+					EvtTagChanged.Broadcast(TagData.UID, TagData.bPresent, 2);
+
+					// Auto-apply weapon mag configuration when tag is inserted (reload box)
+					if (bAutoApplyWeaponMag && TagData.bPresent)
+					{
+						ApplyWeaponMagByTagId(TagData.UID);
+					}
+				}
 			}
 		}
 		break;
