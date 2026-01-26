@@ -26,6 +26,10 @@ struct ARDUINOCOMMUNICATION_API FWeaponMag
 {
 	GENERATED_BODY()
 
+	/** Whether this weapon mag is currently active/enabled */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Mag")
+	bool bActive = true;
+
 	/** RFID/NFC tag UID that identifies this weapon magazine */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Mag")
 	int64 TagId = 0;

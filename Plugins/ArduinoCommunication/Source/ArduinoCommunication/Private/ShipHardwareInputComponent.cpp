@@ -268,7 +268,7 @@ bool UShipHardwareInputComponent::FindWeaponMagByTagId(int64 TagId, FWeaponMag& 
 {
 	for (const FWeaponMag& Mag : WeaponMags)
 	{
-		if (Mag.TagId == TagId)
+		if (Mag.TagId == TagId && Mag.bActive)
 		{
 			OutWeaponMag = Mag;
 			return true;
