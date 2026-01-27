@@ -131,4 +131,20 @@ FName UK2Node_SwitchByte::GetPinNameFromIndex(int32 Index) const
 	return FName(*FString::Printf(TEXT("Case_%d"), Index));
 }
 
+FString UK2Node_SwitchByte::GetExportTextDefaultValue() const
+{
+	return TEXT("0");
+}
+
+FString UK2Node_SwitchByte::GetUniquePinName()
+{
+	// Find a unique value that doesn't exist in the current pin values
+	uint8 NewValue = 0;
+	while (PinValues.Contains(NewValue) && NewValue < 255)
+	{
+		++NewValue;
+	}
+	return FString::Printf(TEXT("%d"), NewValue);
+}
+
 #undef LOCTEXT_NAMESPACE
