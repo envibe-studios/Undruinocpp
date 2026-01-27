@@ -286,6 +286,7 @@ bool UShipHardwareInputComponent::ApplyWeaponMag(const FWeaponMag& WeaponMag)
 	}
 
 	FiringComponent->ApplyWeaponMagConfig(
+		WeaponMag.bActive,
 		WeaponMag.FiringMode,
 		WeaponMag.Damage,
 		WeaponMag.RateOfFire,

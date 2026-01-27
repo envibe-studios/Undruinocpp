@@ -471,6 +471,7 @@ public:
 	/**
 	 * Apply weapon magazine configuration to this firing component
 	 * Updates firing mode, damage, rate of fire, spread, bullets per shot, max ammo, and range
+	 * @param bActive - Whether the weapon mag is active/enabled
 	 * @param FiringMode - The firing mode type (0=Bullet, 1=TractorBeam, 2=Scanner)
 	 * @param Damage - Bullet damage
 	 * @param RateOfFire - Rounds per second
@@ -483,6 +484,7 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Firing|Weapon Mag")
 	void ApplyWeaponMagConfig(
+		bool bActive,
 		uint8 FiringMode,
 		float Damage,
 		float RateOfFire,

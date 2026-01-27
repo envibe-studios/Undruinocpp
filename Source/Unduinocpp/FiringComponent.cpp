@@ -730,6 +730,7 @@ FVector UFiringComponent::ApplySpread(const FVector& Direction, float SpreadAngl
 // ============================================================================
 
 void UFiringComponent::ApplyWeaponMagConfig(
+	bool bActive,
 	uint8 FiringMode,
 	float Damage,
 	float RateOfFire,
@@ -741,6 +742,13 @@ void UFiringComponent::ApplyWeaponMagConfig(
 	float ScanDuration
 )
 {
+	// If not active, log and skip applying config
+	if (!bActive)
+	{
+		UE_LOG(LogTemp, Log, TEXT("FiringComponent: WeaponMag is not active, skipping config apply"));
+		return;
+	}
+
 	// Set the firing mode
 	EFiringModeType NewMode = static_cast<EFiringModeType>(FMath::Clamp(static_cast<int32>(FiringMode), 0, 3));
 	SetFiringMode(NewMode);
