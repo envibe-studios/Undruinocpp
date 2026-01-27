@@ -15,7 +15,10 @@
 UCLASS()
 class UNREALMCP_API UK2Node_SwitchByte : public UK2Node_Switch
 {
-	GENERATED_UCLASS_BODY()
+	GENERATED_BODY()
+
+public:
+	UK2Node_SwitchByte();
 
 	/** Array of byte values for each output pin */
 	UPROPERTY(EditAnywhere, Category = "PinOptions")
@@ -35,14 +38,12 @@ class UNREALMCP_API UK2Node_SwitchByte : public UK2Node_Switch
 	virtual void AddPinToSwitchNode() override;
 	virtual FEdGraphPinType GetPinType() const override;
 	virtual FEdGraphPinType GetInnerCaseType() const override;
-	virtual FString GetPinNameGivenIndex(int32 Index) const override;
+	virtual FName GetPinNameGivenIndex(int32 Index) const override;
 	virtual void CreateCasePins() override;
 	virtual void RemovePin(UEdGraphPin* TargetPin) override;
-	virtual FString GetExportTextDefaultValue() const override;
-	virtual FString GetUniquePinName() override;
+	virtual FName GetUniquePinName() override;
 	//~ End UK2Node_Switch Interface
 
 protected:
 	virtual void CreateSelectionPin() override;
-	virtual FName GetPinNameFromIndex(int32 Index) const;
 };

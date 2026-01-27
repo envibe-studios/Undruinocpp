@@ -7,8 +7,7 @@
 
 #define LOCTEXT_NAMESPACE "K2Node_SwitchByte"
 
-UK2Node_SwitchByte::UK2Node_SwitchByte(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
+UK2Node_SwitchByte::UK2Node_SwitchByte()
 {
 }
 
@@ -60,7 +59,7 @@ void UK2Node_SwitchByte::AddPinToSwitchNode()
 	PinValues.Add(NewValue);
 
 	// Create the corresponding pin
-	const FName PinName = GetPinNameFromIndex(PinValues.Num() - 1);
+	const FName PinName = GetPinNameGivenIndex(PinValues.Num() - 1);
 	CreatePin(EGPD_Output, UEdGraphSchema_K2::PC_Exec, PinName);
 }
 
@@ -76,13 +75,13 @@ FEdGraphPinType UK2Node_SwitchByte::GetInnerCaseType() const
 	return GetPinType();
 }
 
-FString UK2Node_SwitchByte::GetPinNameGivenIndex(int32 Index) const
+FName UK2Node_SwitchByte::GetPinNameGivenIndex(int32 Index) const
 {
 	if (PinValues.IsValidIndex(Index))
 	{
-		return FString::Printf(TEXT("%d"), PinValues[Index]);
+		return FName(*FString::Printf(TEXT("%d"), PinValues[Index]));
 	}
-	return FString::Printf(TEXT("%d"), Index);
+	return FName(*FString::Printf(TEXT("%d"), Index));
 }
 
 void UK2Node_SwitchByte::CreateCasePins()
@@ -90,7 +89,7 @@ void UK2Node_SwitchByte::CreateCasePins()
 	// Create output pins for each case value
 	for (int32 Index = 0; Index < PinValues.Num(); ++Index)
 	{
-		const FName PinName = GetPinNameFromIndex(Index);
+		const FName PinName = GetPinNameGivenIndex(Index);
 		CreatePin(EGPD_Output, UEdGraphSchema_K2::PC_Exec, PinName);
 	}
 }
@@ -104,7 +103,7 @@ void UK2Node_SwitchByte::RemovePin(UEdGraphPin* TargetPin)
 
 		for (int32 Index = 0; Index < PinValues.Num(); ++Index)
 		{
-			if (GetPinNameFromIndex(Index).ToString() == PinName)
+			if (GetPinNameGivenIndex(Index).ToString() == PinName)
 			{
 				PinValues.RemoveAt(Index);
 				break;
@@ -122,21 +121,7 @@ void UK2Node_SwitchByte::CreateSelectionPin()
 	CreatePin(EGPD_Input, UEdGraphSchema_K2::PC_Byte, TEXT("Selection"));
 }
 
-FName UK2Node_SwitchByte::GetPinNameFromIndex(int32 Index) const
-{
-	if (PinValues.IsValidIndex(Index))
-	{
-		return FName(*FString::Printf(TEXT("%d"), PinValues[Index]));
-	}
-	return FName(*FString::Printf(TEXT("Case_%d"), Index));
-}
-
-FString UK2Node_SwitchByte::GetExportTextDefaultValue() const
-{
-	return TEXT("0");
-}
-
-FString UK2Node_SwitchByte::GetUniquePinName()
+FName UK2Node_SwitchByte::GetUniquePinName()
 {
 	// Find a unique value that doesn't exist in the current pin values
 	uint8 NewValue = 0;
@@ -144,7 +129,7 @@ FString UK2Node_SwitchByte::GetUniquePinName()
 	{
 		++NewValue;
 	}
-	return FString::Printf(TEXT("%d"), NewValue);
+	return FName(*FString::Printf(TEXT("%d"), NewValue));
 }
 
 #undef LOCTEXT_NAMESPACE
