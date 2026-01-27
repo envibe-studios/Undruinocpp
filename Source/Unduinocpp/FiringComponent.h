@@ -478,6 +478,7 @@ public:
 	 * @param SpreadAngle - Bullet spread in degrees
 	 * @param BulletsPerShot - Bullets per trigger pull
 	 * @param MaxAmmo - Maximum ammo capacity
+	 * @param CurrentAmmo - Current ammo in the mag (if -1, uses MaxAmmo)
 	 * @param Range - Firing range in cm
 	 * @param TractorPullForce - Pull force for tractor beam mode
 	 * @param ScanDuration - Scan duration for scanner mode
@@ -491,6 +492,7 @@ public:
 		float SpreadAngle,
 		int32 BulletsPerShot,
 		int32 MaxAmmo,
+		int32 CurrentAmmo,
 		float Range,
 		float TractorPullForce,
 		float ScanDuration

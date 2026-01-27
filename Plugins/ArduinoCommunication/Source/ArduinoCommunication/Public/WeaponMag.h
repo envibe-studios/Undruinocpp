@@ -56,6 +56,10 @@ struct ARDUINOCOMMUNICATION_API FWeaponMag
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Mag|Bullet", meta = (ClampMin = "1"))
 	int32 MaxAmmo = 100;
 
+	/** Current ammo count in this mag */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Mag|Bullet", meta = (ClampMin = "0"))
+	int32 CurrentAmmo = 100;
+
 	/** Firing range in cm */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Mag", meta = (ClampMin = "0.0"))
 	float Range = 5000.0f;

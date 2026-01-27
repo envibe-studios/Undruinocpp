@@ -293,6 +293,7 @@ bool UShipHardwareInputComponent::ApplyWeaponMag(const FWeaponMag& WeaponMag)
 		WeaponMag.SpreadAngle,
 		WeaponMag.BulletsPerShot,
 		WeaponMag.MaxAmmo,
+		WeaponMag.CurrentAmmo,
 		WeaponMag.Range,
 		WeaponMag.TractorPullForce,
 		WeaponMag.ScanDuration

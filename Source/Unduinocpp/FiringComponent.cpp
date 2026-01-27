@@ -737,6 +737,7 @@ void UFiringComponent::ApplyWeaponMagConfig(
 	float SpreadAngle,
 	int32 BulletsPerShot,
 	int32 MaxAmmo,
+	int32 CurrentAmmo,
 	float Range,
 	float TractorPullForce,
 	float ScanDuration
@@ -759,7 +760,8 @@ void UFiringComponent::ApplyWeaponMagConfig(
 	BulletConfig.SpreadAngle = FMath::Clamp(SpreadAngle, 0.0f, 45.0f);
 	BulletConfig.BulletsPerShot = FMath::Max(1, BulletsPerShot);
 	BulletConfig.MaxAmmo = FMath::Max(1, MaxAmmo);
-	BulletConfig.CurrentAmmo = BulletConfig.MaxAmmo; // Reload to full
+	// Use CurrentAmmo if provided (>= 0), otherwise reload to full
+	BulletConfig.CurrentAmmo = (CurrentAmmo >= 0) ? FMath::Clamp(CurrentAmmo, 0, BulletConfig.MaxAmmo) : BulletConfig.MaxAmmo;
 	BulletConfig.Range = FMath::Max(0.0f, Range);
 
 	// Apply tractor beam config
@@ -773,6 +775,6 @@ void UFiringComponent::ApplyWeaponMagConfig(
 	// Broadcast ammo changed event since we reloaded
 	OnAmmoChanged.Broadcast(BulletConfig.CurrentAmmo, BulletConfig.MaxAmmo);
 
-	UE_LOG(LogTemp, Log, TEXT("FiringComponent: Applied WeaponMag config - Mode: %d, Damage: %.1f, RoF: %.1f, Ammo: %d"),
-		static_cast<int32>(NewMode), Damage, RateOfFire, MaxAmmo);
+	UE_LOG(LogTemp, Log, TEXT("FiringComponent: Applied WeaponMag config - Mode: %d, Damage: %.1f, RoF: %.1f, Ammo: %d/%d"),
+		static_cast<int32>(NewMode), Damage, RateOfFire, BulletConfig.CurrentAmmo, MaxAmmo);
 }
