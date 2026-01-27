@@ -56,6 +56,14 @@ public:
 	static UK2Node* CreateSwitchIntegerNode(UEdGraph* Graph, const TSharedPtr<class FJsonObject>& Params);
 
 	/**
+	 * Creates a Switch on Byte node (UK2Node_SwitchByte)
+	 * @param Graph - The graph to add the node to
+	 * @param Params - JSON parameters containing pos_x, pos_y
+	 * @return The created node or nullptr on error
+	 */
+	static UK2Node* CreateSwitchByteNode(UEdGraph* Graph, const TSharedPtr<class FJsonObject>& Params);
+
+	/**
 	 * Creates an Execution Sequence node (K2Node_ExecutionSequence)
 	 * @param Graph - The graph to add the node to
 	 * @param Params - JSON parameters containing pos_x, pos_y

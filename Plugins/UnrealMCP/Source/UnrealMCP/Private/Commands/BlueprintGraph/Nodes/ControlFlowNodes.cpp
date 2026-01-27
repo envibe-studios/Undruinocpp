@@ -1,5 +1,6 @@
 #include "BlueprintGraph/Nodes/ControlFlowNodes.h"
 #include "BlueprintGraph/Nodes/NodeCreatorUtils.h"
+#include "Commands/BlueprintGraph/Nodes/K2Node_SwitchByte.h"
 #include "K2Node_IfThenElse.h"
 #include "K2Node_PromotableOperator.h"
 #include "K2Node_Switch.h"
@@ -205,6 +206,33 @@ UK2Node* FControlFlowNodeCreator::CreateSwitchIntegerNode(UEdGraph* Graph, const
 	FNodeCreatorUtils::InitializeK2Node(SwitchIntNode, Graph);
 
 	return SwitchIntNode;
+}
+
+UK2Node* FControlFlowNodeCreator::CreateSwitchByteNode(UEdGraph* Graph, const TSharedPtr<FJsonObject>& Params)
+{
+	if (!Graph || !Params.IsValid())
+	{
+		return nullptr;
+	}
+
+	// Create a Switch on Byte node (UK2Node_SwitchByte)
+	UK2Node_SwitchByte* SwitchByteNode = NewObject<UK2Node_SwitchByte>(Graph);
+	if (!SwitchByteNode)
+	{
+		return nullptr;
+	}
+
+	double PosX, PosY;
+	FNodeCreatorUtils::ExtractNodePosition(Params, PosX, PosY);
+	SwitchByteNode->NodePosX = static_cast<int32>(PosX);
+	SwitchByteNode->NodePosY = static_cast<int32>(PosY);
+
+	Graph->AddNode(SwitchByteNode, false, false);
+	SwitchByteNode->CreateNewGuid();
+	SwitchByteNode->PostPlacedNewNode();
+	FNodeCreatorUtils::InitializeK2Node(SwitchByteNode, Graph);
+
+	return SwitchByteNode;
 }
 
 UK2Node* FControlFlowNodeCreator::CreateExecutionSequenceNode(UEdGraph* Graph, const TSharedPtr<FJsonObject>& Params)

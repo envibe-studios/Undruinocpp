@@ -136,6 +136,10 @@ TSharedPtr<FJsonObject> FBlueprintNodeManager::AddNode(const TSharedPtr<FJsonObj
 	{
 		NewNode = FControlFlowNodeCreator::CreateSwitchIntegerNode(Graph, NodeParams);
 	}
+	else if (NodeType.Equals(TEXT("SwitchByte"), ESearchCase::IgnoreCase))
+	{
+		NewNode = FControlFlowNodeCreator::CreateSwitchByteNode(Graph, NodeParams);
+	}
 	else if (NodeType.Equals(TEXT("ExecutionSequence"), ESearchCase::IgnoreCase))
 	{
 		NewNode = FControlFlowNodeCreator::CreateExecutionSequenceNode(Graph, NodeParams);
