@@ -25,7 +25,7 @@ UMultiDisplayCameraComponent::UMultiDisplayCameraComponent()
 
 	// Default scene capture settings
 	bCaptureEveryFrame = true;
-	bCaptureOnMovement = false;
+	bCaptureOnMovement = true;
 	bAlwaysPersistRenderingState = true;
 
 	// Use high quality capture settings
@@ -67,12 +67,12 @@ void UMultiDisplayCameraComponent::TickComponent(float DeltaTime, ELevelTick Tic
 
 		if (CaptureTimer >= FrameInterval)
 		{
-			CaptureTimer = 0.0f;
-			// Scene capture will automatically update
+			CaptureTimer -= FrameInterval;
+			bCaptureEveryFrame = true;
 		}
 		else
 		{
-			// Skip capture this frame
+			// Skip capture this frame but keep movement tracking
 			bCaptureEveryFrame = false;
 		}
 	}
