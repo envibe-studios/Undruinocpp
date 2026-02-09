@@ -20,6 +20,9 @@ UMultiDisplayCameraComponent::UMultiDisplayCameraComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = true;
 
+	// Auto-activate this camera component on BeginPlay by default
+	bAutoActivate = true;
+
 	// Default scene capture settings
 	bCaptureEveryFrame = true;
 	bCaptureOnMovement = false;

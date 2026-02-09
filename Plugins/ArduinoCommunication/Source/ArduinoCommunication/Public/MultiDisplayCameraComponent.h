@@ -32,10 +32,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiDisplay|Settings", meta = (ClampMin = "0", ClampMax = "7"))
 	int32 TargetDisplayIndex = 0;
 
-	/** Whether to automatically activate this camera on BeginPlay */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiDisplay|Settings")
-	bool bAutoActivate = true;
-
 	/** Whether to use fullscreen exclusive mode on the target display */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiDisplay|Settings")
 	bool bFullscreen = true;
