@@ -8,7 +8,7 @@
 #include "Widgets/Images/SImage.h"
 #include "Widgets/SViewport.h"
 #include "Framework/Application/SlateApplication.h"
-#include "Layout/InvalidateWidgetReason.h"
+#include "Widgets/InvalidateWidgetReason.h"
 #include "Slate/SlateTextures.h"
 #include "RHI.h"
 #include "Engine/TextureRenderTarget2D.h"
