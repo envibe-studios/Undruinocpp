@@ -29,7 +29,11 @@ public class ArduinoCommunication : ModuleRules
 				"CoreUObject",
 				"Engine",
 				"Sockets",
-				"Networking"
+				"Networking",
+				"Slate",
+				"SlateCore",
+				"RHI",
+				"RenderCore"
 			}
 		);
 
