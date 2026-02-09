@@ -8,6 +8,7 @@
 #include "Widgets/Images/SImage.h"
 #include "Widgets/SViewport.h"
 #include "Framework/Application/SlateApplication.h"
+#include "Layout/InvalidateWidgetReason.h"
 #include "Slate/SlateTextures.h"
 #include "RHI.h"
 #include "Engine/TextureRenderTarget2D.h"
@@ -80,6 +81,12 @@ void UMultiDisplayCameraComponent::TickComponent(float DeltaTime, ELevelTick Tic
 	{
 		bCaptureEveryFrame = bIsDisplayActive;
 	}
+
+	// Invalidate the display widget so the render target content is redrawn each frame
+	if (bIsDisplayActive && DisplayWidget.IsValid())
+	{
+		DisplayWidget->Invalidate(EInvalidateWidgetReason::Paint);
+	}
 }
 
 void UMultiDisplayCameraComponent::SetupRenderTarget()
@@ -114,6 +121,8 @@ void UMultiDisplayCameraComponent::SetupRenderTarget()
 		TextureTarget = NewObject<UTextureRenderTarget2D>(this);
 	}
 
+	TextureTarget->RenderTargetFormat = ETextureRenderTargetFormat::RTF_RGBA8;
+	TextureTarget->ClearColor = FLinearColor::Black;
 	TextureTarget->InitAutoFormat(Width, Height);
 	TextureTarget->UpdateResourceImmediate(true);
 
@@ -348,8 +357,14 @@ void UMultiDisplayCameraComponent::CreateSecondaryWindow()
 		RenderTargetBrush->DrawAs = ESlateBrushDrawType::Image;
 		RenderTargetBrush->Tiling = ESlateBrushTileType::NoTile;
 
+		// Use a delegate-based attribute so Slate re-reads the brush each frame,
+		// ensuring the render target content is always displayed up-to-date.
+		FSlateBrush* BrushPtr = RenderTargetBrush.Get();
 		DisplayWidget = SNew(SImage)
-			.Image(RenderTargetBrush.Get());
+			.Image_Lambda([BrushPtr]() -> const FSlateBrush*
+			{
+				return BrushPtr;
+			});
 
 		SecondaryWindow->SetContent(DisplayWidget.ToSharedRef());
 	}
