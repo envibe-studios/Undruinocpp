@@ -1,4 +1,24 @@
 // Multi-Display Camera Component - Outputs camera view to selected display/monitor
+//
+// SETUP GUIDE:
+// 1. Add this component to any Actor in your level (e.g., an empty Actor or a CameraActor).
+// 2. In the Details panel, set "Target Display Index" to the monitor you want (0 = primary, 1 = second monitor, etc.).
+// 3. Optionally adjust RenderTargetWidth/Height (0 = auto-detect from monitor resolution).
+// 4. Optionally set bFullscreen to true for borderless fullscreen on that monitor.
+// 5. The component auto-activates on BeginPlay. You can also call ActivateDisplay()/DeactivateDisplay() at runtime.
+// 6. Attach this component as a child of another component (e.g., a SpringArm or the Actor root)
+//    so that it inherits the parent's transform (position and rotation).
+// 7. Call GetNumDisplays() or GetAllDisplayNames() to discover available monitors at runtime.
+//
+// IMPORTANT NOTES:
+// - The component creates a separate OS window on the target monitor. This window displays the
+//   scene as captured by the SceneCaptureComponent2D base class.
+// - "Display 0" is your primary monitor. "Display 1" is your second monitor, etc.
+// - If you see a blank/gray window, ensure:
+//     a) The component's Actor is placed in the level and the level is running (PIE or standalone).
+//     b) There are visible objects in front of the camera's view frustum.
+//     c) The TargetDisplayIndex matches a valid, connected monitor.
+// - For best results, run as "Standalone Game" rather than PIE, since PIE can have Slate focus issues.
 
 #pragma once
 
@@ -8,10 +28,17 @@
 #include "Styling/SlateBrush.h"
 #include "MultiDisplayCameraComponent.generated.h"
 
+class SWindow;
+class SImage;
+
 /**
  * Multi-Display Camera Component
- * A camera component that allows selecting which display/monitor to output to.
- * Supports multiple monitors and provides Blueprint-friendly display selection.
+ *
+ * A SceneCaptureComponent2D that opens a secondary OS window on a chosen monitor
+ * and displays the captured scene in real-time.
+ *
+ * Inherits all SceneCaptureComponent2D properties (ShowFlags, CaptureSource, etc.)
+ * so you can configure capture quality, post-processing, and show/hide actors as usual.
  */
 UCLASS(ClassGroup=(Camera), meta=(BlueprintSpawnableComponent))
 class ARDUINOCOMMUNICATION_API UMultiDisplayCameraComponent : public USceneCaptureComponent2D
@@ -30,9 +57,9 @@ public:
 
 	/** The display/monitor index to output to (0 = primary display, 1 = second monitor, etc.) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiDisplay|Settings", meta = (ClampMin = "0", ClampMax = "7"))
-	int32 TargetDisplayIndex = 0;
+	int32 TargetDisplayIndex = 1;
 
-	/** Whether to use fullscreen exclusive mode on the target display */
+	/** Whether to use borderless fullscreen mode on the target display */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiDisplay|Settings")
 	bool bFullscreen = true;
 
@@ -44,17 +71,17 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiDisplay|Settings", meta = (ClampMin = "0", ClampMax = "4320"))
 	int32 RenderTargetHeight = 0;
 
-	/** Frame rate for the capture (0 = every frame) */
+	/** Frame rate for the capture (0 = every frame, which is recommended) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiDisplay|Settings", meta = (ClampMin = "0", ClampMax = "240"))
 	int32 CaptureFrameRate = 0;
 
 	// === Functions ===
 
-	/** Activate this camera and assign it to the target display */
+	/** Activate this camera and open a window on the target display */
 	UFUNCTION(BlueprintCallable, Category = "MultiDisplay")
 	void ActivateDisplay();
 
-	/** Deactivate this camera from its display */
+	/** Deactivate this camera and close its display window */
 	UFUNCTION(BlueprintCallable, Category = "MultiDisplay")
 	void DeactivateDisplay();
 
@@ -62,7 +89,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "MultiDisplay")
 	bool IsDisplayActive() const;
 
-	/** Change the target display at runtime */
+	/** Change the target display at runtime (will reopen the window on the new monitor) */
 	UFUNCTION(BlueprintCallable, Category = "MultiDisplay")
 	void SetTargetDisplay(int32 NewDisplayIndex);
 
@@ -74,11 +101,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "MultiDisplay")
 	static int32 GetNumDisplays();
 
-	/** Get display info for a specific monitor */
+	/** Get display info for a specific monitor (name and resolution) */
 	UFUNCTION(BlueprintCallable, Category = "MultiDisplay")
 	static bool GetDisplayInfo(int32 DisplayIndex, FString& OutDisplayName, FIntPoint& OutResolution);
 
-	/** Get an array of all available display names */
+	/** Get an array of all available display names with resolutions */
 	UFUNCTION(BlueprintCallable, Category = "MultiDisplay")
 	static TArray<FString> GetAllDisplayNames();
 
@@ -86,19 +113,13 @@ public:
 	UFUNCTION(BlueprintPure, Category = "MultiDisplay")
 	UTextureRenderTarget2D* GetRenderTarget() const { return TextureTarget; }
 
-	/** Force refresh the display configuration */
+	/** Force refresh: closes and reopens the display window with current settings */
 	UFUNCTION(BlueprintCallable, Category = "MultiDisplay")
 	void RefreshDisplayConfiguration();
 
 protected:
 	/** Create or update the render target for this camera */
 	void SetupRenderTarget();
-
-	/** Apply the camera view to the target display */
-	void ApplyToDisplay();
-
-	/** Remove the camera view from the display */
-	void RemoveFromDisplay();
 
 private:
 	/** Whether the display is currently active */
@@ -110,18 +131,21 @@ private:
 	/** Cached display resolution */
 	FIntPoint CachedDisplayResolution;
 
-	/** Create a new secondary window for the display */
+	/** Create a new secondary window on the target display */
 	void CreateSecondaryWindow();
 
 	/** Destroy the secondary window */
 	void DestroySecondaryWindow();
 
-	/** Handle to the secondary window (if created) */
-	TSharedPtr<class SWindow> SecondaryWindow;
+	/** Update the window's image content from the render target */
+	void UpdateWindowContent();
 
-	/** Widget to display the render target in the secondary window */
-	TSharedPtr<class SWidget> DisplayWidget;
+	/** Handle to the secondary window */
+	TSharedPtr<SWindow> SecondaryWindow;
 
-	/** Brush used to display the render target */
-	TSharedPtr<FSlateBrush> RenderTargetBrush;
+	/** The Slate image widget displaying the render target */
+	TSharedPtr<SImage> DisplayImage;
+
+	/** Brush used to paint the render target into the SImage */
+	FSlateBrush RenderTargetBrush;
 };

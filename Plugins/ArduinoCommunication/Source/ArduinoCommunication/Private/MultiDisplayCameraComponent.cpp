@@ -2,34 +2,23 @@
 
 #include "MultiDisplayCameraComponent.h"
 #include "Engine/Engine.h"
-#include "Engine/GameViewportClient.h"
-#include "Slate/SceneViewport.h"
 #include "Widgets/SWindow.h"
 #include "Widgets/Images/SImage.h"
-#include "Widgets/SViewport.h"
 #include "Framework/Application/SlateApplication.h"
-#include "Widgets/InvalidateWidgetReason.h"
-#include "Slate/SlateTextures.h"
-#include "RHI.h"
-#include "Engine/TextureRenderTarget2D.h"
-#include "Materials/MaterialInstanceDynamic.h"
-#include "Components/SceneCaptureComponent2D.h"
-#include "Kismet/KismetRenderingLibrary.h"
 
 UMultiDisplayCameraComponent::UMultiDisplayCameraComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = true;
 
-	// Auto-activate this camera component on BeginPlay by default
+	// Auto-activate on BeginPlay by default (uses inherited bAutoActivate from UActorComponent)
 	bAutoActivate = true;
 
-	// Default scene capture settings
+	// Scene capture settings for real-time rendering
 	bCaptureEveryFrame = true;
 	bCaptureOnMovement = true;
 	bAlwaysPersistRenderingState = true;
 
-	// Use high quality capture settings
 	CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
 }
 
@@ -37,10 +26,8 @@ void UMultiDisplayCameraComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Setup render target
 	SetupRenderTarget();
 
-	// Auto-activate if configured
 	if (bAutoActivate)
 	{
 		ActivateDisplay();
@@ -49,7 +36,6 @@ void UMultiDisplayCameraComponent::BeginPlay()
 
 void UMultiDisplayCameraComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	// Cleanup
 	DeactivateDisplay();
 	DestroySecondaryWindow();
 
@@ -60,8 +46,13 @@ void UMultiDisplayCameraComponent::TickComponent(float DeltaTime, ELevelTick Tic
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	if (!bIsDisplayActive)
+	{
+		return;
+	}
+
 	// Handle frame rate limiting
-	if (CaptureFrameRate > 0 && bIsDisplayActive)
+	if (CaptureFrameRate > 0)
 	{
 		CaptureTimer += DeltaTime;
 		float FrameInterval = 1.0f / CaptureFrameRate;
@@ -73,33 +64,25 @@ void UMultiDisplayCameraComponent::TickComponent(float DeltaTime, ELevelTick Tic
 		}
 		else
 		{
-			// Skip capture this frame but keep movement tracking
 			bCaptureEveryFrame = false;
 		}
 	}
-	else
-	{
-		bCaptureEveryFrame = bIsDisplayActive;
-	}
 
-	// Invalidate the display widget so the render target content is redrawn each frame
-	if (bIsDisplayActive && DisplayWidget.IsValid())
-	{
-		DisplayWidget->Invalidate(EInvalidateWidgetReason::Paint);
-	}
+	// Force the SImage widget to repaint so the render target content appears each frame.
+	// Without this, Slate caches the widget and the image stays gray/stale.
+	UpdateWindowContent();
 }
 
 void UMultiDisplayCameraComponent::SetupRenderTarget()
 {
-	// Determine resolution
 	int32 Width = RenderTargetWidth;
 	int32 Height = RenderTargetHeight;
 
-	// If resolution is 0, try to get display resolution
+	// Auto-detect resolution from the target display
 	if (Width == 0 || Height == 0)
 	{
-		FIntPoint DisplayRes;
 		FString DisplayName;
+		FIntPoint DisplayRes;
 		if (GetDisplayInfo(TargetDisplayIndex, DisplayName, DisplayRes))
 		{
 			Width = DisplayRes.X > 0 ? DisplayRes.X : 1920;
@@ -107,7 +90,6 @@ void UMultiDisplayCameraComponent::SetupRenderTarget()
 		}
 		else
 		{
-			// Default resolution
 			Width = 1920;
 			Height = 1080;
 		}
@@ -115,7 +97,6 @@ void UMultiDisplayCameraComponent::SetupRenderTarget()
 
 	CachedDisplayResolution = FIntPoint(Width, Height);
 
-	// Create or update render target
 	if (!TextureTarget)
 	{
 		TextureTarget = NewObject<UTextureRenderTarget2D>(this);
@@ -123,10 +104,11 @@ void UMultiDisplayCameraComponent::SetupRenderTarget()
 
 	TextureTarget->RenderTargetFormat = ETextureRenderTargetFormat::RTF_RGBA8;
 	TextureTarget->ClearColor = FLinearColor::Black;
+	TextureTarget->bAutoGenerateMips = false;
 	TextureTarget->InitAutoFormat(Width, Height);
 	TextureTarget->UpdateResourceImmediate(true);
 
-	UE_LOG(LogTemp, Log, TEXT("MultiDisplayCamera: Created render target %dx%d for display %d"), Width, Height, TargetDisplayIndex);
+	UE_LOG(LogTemp, Log, TEXT("MultiDisplayCamera: Render target %dx%d for display %d"), Width, Height, TargetDisplayIndex);
 }
 
 void UMultiDisplayCameraComponent::ActivateDisplay()
@@ -136,13 +118,11 @@ void UMultiDisplayCameraComponent::ActivateDisplay()
 		return;
 	}
 
-	// Make sure render target is ready
 	if (!TextureTarget)
 	{
 		SetupRenderTarget();
 	}
 
-	// Create secondary window for the target display
 	CreateSecondaryWindow();
 
 	bIsDisplayActive = true;
@@ -158,7 +138,7 @@ void UMultiDisplayCameraComponent::DeactivateDisplay()
 		return;
 	}
 
-	RemoveFromDisplay();
+	DestroySecondaryWindow();
 	bIsDisplayActive = false;
 	bCaptureEveryFrame = false;
 
@@ -179,19 +159,14 @@ void UMultiDisplayCameraComponent::SetTargetDisplay(int32 NewDisplayIndex)
 
 	bool bWasActive = bIsDisplayActive;
 
-	// Deactivate from current display
 	if (bIsDisplayActive)
 	{
 		DeactivateDisplay();
 	}
 
-	// Update target
 	TargetDisplayIndex = FMath::Clamp(NewDisplayIndex, 0, 7);
-
-	// Refresh render target for new display resolution
 	SetupRenderTarget();
 
-	// Reactivate on new display
 	if (bWasActive)
 	{
 		ActivateDisplay();
@@ -207,7 +182,6 @@ int32 UMultiDisplayCameraComponent::GetNumDisplays()
 
 	FDisplayMetrics DisplayMetrics;
 	FSlateApplication::Get().GetDisplayMetrics(DisplayMetrics);
-
 	return DisplayMetrics.MonitorInfo.Num();
 }
 
@@ -283,25 +257,15 @@ void UMultiDisplayCameraComponent::RefreshDisplayConfiguration()
 	}
 }
 
-void UMultiDisplayCameraComponent::ApplyToDisplay()
-{
-	// Implementation handled by CreateSecondaryWindow
-}
-
-void UMultiDisplayCameraComponent::RemoveFromDisplay()
-{
-	DestroySecondaryWindow();
-}
-
 void UMultiDisplayCameraComponent::CreateSecondaryWindow()
 {
 	if (!FSlateApplication::IsInitialized())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("MultiDisplayCamera: Slate not initialized, cannot create secondary window"));
+		UE_LOG(LogTemp, Warning, TEXT("MultiDisplayCamera: Slate not initialized"));
 		return;
 	}
 
-	// Destroy existing window first
+	// Clean up any existing window first
 	DestroySecondaryWindow();
 
 	FDisplayMetrics DisplayMetrics;
@@ -309,77 +273,81 @@ void UMultiDisplayCameraComponent::CreateSecondaryWindow()
 
 	if (TargetDisplayIndex >= DisplayMetrics.MonitorInfo.Num())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("MultiDisplayCamera: Display %d not found, only %d displays available"),
+		UE_LOG(LogTemp, Warning, TEXT("MultiDisplayCamera: Display %d not found (%d displays available)"),
 			TargetDisplayIndex, DisplayMetrics.MonitorInfo.Num());
 		return;
 	}
 
 	const FMonitorInfo& TargetMonitor = DisplayMetrics.MonitorInfo[TargetDisplayIndex];
 
-	// Calculate window position and size
-	int32 WindowX = TargetMonitor.WorkArea.Left;
-	int32 WindowY = TargetMonitor.WorkArea.Top;
-	int32 WindowWidth = TargetMonitor.WorkArea.Right - TargetMonitor.WorkArea.Left;
-	int32 WindowHeight = TargetMonitor.WorkArea.Bottom - TargetMonitor.WorkArea.Top;
+	// Determine window position and size from the target monitor
+	int32 WindowX, WindowY, WindowWidth, WindowHeight;
 
-	// Use native resolution if available and fullscreen
 	if (bFullscreen && TargetMonitor.NativeWidth > 0 && TargetMonitor.NativeHeight > 0)
 	{
+		// Use the full display rect for fullscreen
 		WindowX = TargetMonitor.DisplayRect.Left;
 		WindowY = TargetMonitor.DisplayRect.Top;
 		WindowWidth = TargetMonitor.NativeWidth;
 		WindowHeight = TargetMonitor.NativeHeight;
 	}
+	else
+	{
+		// Use the work area (excludes taskbar)
+		WindowX = TargetMonitor.WorkArea.Left;
+		WindowY = TargetMonitor.WorkArea.Top;
+		WindowWidth = TargetMonitor.WorkArea.Right - TargetMonitor.WorkArea.Left;
+		WindowHeight = TargetMonitor.WorkArea.Bottom - TargetMonitor.WorkArea.Top;
+	}
 
-	// Create window descriptor
-	FText WindowTitle = FText::FromString(FString::Printf(TEXT("Camera View - Display %d"), TargetDisplayIndex));
+	UE_LOG(LogTemp, Log, TEXT("MultiDisplayCamera: Opening window on display %d at (%d,%d) size %dx%d"),
+		TargetDisplayIndex, WindowX, WindowY, WindowWidth, WindowHeight);
 
-	// Create the Slate window
+	// Setup the brush that will display the render target texture.
+	// FSlateBrush::SetResourceObject points the brush at our UTextureRenderTarget2D.
+	// Each frame we invalidate the SImage so Slate re-reads the texture data.
+	RenderTargetBrush = FSlateBrush();
+	RenderTargetBrush.DrawAs = ESlateBrushDrawType::Image;
+	RenderTargetBrush.Tiling = ESlateBrushTileType::NoTile;
+	RenderTargetBrush.ImageSize = FVector2D(WindowWidth, WindowHeight);
+
+	if (TextureTarget)
+	{
+		RenderTargetBrush.SetResourceObject(TextureTarget);
+	}
+
+	// Create the SImage widget. Using Image_Lambda ensures the brush pointer
+	// is re-evaluated every frame (not cached once at construction).
+	DisplayImage = SNew(SImage)
+		.Image_Lambda([this]() -> const FSlateBrush*
+		{
+			return &RenderTargetBrush;
+		});
+
+	// Build the Slate window
+	FText WindowTitle = FText::FromString(FString::Printf(TEXT("Camera - Display %d"), TargetDisplayIndex));
+
 	SecondaryWindow = SNew(SWindow)
 		.Title(WindowTitle)
 		.ClientSize(FVector2D(WindowWidth, WindowHeight))
 		.ScreenPosition(FVector2D(WindowX, WindowY))
-		.SizingRule(bFullscreen ? ESizingRule::FixedSize : ESizingRule::UserSized)
 		.AutoCenter(EAutoCenter::None)
+		.SizingRule(bFullscreen ? ESizingRule::FixedSize : ESizingRule::UserSized)
 		.UseOSWindowBorder(!bFullscreen)
 		.FocusWhenFirstShown(false)
 		.SupportsMaximize(!bFullscreen)
 		.SupportsMinimize(!bFullscreen)
-		.HasCloseButton(!bFullscreen);
+		.HasCloseButton(!bFullscreen)
+		[
+			DisplayImage.ToSharedRef()
+		];
 
-	// Create an image widget that displays the render target
-	if (TextureTarget)
-	{
-		// Create a brush from the render target (stored as shared ptr for proper cleanup)
-		RenderTargetBrush = MakeShared<FSlateBrush>();
-		RenderTargetBrush->SetResourceObject(TextureTarget);
-		RenderTargetBrush->ImageSize = FVector2D(WindowWidth, WindowHeight);
-		RenderTargetBrush->DrawAs = ESlateBrushDrawType::Image;
-		RenderTargetBrush->Tiling = ESlateBrushTileType::NoTile;
-
-		// Use a delegate-based attribute so Slate re-reads the brush each frame,
-		// ensuring the render target content is always displayed up-to-date.
-		FSlateBrush* BrushPtr = RenderTargetBrush.Get();
-		DisplayWidget = SNew(SImage)
-			.Image_Lambda([BrushPtr]() -> const FSlateBrush*
-			{
-				return BrushPtr;
-			});
-
-		SecondaryWindow->SetContent(DisplayWidget.ToSharedRef());
-	}
-
-	// Add the window to Slate
 	FSlateApplication::Get().AddWindow(SecondaryWindow.ToSharedRef(), true);
 
-	// Make it fullscreen if requested
 	if (bFullscreen)
 	{
 		SecondaryWindow->SetWindowMode(EWindowMode::WindowedFullscreen);
 	}
-
-	UE_LOG(LogTemp, Log, TEXT("MultiDisplayCamera: Created secondary window on display %d at (%d, %d) size %dx%d"),
-		TargetDisplayIndex, WindowX, WindowY, WindowWidth, WindowHeight);
 }
 
 void UMultiDisplayCameraComponent::DestroySecondaryWindow()
@@ -391,9 +359,27 @@ void UMultiDisplayCameraComponent::DestroySecondaryWindow()
 			FSlateApplication::Get().RequestDestroyWindow(SecondaryWindow.ToSharedRef());
 		}
 		SecondaryWindow.Reset();
-		DisplayWidget.Reset();
-		RenderTargetBrush.Reset();
+		DisplayImage.Reset();
+		RenderTargetBrush.SetResourceObject(nullptr);
 
 		UE_LOG(LogTemp, Log, TEXT("MultiDisplayCamera: Destroyed secondary window"));
 	}
+}
+
+void UMultiDisplayCameraComponent::UpdateWindowContent()
+{
+	if (!DisplayImage.IsValid() || !SecondaryWindow.IsValid())
+	{
+		return;
+	}
+
+	// Ensure the brush still points at our render target (in case it was recreated)
+	if (TextureTarget && RenderTargetBrush.GetResourceObject() != TextureTarget)
+	{
+		RenderTargetBrush.SetResourceObject(TextureTarget);
+	}
+
+	// Invalidate the widget so Slate repaints it with the latest render target content.
+	// Without this, Slate's caching causes the SImage to display a stale/gray frame.
+	DisplayImage->Invalidate(EInvalidateWidgetReason::Paint);
 }
