@@ -378,6 +378,13 @@ void UMultiDisplayCameraComponent::CreateSecondaryWindow()
 			return BrushPtr;
 		});
 
+	// Mark the image widget as Volatile so Slate never caches its paint data.
+	// Without this, Slate's invalidation system may still serve cached (blank)
+	// frames even when Invalidate() is called, because the GPU texture update
+	// doesn't trigger Slate's change detection. ForceVolatile ensures the
+	// widget geometry and paint are recalculated every single frame.
+	DisplayImage->ForceVolatile(true);
+
 	// Build the Slate window with a title that identifies this camera
 	AActor* Owner = GetOwner();
 	FString OwnerName = Owner ? Owner->GetActorLabel() : TEXT("Camera");

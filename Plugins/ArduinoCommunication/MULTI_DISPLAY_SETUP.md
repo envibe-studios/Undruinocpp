@@ -37,7 +37,7 @@ In the **Details** panel under the **MultiDisplay | Settings** category:
 | **Fullscreen** | `true` | When enabled, the window opens in borderless fullscreen on the target monitor. |
 | **Render Target Width** | `0` | Width in pixels. `0` = auto-detect from the monitor's native resolution. |
 | **Render Target Height** | `0` | Height in pixels. `0` = auto-detect from the monitor's native resolution. |
-| **Window Open Delay** | `4` | Number of frames to wait before opening the window. Gives the render target time to fill with valid content. Increase this if you see a brief flash of blank content on startup. |
+| **Window Open Delay** | `8` | Number of frames to wait before opening the window. Gives the render target time to fill with valid content. Increase this if you see a brief flash of blank content on startup. |
 
 ### Step 4: Set Up Multiple Cameras (Multi-Monitor)
 
@@ -163,7 +163,7 @@ Since `MultiDisplayCameraComponent` inherits from `USceneCaptureComponent2D`, yo
 
 ### Performance Issues
 
-- Each `MultiDisplayCameraComponent` performs an explicit `CaptureScene()` call each tick, which re-renders the scene from that camera's viewpoint. Multiple cameras multiply the rendering cost.
+- Each `MultiDisplayCameraComponent` uses the engine's `bCaptureEveryFrame` pipeline, which re-renders the scene from that camera's viewpoint each frame. Multiple cameras multiply the rendering cost.
 - **Lower resolution**: Set `RenderTargetWidth` and `RenderTargetHeight` to values below native (e.g., 1280x720 instead of 1920x1080).
 - **Reduce capture scope**: Use Show Only Actors / Hidden Actors to limit what each camera renders.
 - **Limit post-processing**: Disable expensive effects (bloom, SSR, SSAO) on secondary cameras via post-process overrides.
@@ -184,10 +184,11 @@ Since `MultiDisplayCameraComponent` inherits from `USceneCaptureComponent2D`, yo
 
 The component works by:
 
-1. **Render Target**: Creates a `UTextureRenderTarget2D` sized to the target monitor's resolution.
-2. **Explicit Scene Capture**: Calls `CaptureScene()` each tick to render the scene into the render target. This gives explicit control over when the render target has valid content, which is critical for multi-instance setups.
-3. **Deferred Window Open**: Waits several frames (configurable) after activation before opening the Slate window, ensuring the render target has been written to by the GPU.
+1. **Render Target**: Creates a `UTextureRenderTarget2D` sized to the target monitor's resolution, initialized **before** `Super::BeginPlay()` so the engine's scene capture system registers it correctly.
+2. **Engine-Managed Capture**: Uses `bCaptureEveryFrame = true` to let the engine handle scene capture each frame. This is the standard pipeline that properly coordinates multiple `SceneCaptureComponent2D` instances.
+3. **Deferred Window Open**: Waits several frames (configurable via `WindowOpenDelay`) after activation before opening the Slate window, ensuring the render target has been written to by the GPU.
 4. **Slate Window**: A separate `SWindow` is opened on the target monitor, containing an `SImage` widget.
 5. **FSlateBrush**: Points at the render target texture via `SetResourceObject()`.
-6. **Per-Frame Invalidation**: Each tick, the `SImage` is invalidated with `EInvalidateWidgetReason::Paint` so Slate resamples the render target texture instead of displaying a cached (stale) frame.
-7. **Image_Lambda**: The `SImage` uses `Image_Lambda` for dynamic brush evaluation, ensuring the texture reference stays synchronized even if the render target is recreated.
+6. **Volatile Widget**: The `SImage` is marked as `ForceVolatile(true)` so Slate never caches its paint data. This ensures the widget is repainted every frame with fresh GPU content from the render target.
+7. **Per-Frame Invalidation**: Each tick, the `SImage` is also invalidated with `EInvalidateWidgetReason::Paint` as an additional guarantee that Slate resamples the render target texture.
+8. **Image_Lambda**: The `SImage` uses `Image_Lambda` for dynamic brush evaluation, ensuring the texture reference stays synchronized even if the render target is recreated.
