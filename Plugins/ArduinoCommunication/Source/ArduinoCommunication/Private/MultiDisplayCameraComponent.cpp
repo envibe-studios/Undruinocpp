@@ -14,10 +14,11 @@ UMultiDisplayCameraComponent::UMultiDisplayCameraComponent()
 	// Auto-activate on BeginPlay by default (uses inherited bAutoActivate from UActorComponent)
 	bAutoActivate = true;
 
-	// Let the engine handle scene capture through the render pipeline.
-	// This is far more efficient than manually calling CaptureScene() each tick,
-	// as the engine batches and pipelines the GPU work properly.
-	bCaptureEveryFrame = true;
+	// Use manual CaptureScene() calls instead of bCaptureEveryFrame.
+	// This ensures we have explicit control over when the render target is written to,
+	// which is critical for multi-instance setups where we need the render target
+	// to have valid content before the Slate window reads from it.
+	bCaptureEveryFrame = false;
 	bCaptureOnMovement = true;
 	bAlwaysPersistRenderingState = true;
 
@@ -48,14 +49,30 @@ void UMultiDisplayCameraComponent::TickComponent(float DeltaTime, ELevelTick Tic
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (!bIsDisplayActive)
+	if (!bIsDisplayActive && !bPendingWindowOpen)
 	{
 		return;
 	}
 
-	// The engine handles scene capture via bCaptureEveryFrame on the render thread.
-	// We only need to invalidate the Slate widget so it repaints with the latest
-	// render target content. Without this, Slate caches the widget and shows stale/gray.
+	// Always capture the scene explicitly each tick.
+	// This guarantees the render target has fresh content regardless of engine frame ordering.
+	if (TextureTarget)
+	{
+		CaptureScene();
+	}
+
+	// Deferred window open: wait N frames for the render target to have valid content
+	if (bPendingWindowOpen)
+	{
+		FrameDelayCounter++;
+		if (FrameDelayCounter >= WindowOpenDelay)
+		{
+			bPendingWindowOpen = false;
+			CreateSecondaryWindow();
+		}
+		return;
+	}
+
 	UpdateWindowContent();
 }
 
@@ -93,8 +110,6 @@ void UMultiDisplayCameraComponent::SetupRenderTarget()
 	TextureTarget->bAutoGenerateMips = false;
 	TextureTarget->InitAutoFormat(Width, Height);
 	TextureTarget->UpdateResourceImmediate(true);
-
-	// Ensure the GPU resource is fully created so Slate can sample from it
 	TextureTarget->UpdateResource();
 
 	UE_LOG(LogTemp, Log, TEXT("MultiDisplayCamera: Render target %dx%d for display %d"), Width, Height, TargetDisplayIndex);
@@ -112,20 +127,26 @@ void UMultiDisplayCameraComponent::ActivateDisplay()
 		SetupRenderTarget();
 	}
 
-	CreateSecondaryWindow();
+	// Do an initial capture so the render target has content
+	CaptureScene();
 
+	// Defer window creation by a few frames to let the GPU finish rendering
+	// into the render target. This prevents the blank window on first open.
+	bPendingWindowOpen = true;
+	FrameDelayCounter = 0;
 	bIsDisplayActive = true;
 
-	UE_LOG(LogTemp, Log, TEXT("MultiDisplayCamera: Activated on display %d"), TargetDisplayIndex);
+	UE_LOG(LogTemp, Log, TEXT("MultiDisplayCamera: Activated on display %d (window opens in %d frames)"), TargetDisplayIndex, WindowOpenDelay);
 }
 
 void UMultiDisplayCameraComponent::DeactivateDisplay()
 {
-	if (!bIsDisplayActive)
+	if (!bIsDisplayActive && !bPendingWindowOpen)
 	{
 		return;
 	}
 
+	bPendingWindowOpen = false;
 	DestroySecondaryWindow();
 	bIsDisplayActive = false;
 
@@ -272,7 +293,6 @@ void UMultiDisplayCameraComponent::CreateSecondaryWindow()
 
 	if (bFullscreen && TargetMonitor.NativeWidth > 0 && TargetMonitor.NativeHeight > 0)
 	{
-		// Use the full display rect for fullscreen
 		WindowX = TargetMonitor.DisplayRect.Left;
 		WindowY = TargetMonitor.DisplayRect.Top;
 		WindowWidth = TargetMonitor.NativeWidth;
@@ -280,7 +300,6 @@ void UMultiDisplayCameraComponent::CreateSecondaryWindow()
 	}
 	else
 	{
-		// Use the work area (excludes taskbar)
 		WindowX = TargetMonitor.WorkArea.Left;
 		WindowY = TargetMonitor.WorkArea.Top;
 		WindowWidth = TargetMonitor.WorkArea.Right - TargetMonitor.WorkArea.Left;
@@ -291,8 +310,6 @@ void UMultiDisplayCameraComponent::CreateSecondaryWindow()
 		TargetDisplayIndex, WindowX, WindowY, WindowWidth, WindowHeight);
 
 	// Setup the brush that will display the render target texture.
-	// FSlateBrush::SetResourceObject points the brush at our UTextureRenderTarget2D.
-	// Each frame we invalidate the SImage so Slate re-reads the texture data.
 	RenderTargetBrush = FSlateBrush();
 	RenderTargetBrush.DrawAs = ESlateBrushDrawType::Image;
 	RenderTargetBrush.Tiling = ESlateBrushTileType::NoTile;
@@ -306,8 +323,6 @@ void UMultiDisplayCameraComponent::CreateSecondaryWindow()
 
 	// Create the SImage widget. Using Image_Lambda ensures the brush pointer
 	// is re-evaluated every frame (not cached once at construction).
-	// The lambda also re-applies the resource object each frame to ensure
-	// Slate's texture proxy stays synchronized with our render target.
 	DisplayImage = SNew(SImage)
 		.Image_Lambda([this]() -> const FSlateBrush*
 		{
@@ -342,6 +357,8 @@ void UMultiDisplayCameraComponent::CreateSecondaryWindow()
 	{
 		SecondaryWindow->SetWindowMode(EWindowMode::WindowedFullscreen);
 	}
+
+	UE_LOG(LogTemp, Log, TEXT("MultiDisplayCamera: Window opened successfully on display %d"), TargetDisplayIndex);
 }
 
 void UMultiDisplayCameraComponent::DestroySecondaryWindow()
@@ -374,7 +391,5 @@ void UMultiDisplayCameraComponent::UpdateWindowContent()
 	}
 
 	// Invalidate the image widget so Slate repaints with the latest render target content.
-	// Only the SImage needs invalidation - the window will repaint automatically when
-	// its child is dirty. Invalidating both caused unnecessary overhead.
 	DisplayImage->Invalidate(EInvalidateWidgetReason::Paint);
 }

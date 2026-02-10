@@ -4,7 +4,7 @@ Output any camera view to any connected monitor using the `UMultiDisplayCameraCo
 
 ## Overview
 
-The Multi-Display Camera Component extends `USceneCaptureComponent2D` to open a separate OS window on a chosen monitor, displaying the captured scene in real-time. Each component manages its own render target, Slate window, and per-frame invalidation automatically.
+The Multi-Display Camera Component extends `USceneCaptureComponent2D` to open a separate OS window on a chosen monitor, displaying the captured scene in real-time. Each component manages its own render target, Slate window, and per-frame updates automatically.
 
 ## Requirements
 
@@ -37,11 +37,11 @@ In the **Details** panel under the **MultiDisplay | Settings** category:
 | **Fullscreen** | `true` | When enabled, the window opens in borderless fullscreen on the target monitor. |
 | **Render Target Width** | `0` | Width in pixels. `0` = auto-detect from the monitor's native resolution. |
 | **Render Target Height** | `0` | Height in pixels. `0` = auto-detect from the monitor's native resolution. |
-| **Capture Frame Rate** | `0` | Max Slate window update rate. `0` = update every frame (recommended). |
+| **Window Open Delay** | `4` | Number of frames to wait before opening the window. Gives the render target time to fill with valid content. Increase this if you see a brief flash of blank content on startup. |
 
 ### Step 4: Set Up Multiple Cameras (Multi-Monitor)
 
-For a two-monitor setup, you need **two separate Actors**, each with its own `MultiDisplayCameraComponent`:
+For a three-monitor setup, you need **three separate Actors**, each with its own `MultiDisplayCameraComponent`:
 
 **Camera A (Primary Monitor):**
 - Add `MultiDisplayCameraComponent` to Actor A
@@ -53,13 +53,22 @@ For a two-monitor setup, you need **two separate Actors**, each with its own `Mu
 - Set `Target Display Index` = `1`
 - Position Actor B where you want the secondary view
 
+**Camera C (Third Monitor):**
+- Add `MultiDisplayCameraComponent` to Actor C
+- Set `Target Display Index` = `2`
+- Position Actor C where you want the third view
+
 > Each camera is an independent scene capture. They can look at different parts of the level, follow different actors, or even have different post-processing settings.
 
 ### Step 5: Run the Project
 
 1. **Recommended**: Use **Standalone Game** mode (Play > Standalone Game) rather than Play-In-Editor (PIE). Standalone avoids Slate focus conflicts with the editor.
-2. On launch, the component auto-activates and opens a window on the target monitor.
-3. You should see the camera's view on the corresponding monitor.
+2. On launch, each component will:
+   - Create a render target at the target monitor's resolution
+   - Perform an initial scene capture
+   - Wait a few frames (configurable via `WindowOpenDelay`) for the render target to have valid content
+   - Open a Slate window on the target monitor
+3. You should see each camera's view on the corresponding monitor.
 
 ## Camera Following / Rotation
 
@@ -149,11 +158,12 @@ Since `MultiDisplayCameraComponent` inherits from `USceneCaptureComponent2D`, yo
 2. **Verify display index**: Ensure `Target Display Index` matches the monitor you want. Indices start at 0.
 3. **Run as Standalone**: PIE mode can cause Slate window conflicts. Use Play > Standalone Game.
 4. **Check for visible objects**: The camera captures what's in front of it. Ensure there are visible meshes/actors in the camera's view frustum.
-5. **Check Output Log**: Look for lines starting with `MultiDisplayCamera:` for diagnostic messages.
+5. **Increase Window Open Delay**: If the window opens before the render target has content, increase the `WindowOpenDelay` property (try 8 or 10).
+6. **Check Output Log**: Look for lines starting with `MultiDisplayCamera:` for diagnostic messages.
 
 ### Performance Issues
 
-- Each `MultiDisplayCameraComponent` is an independent scene capture, which re-renders the scene from that camera's viewpoint. Two cameras effectively double the rendering cost.
+- Each `MultiDisplayCameraComponent` performs an explicit `CaptureScene()` call each tick, which re-renders the scene from that camera's viewpoint. Multiple cameras multiply the rendering cost.
 - **Lower resolution**: Set `RenderTargetWidth` and `RenderTargetHeight` to values below native (e.g., 1280x720 instead of 1920x1080).
 - **Reduce capture scope**: Use Show Only Actors / Hidden Actors to limit what each camera renders.
 - **Limit post-processing**: Disable expensive effects (bloom, SSR, SSAO) on secondary cameras via post-process overrides.
@@ -175,8 +185,9 @@ Since `MultiDisplayCameraComponent` inherits from `USceneCaptureComponent2D`, yo
 The component works by:
 
 1. **Render Target**: Creates a `UTextureRenderTarget2D` sized to the target monitor's resolution.
-2. **Scene Capture**: The engine's `bCaptureEveryFrame` renders the scene into the render target each frame on the render thread.
-3. **Slate Window**: A separate `SWindow` is opened on the target monitor, containing an `SImage` widget.
-4. **FSlateBrush**: Points at the render target texture via `SetResourceObject()`.
-5. **Per-Frame Invalidation**: Each tick, the `SImage` is invalidated with `EInvalidateWidgetReason::Paint` so Slate resamples the render target texture instead of displaying a cached (stale) frame.
-6. **Image_Lambda**: The `SImage` uses `Image_Lambda` for dynamic brush evaluation, ensuring the texture reference stays synchronized even if the render target is recreated.
+2. **Explicit Scene Capture**: Calls `CaptureScene()` each tick to render the scene into the render target. This gives explicit control over when the render target has valid content, which is critical for multi-instance setups.
+3. **Deferred Window Open**: Waits several frames (configurable) after activation before opening the Slate window, ensuring the render target has been written to by the GPU.
+4. **Slate Window**: A separate `SWindow` is opened on the target monitor, containing an `SImage` widget.
+5. **FSlateBrush**: Points at the render target texture via `SetResourceObject()`.
+6. **Per-Frame Invalidation**: Each tick, the `SImage` is invalidated with `EInvalidateWidgetReason::Paint` so Slate resamples the render target texture instead of displaying a cached (stale) frame.
+7. **Image_Lambda**: The `SImage` uses `Image_Lambda` for dynamic brush evaluation, ensuring the texture reference stays synchronized even if the render target is recreated.

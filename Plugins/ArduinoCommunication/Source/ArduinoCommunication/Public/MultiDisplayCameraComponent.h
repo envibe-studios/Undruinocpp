@@ -71,9 +71,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiDisplay|Settings", meta = (ClampMin = "0", ClampMax = "4320"))
 	int32 RenderTargetHeight = 0;
 
-	/** Maximum frame rate for Slate window updates (0 = every frame) */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiDisplay|Settings", meta = (ClampMin = "0", ClampMax = "240"))
-	int32 CaptureFrameRate = 0;
+	/** Number of frames to wait after BeginPlay before opening the display window.
+	 *  This gives the engine time to render into the render target so the window
+	 *  doesn't start with blank content. Default 4 frames. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiDisplay|Settings", meta = (ClampMin = "0", ClampMax = "60"))
+	int32 WindowOpenDelay = 4;
 
 	// === Functions ===
 
@@ -125,8 +127,11 @@ private:
 	/** Whether the display is currently active */
 	bool bIsDisplayActive = false;
 
-	/** Timer for frame rate limiting */
-	float CaptureTimer = 0.0f;
+	/** Whether we are waiting to open the window (deferred open) */
+	bool bPendingWindowOpen = false;
+
+	/** Frame counter for deferred window opening */
+	int32 FrameDelayCounter = 0;
 
 	/** Cached display resolution */
 	FIntPoint CachedDisplayResolution;
