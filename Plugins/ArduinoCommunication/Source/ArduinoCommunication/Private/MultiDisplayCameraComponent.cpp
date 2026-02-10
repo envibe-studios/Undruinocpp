@@ -6,30 +6,57 @@
 #include "Widgets/Images/SImage.h"
 #include "Framework/Application/SlateApplication.h"
 
+DEFINE_LOG_CATEGORY_STATIC(LogMultiDisplay, Log, All);
+
 UMultiDisplayCameraComponent::UMultiDisplayCameraComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = true;
 
-	// Auto-activate on BeginPlay by default (uses inherited bAutoActivate from UActorComponent)
+	// Auto-activate on BeginPlay (inherited from UActorComponent)
 	bAutoActivate = true;
 
-	// Use manual CaptureScene() calls instead of bCaptureEveryFrame.
-	// This ensures we have explicit control over when the render target is written to,
-	// which is critical for multi-instance setups where we need the render target
-	// to have valid content before the Slate window reads from it.
-	bCaptureEveryFrame = false;
+	// Let the engine manage scene capture every frame.
+	// This is the standard pipeline and properly handles multiple
+	// SceneCaptureComponent2D instances rendering in the same frame.
+	bCaptureEveryFrame = true;
 	bCaptureOnMovement = true;
 	bAlwaysPersistRenderingState = true;
 
 	CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
 }
 
+FString UMultiDisplayCameraComponent::GetDisplayLogPrefix() const
+{
+	AActor* Owner = GetOwner();
+	FString OwnerName = Owner ? Owner->GetName() : TEXT("NoOwner");
+	return FString::Printf(TEXT("MultiDisplay[%s|Disp%d]"), *OwnerName, TargetDisplayIndex);
+}
+
 void UMultiDisplayCameraComponent::BeginPlay()
 {
+	// IMPORTANT: Set up the render target BEFORE calling Super::BeginPlay().
+	// The engine's scene capture system registers this component during Super::BeginPlay()
+	// and checks TextureTarget at that point. If TextureTarget is null when the engine
+	// registers the component, the capture pipeline won't render into it, resulting in
+	// blank output. By creating the render target first, the engine sees a valid target
+	// during registration and properly sets up the GPU capture commands.
+	SetupRenderTarget();
+
 	Super::BeginPlay();
 
-	SetupRenderTarget();
+	UE_LOG(LogMultiDisplay, Log, TEXT("%s: BeginPlay (TextureTarget: %s, Resource: %s)"),
+		*GetDisplayLogPrefix(),
+		TextureTarget ? TEXT("valid") : TEXT("null"),
+		(TextureTarget && TextureTarget->GetResource()) ? TEXT("ready") : TEXT("not ready"));
+
+	// Do an initial capture to pre-fill the render target with content.
+	// This ensures the render target has valid scene data before the deferred
+	// window open, supplementing the engine's bCaptureEveryFrame pipeline.
+	if (TextureTarget)
+	{
+		CaptureScene();
+	}
 
 	if (bAutoActivate)
 	{
@@ -39,6 +66,8 @@ void UMultiDisplayCameraComponent::BeginPlay()
 
 void UMultiDisplayCameraComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	UE_LOG(LogMultiDisplay, Log, TEXT("%s: EndPlay"), *GetDisplayLogPrefix());
+
 	DeactivateDisplay();
 	DestroySecondaryWindow();
 
@@ -52,13 +81,6 @@ void UMultiDisplayCameraComponent::TickComponent(float DeltaTime, ELevelTick Tic
 	if (!bIsDisplayActive && !bPendingWindowOpen)
 	{
 		return;
-	}
-
-	// Always capture the scene explicitly each tick.
-	// This guarantees the render target has fresh content regardless of engine frame ordering.
-	if (TextureTarget)
-	{
-		CaptureScene();
 	}
 
 	// Deferred window open: wait N frames for the render target to have valid content
@@ -100,19 +122,20 @@ void UMultiDisplayCameraComponent::SetupRenderTarget()
 
 	CachedDisplayResolution = FIntPoint(Width, Height);
 
-	if (!TextureTarget)
-	{
-		TextureTarget = NewObject<UTextureRenderTarget2D>(this);
-	}
+	// Each component instance must have its own unique render target.
+	// Create a new one with a unique name to avoid any resource sharing issues.
+	FName RTName = MakeUniqueObjectName(this, UTextureRenderTarget2D::StaticClass(), FName(FString::Printf(TEXT("MultiDisplayRT_%d"), TargetDisplayIndex)));
+	TextureTarget = NewObject<UTextureRenderTarget2D>(this, RTName);
 
 	TextureTarget->RenderTargetFormat = ETextureRenderTargetFormat::RTF_RGBA8;
 	TextureTarget->ClearColor = FLinearColor::Black;
 	TextureTarget->bAutoGenerateMips = false;
 	TextureTarget->InitAutoFormat(Width, Height);
 	TextureTarget->UpdateResourceImmediate(true);
-	TextureTarget->UpdateResource();
 
-	UE_LOG(LogTemp, Log, TEXT("MultiDisplayCamera: Render target %dx%d for display %d"), Width, Height, TargetDisplayIndex);
+	UE_LOG(LogMultiDisplay, Log, TEXT("%s: Render target created %dx%d (resource: %s)"),
+		*GetDisplayLogPrefix(), Width, Height,
+		TextureTarget->GetResource() ? TEXT("valid") : TEXT("null"));
 }
 
 void UMultiDisplayCameraComponent::ActivateDisplay()
@@ -124,19 +147,18 @@ void UMultiDisplayCameraComponent::ActivateDisplay()
 
 	if (!TextureTarget)
 	{
+		UE_LOG(LogMultiDisplay, Warning, TEXT("%s: No render target, creating one"), *GetDisplayLogPrefix());
 		SetupRenderTarget();
 	}
 
-	// Do an initial capture so the render target has content
-	CaptureScene();
-
-	// Defer window creation by a few frames to let the GPU finish rendering
-	// into the render target. This prevents the blank window on first open.
+	// Defer window creation to let the engine capture several frames first.
+	// The engine's bCaptureEveryFrame=true will populate the render target
+	// during these frames, ensuring the window shows content when it opens.
 	bPendingWindowOpen = true;
 	FrameDelayCounter = 0;
 	bIsDisplayActive = true;
 
-	UE_LOG(LogTemp, Log, TEXT("MultiDisplayCamera: Activated on display %d (window opens in %d frames)"), TargetDisplayIndex, WindowOpenDelay);
+	UE_LOG(LogMultiDisplay, Log, TEXT("%s: Activated (window opens in %d frames)"), *GetDisplayLogPrefix(), WindowOpenDelay);
 }
 
 void UMultiDisplayCameraComponent::DeactivateDisplay()
@@ -150,7 +172,7 @@ void UMultiDisplayCameraComponent::DeactivateDisplay()
 	DestroySecondaryWindow();
 	bIsDisplayActive = false;
 
-	UE_LOG(LogTemp, Log, TEXT("MultiDisplayCamera: Deactivated from display %d"), TargetDisplayIndex);
+	UE_LOG(LogMultiDisplay, Log, TEXT("%s: Deactivated"), *GetDisplayLogPrefix());
 }
 
 bool UMultiDisplayCameraComponent::IsDisplayActive() const
@@ -269,7 +291,7 @@ void UMultiDisplayCameraComponent::CreateSecondaryWindow()
 {
 	if (!FSlateApplication::IsInitialized())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("MultiDisplayCamera: Slate not initialized"));
+		UE_LOG(LogMultiDisplay, Warning, TEXT("%s: Slate not initialized"), *GetDisplayLogPrefix());
 		return;
 	}
 
@@ -281,8 +303,8 @@ void UMultiDisplayCameraComponent::CreateSecondaryWindow()
 
 	if (TargetDisplayIndex >= DisplayMetrics.MonitorInfo.Num())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("MultiDisplayCamera: Display %d not found (%d displays available)"),
-			TargetDisplayIndex, DisplayMetrics.MonitorInfo.Num());
+		UE_LOG(LogMultiDisplay, Warning, TEXT("%s: Display %d not found (%d displays available)"),
+			*GetDisplayLogPrefix(), TargetDisplayIndex, DisplayMetrics.MonitorInfo.Num());
 		return;
 	}
 
@@ -306,35 +328,60 @@ void UMultiDisplayCameraComponent::CreateSecondaryWindow()
 		WindowHeight = TargetMonitor.WorkArea.Bottom - TargetMonitor.WorkArea.Top;
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("MultiDisplayCamera: Opening window on display %d at (%d,%d) size %dx%d"),
-		TargetDisplayIndex, WindowX, WindowY, WindowWidth, WindowHeight);
+	UE_LOG(LogMultiDisplay, Log, TEXT("%s: Creating window at (%d,%d) size %dx%d"),
+		*GetDisplayLogPrefix(), WindowX, WindowY, WindowWidth, WindowHeight);
+
+	// Verify render target is ready
+	if (!TextureTarget)
+	{
+		UE_LOG(LogMultiDisplay, Error, TEXT("%s: No render target available!"), *GetDisplayLogPrefix());
+		return;
+	}
+
+	if (!TextureTarget->GetResource())
+	{
+		UE_LOG(LogMultiDisplay, Warning, TEXT("%s: Render target resource not yet available, forcing update"), *GetDisplayLogPrefix());
+		TextureTarget->UpdateResourceImmediate(true);
+	}
 
 	// Setup the brush that will display the render target texture.
+	// We store a raw pointer to the render target that the lambda will use.
+	// This avoids issues with brush resource object caching.
 	RenderTargetBrush = FSlateBrush();
 	RenderTargetBrush.DrawAs = ESlateBrushDrawType::Image;
 	RenderTargetBrush.Tiling = ESlateBrushTileType::NoTile;
 	RenderTargetBrush.ImageSize = FVector2D(WindowWidth, WindowHeight);
 	RenderTargetBrush.ImageType = ESlateBrushImageType::FullColor;
+	RenderTargetBrush.SetResourceObject(TextureTarget);
 
-	if (TextureTarget)
-	{
-		RenderTargetBrush.SetResourceObject(TextureTarget);
-	}
+	UE_LOG(LogMultiDisplay, Log, TEXT("%s: Brush resource set to %s (RenderTarget: %s, Resource: %s)"),
+		*GetDisplayLogPrefix(),
+		*TextureTarget->GetName(),
+		TextureTarget->IsValidLowLevel() ? TEXT("valid") : TEXT("invalid"),
+		TextureTarget->GetResource() ? TEXT("ready") : TEXT("null"));
+
+	// Capture a raw pointer to the render target for the lambda.
+	// The lambda needs to re-set the resource object every frame to ensure
+	// Slate picks up the latest GPU content from the texture.
+	UTextureRenderTarget2D* RT = TextureTarget;
+	FSlateBrush* BrushPtr = &RenderTargetBrush;
 
 	// Create the SImage widget. Using Image_Lambda ensures the brush pointer
 	// is re-evaluated every frame (not cached once at construction).
 	DisplayImage = SNew(SImage)
-		.Image_Lambda([this]() -> const FSlateBrush*
+		.Image_Lambda([BrushPtr, RT]() -> const FSlateBrush*
 		{
-			if (TextureTarget)
+			if (RT && RT->IsValidLowLevel() && RT->GetResource())
 			{
-				RenderTargetBrush.SetResourceObject(TextureTarget);
+				BrushPtr->SetResourceObject(RT);
 			}
-			return &RenderTargetBrush;
+			return BrushPtr;
 		});
 
-	// Build the Slate window
-	FText WindowTitle = FText::FromString(FString::Printf(TEXT("Camera - Display %d"), TargetDisplayIndex));
+	// Build the Slate window with a title that identifies this camera
+	AActor* Owner = GetOwner();
+	FString OwnerName = Owner ? Owner->GetActorLabel() : TEXT("Camera");
+	FText WindowTitle = FText::FromString(FString::Printf(TEXT("Camera - Display %d (%s)"), TargetDisplayIndex, *OwnerName));
 
 	SecondaryWindow = SNew(SWindow)
 		.Title(WindowTitle)
@@ -358,7 +405,7 @@ void UMultiDisplayCameraComponent::CreateSecondaryWindow()
 		SecondaryWindow->SetWindowMode(EWindowMode::WindowedFullscreen);
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("MultiDisplayCamera: Window opened successfully on display %d"), TargetDisplayIndex);
+	UE_LOG(LogMultiDisplay, Log, TEXT("%s: Window opened successfully"), *GetDisplayLogPrefix());
 }
 
 void UMultiDisplayCameraComponent::DestroySecondaryWindow()
@@ -373,7 +420,7 @@ void UMultiDisplayCameraComponent::DestroySecondaryWindow()
 		DisplayImage.Reset();
 		RenderTargetBrush.SetResourceObject(nullptr);
 
-		UE_LOG(LogTemp, Log, TEXT("MultiDisplayCamera: Destroyed secondary window"));
+		UE_LOG(LogMultiDisplay, Log, TEXT("%s: Window destroyed"), *GetDisplayLogPrefix());
 	}
 }
 
@@ -388,8 +435,10 @@ void UMultiDisplayCameraComponent::UpdateWindowContent()
 	if (TextureTarget && RenderTargetBrush.GetResourceObject() != TextureTarget)
 	{
 		RenderTargetBrush.SetResourceObject(TextureTarget);
+		UE_LOG(LogMultiDisplay, Log, TEXT("%s: Brush resource re-linked to render target"), *GetDisplayLogPrefix());
 	}
 
 	// Invalidate the image widget so Slate repaints with the latest render target content.
+	// Without this, Slate caches the widget and shows a stale/blank frame.
 	DisplayImage->Invalidate(EInvalidateWidgetReason::Paint);
 }

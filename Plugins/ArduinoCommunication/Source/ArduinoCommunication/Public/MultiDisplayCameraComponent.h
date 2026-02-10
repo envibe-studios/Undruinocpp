@@ -1,24 +1,19 @@
 // Multi-Display Camera Component - Outputs camera view to selected display/monitor
 //
 // SETUP GUIDE:
-// 1. Add this component to any Actor in your level (e.g., an empty Actor or a CameraActor).
-// 2. In the Details panel, set "Target Display Index" to the monitor you want (0 = primary, 1 = second monitor, etc.).
-// 3. Optionally adjust RenderTargetWidth/Height (0 = auto-detect from monitor resolution).
-// 4. Optionally set bFullscreen to true for borderless fullscreen on that monitor.
-// 5. The component auto-activates on BeginPlay. You can also call ActivateDisplay()/DeactivateDisplay() at runtime.
-// 6. Attach this component as a child of another component (e.g., a SpringArm or the Actor root)
-//    so that it inherits the parent's transform (position and rotation).
-// 7. Call GetNumDisplays() or GetAllDisplayNames() to discover available monitors at runtime.
+// 1. Create an empty Actor in the level for EACH monitor you want to display on.
+// 2. Add a MultiDisplayCameraComponent to each Actor.
+// 3. Set "Target Display Index" to the desired monitor (0 = primary, 1 = second, etc.).
+// 4. Position/rotate the Actor to point the camera where you want.
+// 5. Optionally attach the component to a SpringArm or parent component for rotation inheritance.
+// 6. Run as Standalone Game (not PIE) for best results.
+// 7. A window will open on the target monitor showing the camera's view.
 //
 // IMPORTANT NOTES:
-// - The component creates a separate OS window on the target monitor. This window displays the
-//   scene as captured by the SceneCaptureComponent2D base class.
-// - "Display 0" is your primary monitor. "Display 1" is your second monitor, etc.
-// - If you see a blank/gray window, ensure:
-//     a) The component's Actor is placed in the level and the level is running (PIE or standalone).
-//     b) There are visible objects in front of the camera's view frustum.
-//     c) The TargetDisplayIndex matches a valid, connected monitor.
-// - For best results, run as "Standalone Game" rather than PIE, since PIE can have Slate focus issues.
+// - Each component creates a separate OS window on the target monitor.
+// - "Display 0" = primary monitor, "Display 1" = second monitor, etc.
+// - The component auto-activates on BeginPlay.
+// - For best results, run as "Standalone Game" rather than PIE.
 
 #pragma once
 
@@ -73,9 +68,9 @@ public:
 
 	/** Number of frames to wait after BeginPlay before opening the display window.
 	 *  This gives the engine time to render into the render target so the window
-	 *  doesn't start with blank content. Default 4 frames. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiDisplay|Settings", meta = (ClampMin = "0", ClampMax = "60"))
-	int32 WindowOpenDelay = 4;
+	 *  doesn't start with blank content. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiDisplay|Settings", meta = (ClampMin = "1", ClampMax = "60"))
+	int32 WindowOpenDelay = 8;
 
 	// === Functions ===
 
@@ -144,6 +139,9 @@ private:
 
 	/** Update the window's image content from the render target */
 	void UpdateWindowContent();
+
+	/** Get a descriptive name for logging */
+	FString GetDisplayLogPrefix() const;
 
 	/** Handle to the secondary window */
 	TSharedPtr<SWindow> SecondaryWindow;
