@@ -14,8 +14,10 @@ UMultiDisplayCameraComponent::UMultiDisplayCameraComponent()
 	// Auto-activate on BeginPlay by default (uses inherited bAutoActivate from UActorComponent)
 	bAutoActivate = true;
 
-	// Scene capture settings for real-time rendering
-	bCaptureEveryFrame = false; // We manually call CaptureScene() for precise control
+	// Let the engine handle scene capture through the render pipeline.
+	// This is far more efficient than manually calling CaptureScene() each tick,
+	// as the engine batches and pipelines the GPU work properly.
+	bCaptureEveryFrame = true;
 	bCaptureOnMovement = true;
 	bAlwaysPersistRenderingState = true;
 
@@ -51,32 +53,9 @@ void UMultiDisplayCameraComponent::TickComponent(float DeltaTime, ELevelTick Tic
 		return;
 	}
 
-	// Determine if we should capture this frame
-	bool bShouldCapture = true;
-	if (CaptureFrameRate > 0)
-	{
-		CaptureTimer += DeltaTime;
-		float FrameInterval = 1.0f / CaptureFrameRate;
-		if (CaptureTimer >= FrameInterval)
-		{
-			CaptureTimer -= FrameInterval;
-		}
-		else
-		{
-			bShouldCapture = false;
-		}
-	}
-
-	// Manually trigger scene capture to ensure the render target gets fresh content.
-	// We don't use bCaptureEveryFrame because toggling it creates race conditions
-	// with the render thread.
-	if (bShouldCapture)
-	{
-		CaptureScene();
-	}
-
-	// Force the SImage widget to repaint so the render target content appears each frame.
-	// Without this, Slate caches the widget and the image stays gray/stale.
+	// The engine handles scene capture via bCaptureEveryFrame on the render thread.
+	// We only need to invalidate the Slate widget so it repaints with the latest
+	// render target content. Without this, Slate caches the widget and shows stale/gray.
 	UpdateWindowContent();
 }
 
@@ -132,10 +111,6 @@ void UMultiDisplayCameraComponent::ActivateDisplay()
 	{
 		SetupRenderTarget();
 	}
-
-	// Perform an initial scene capture so the render target has content
-	// before the window is created. This prevents the initial blank frame.
-	CaptureScene();
 
 	CreateSecondaryWindow();
 
@@ -398,9 +373,8 @@ void UMultiDisplayCameraComponent::UpdateWindowContent()
 		RenderTargetBrush.SetResourceObject(TextureTarget);
 	}
 
-	// Invalidate both the image widget and the window so Slate repaints with the
-	// latest render target content. Without this, Slate's caching causes the SImage
-	// to display a stale/gray frame.
+	// Invalidate the image widget so Slate repaints with the latest render target content.
+	// Only the SImage needs invalidation - the window will repaint automatically when
+	// its child is dirty. Invalidating both caused unnecessary overhead.
 	DisplayImage->Invalidate(EInvalidateWidgetReason::Paint);
-	SecondaryWindow->Invalidate(EInvalidateWidgetReason::Paint);
 }

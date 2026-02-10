@@ -71,7 +71,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiDisplay|Settings", meta = (ClampMin = "0", ClampMax = "4320"))
 	int32 RenderTargetHeight = 0;
 
-	/** Frame rate for the capture (0 = every frame, which is recommended) */
+	/** Maximum frame rate for Slate window updates (0 = every frame) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiDisplay|Settings", meta = (ClampMin = "0", ClampMax = "240"))
 	int32 CaptureFrameRate = 0;
 

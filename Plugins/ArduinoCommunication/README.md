@@ -329,6 +329,12 @@ void AMyShip::HandleWheelTurn(uint8 Src, int32 Delta)
 - All delegate broadcasts are marshaled to the game thread via `AsyncTask(ENamedThreads::GameThread, ...)`
 - Each port has its own independent parser instance (no shared state)
 
+## Multi-Display Camera System
+
+For outputting camera views to multiple monitors, see **[MULTI_DISPLAY_SETUP.md](MULTI_DISPLAY_SETUP.md)**.
+
+The `UMultiDisplayCameraComponent` extends `USceneCaptureComponent2D` to open a secondary OS window on any connected monitor, displaying a real-time camera view. Add one component per monitor, set the `TargetDisplayIndex`, and run as Standalone Game.
+
 ## License
 
 MIT License - Use freely in your projects.
