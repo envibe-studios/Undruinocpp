@@ -469,6 +469,14 @@ public:
 	// ============================================================================
 
 	/**
+	 * Constant mount correction offset (Euler degrees, converted to quaternion internally).
+	 * Applied after zero-correction to compensate for physical mounting orientation.
+	 * Adjust Pitch/Yaw/Roll to remove consistent skew without touching ESP32 firmware.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Firing|IMU")
+	FRotator MountCorrectionOffset = FRotator::ZeroRotator;
+
+	/**
 	 * Zero the weapon orientation.
 	 * Captures the current raw IMU quaternion as the "zero reference".
 	 * All subsequent IMU updates will produce rotation deltas relative to this pose.
@@ -483,6 +491,13 @@ public:
 	 * so the weapon points "forward" at the zeroed pose and tracks movement from there.
 	 * If ZeroOrientation has not been called yet, the first quaternion received is
 	 * automatically used as the zero reference.
+	 *
+	 * Uses pure quaternion math (no Euler deltas):
+	 *   Corrected = ZeroQuat.Inverse() * Raw
+	 *   Final = MountQuat * Corrected
+	 *
+	 * Includes sign-flip continuity protection via dot product check against LastQuat.
+	 *
 	 * @param RawImuQuat - The raw quaternion from the 9DOF sensor
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Firing|IMU")
@@ -602,7 +617,12 @@ private:
 	/** Whether the zero-reference quaternion has been captured */
 	bool bHasZeroReference = false;
 
-	/** The inverse of the IMU quaternion captured at zero time.
-	 *  Delta = ZeroInverse * CurrentRaw gives the rotation relative to zero pose. */
-	FQuat ZeroInverseQuat = FQuat::Identity;
+	/** The raw IMU quaternion captured at zero time (stored un-inverted for re-zeroing). */
+	FQuat ZeroQuat = FQuat::Identity;
+
+	/** Whether we have received at least one IMU sample (for sign-flip continuity) */
+	bool bHasLastRawQuat = false;
+
+	/** The last raw IMU quaternion received, used for sign-flip continuity check */
+	FQuat LastRawQuat = FQuat::Identity;
 };

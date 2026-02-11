@@ -731,37 +731,71 @@ FVector UFiringComponent::ApplySpread(const FVector& Direction, float SpreadAngl
 
 void UFiringComponent::ZeroOrientation()
 {
-	// Mark that we want a zero reference.
-	// If we already have IMU data cached in ZeroInverseQuat's "last raw" we could
-	// re-zero immediately, but the simplest approach is to flag it so the next
-	// ApplyImuOrientation call captures the zero reference.
-	bHasZeroReference = false;
-	ZeroInverseQuat = FQuat::Identity;
+	if (bHasLastRawQuat)
+	{
+		// Re-zero immediately from cached last IMU sample
+		ZeroQuat = LastRawQuat;
+		bHasZeroReference = true;
 
-	// Reset the component back to its default relative rotation so it
-	// snaps to "forward" immediately rather than holding a stale pose.
-	SetRelativeRotation(FRotator::ZeroRotator);
+		// Apply mount correction so the weapon snaps to corrected-forward immediately
+		FQuat MountQuat = MountCorrectionOffset.Quaternion();
+		SetRelativeRotation(MountQuat.Rotator());
 
-	UE_LOG(LogTemp, Log, TEXT("FiringComponent: Orientation zeroed - awaiting next IMU sample as new reference"));
+		UE_LOG(LogTemp, Log, TEXT("FiringComponent: Orientation zeroed from cached IMU sample"));
+	}
+	else
+	{
+		// No IMU data yet — flag so the next sample becomes the zero reference
+		bHasZeroReference = false;
+		ZeroQuat = FQuat::Identity;
+
+		SetRelativeRotation(FRotator::ZeroRotator);
+
+		UE_LOG(LogTemp, Log, TEXT("FiringComponent: Orientation zeroed - awaiting next IMU sample as new reference"));
+	}
 }
 
 void UFiringComponent::ApplyImuOrientation(const FQuat& RawImuQuat)
 {
+	// Normalize the incoming quaternion
+	FQuat Raw = RawImuQuat;
+	Raw.Normalize();
+
+	// Sign-flip continuity: quaternions q and -q represent the same rotation,
+	// but interpolation/smoothing can jump if the sign flips. Keep the sign
+	// consistent with the previous sample by checking the dot product.
+	if (bHasLastRawQuat)
+	{
+		if ((Raw | LastRawQuat) < 0.0f)
+		{
+			Raw *= -1.0f;
+		}
+	}
+	LastRawQuat = Raw;
+	bHasLastRawQuat = true;
+
 	// Auto-zero on the very first IMU sample if we haven't zeroed yet
 	if (!bHasZeroReference)
 	{
-		ZeroInverseQuat = RawImuQuat.Inverse();
+		ZeroQuat = Raw;
 		bHasZeroReference = true;
 
 		UE_LOG(LogTemp, Log, TEXT("FiringComponent: Auto-zeroed orientation from first IMU sample"));
 	}
 
-	// Compute the delta rotation: how much the sensor has rotated since the zero pose
-	// Delta = ZeroInverse * Current  →  identity when Current == ZeroPose
-	FQuat DeltaQuat = ZeroInverseQuat * RawImuQuat;
-	DeltaQuat.Normalize();
+	// Compute corrected rotation: remove the zero-pose bias
+	// Corrected = ZeroQuat.Inverse() * Raw
+	// When Raw == ZeroQuat, Corrected == Identity (weapon points forward)
+	FQuat Corrected = ZeroQuat.Inverse() * Raw;
+	Corrected.Normalize();
 
-	SetRelativeRotation(DeltaQuat.Rotator());
+	// Apply constant mount correction to compensate for physical mounting orientation
+	FQuat MountQuat = MountCorrectionOffset.Quaternion();
+	FQuat Final = MountQuat * Corrected;
+	Final.Normalize();
+
+	// Apply using quaternion — avoid Euler conversion until the very end
+	SetRelativeRotation(Final.Rotator());
 }
 
 bool UFiringComponent::IsOrientationZeroed() const
