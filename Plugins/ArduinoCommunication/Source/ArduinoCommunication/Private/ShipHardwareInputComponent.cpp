@@ -163,14 +163,13 @@ void UShipHardwareInputComponent::OnFrameParsedHandler(FName InShipId, uint8 Src
 				bool bTriggerHeld = (ImuData.Buttons & 0x01) != 0;
 				FQuat Orientation = ImuData.GetQuaternion();
 				FVector EulerAngles = ImuData.EulerAngles;
+				OnWeaponImu.Broadcast(Src, Type, Seq, Orientation, EulerAngles, bTriggerHeld, Payload);
 
-				// Auto-apply IMU orientation to FiringComponent if configured
+				// Auto-apply IMU orientation to the FiringComponent
 				if (bAutoApplyImuRotation && FiringComponent)
 				{
 					FiringComponent->ApplyImuOrientation(Orientation);
 				}
-
-				OnWeaponImu.Broadcast(Src, Type, Seq, Orientation, EulerAngles, bTriggerHeld, Payload);
 			}
 		}
 		break;
@@ -322,18 +321,4 @@ bool UShipHardwareInputComponent::ApplyWeaponMagByTagId(int64 TagId)
 
 	UE_LOG(LogTemp, Warning, TEXT("ShipHardwareInputComponent: No WeaponMag found for TagId: %lld"), TagId);
 	return false;
-}
-
-void UShipHardwareInputComponent::ZeroWeaponOrientation()
-{
-	if (!FiringComponent)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("ShipHardwareInputComponent: Cannot zero orientation - FiringComponent not set"));
-		return;
-	}
-
-	FiringComponent->ZeroOrientation();
-
-	UE_LOG(LogTemp, Log, TEXT("ShipHardwareInputComponent: Zeroed weapon orientation for ShipId '%s'"),
-		*ShipId.ToString());
 }

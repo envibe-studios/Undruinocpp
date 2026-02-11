@@ -465,48 +465,20 @@ public:
 	void CancelScan();
 
 	// ============================================================================
-	// IMU ORIENTATION / ZEROING
+	// WEAPON IMU
 	// ============================================================================
 
-	/**
-	 * Constant mount correction offset (Euler degrees, converted to quaternion internally).
-	 * Applied after zero-correction to compensate for physical mounting orientation.
-	 * Adjust Pitch/Yaw/Roll to remove consistent skew without touching ESP32 firmware.
-	 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Firing|IMU")
-	FRotator MountCorrectionOffset = FRotator::ZeroRotator;
+	/** Manual aim offset applied after raw IMU rotation — tune in editor to remove skew */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon IMU")
+	FRotator ManualAimOffset = FRotator::ZeroRotator;
 
 	/**
-	 * Zero the weapon orientation.
-	 * Captures the current raw IMU quaternion as the "zero reference".
-	 * All subsequent IMU updates will produce rotation relative to this zeroed pose,
-	 * composed with the original BasePoseQuat so the weapon returns to its design-time orientation.
-	 * Only zeroes when called explicitly — no auto-zero on first sample.
+	 * Apply raw IMU quaternion orientation to this component
+	 * Converts to rotator, adds ManualAimOffset, and sets relative rotation
+	 * @param RawImuQuat - Raw quaternion from IMU sensor (X,Y,Z,W)
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Firing|IMU")
-	void ZeroOrientation();
-
-	/**
-	 * Apply a raw IMU quaternion to this component's relative rotation.
-	 * Produces an absolute final pose (not just a delta):
-	 *   Zeroed    = bHasZero ? (ZeroQuat.Inverse() * Raw) : Raw
-	 *   Mounted   = MountQuat * Zeroed
-	 *   FinalAbs  = BasePoseQuat * Mounted
-	 *
-	 * Applied immediately on packet receive (no Tick smoothing).
-	 * Includes sign-flip continuity protection via dot product check against LastQuat.
-	 *
-	 * @param RawImuQuat - The raw quaternion from the 9DOF sensor
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Firing|IMU")
+	UFUNCTION(BlueprintCallable, Category = "Weapon IMU")
 	void ApplyImuOrientation(const FQuat& RawImuQuat);
-
-	/**
-	 * Check whether the orientation has been zeroed
-	 * @return True if ZeroOrientation has been called explicitly
-	 */
-	UFUNCTION(BlueprintPure, Category = "Firing|IMU")
-	bool IsOrientationZeroed() const;
 
 	// ============================================================================
 	// WEAPON MAG INTEGRATION
@@ -609,22 +581,4 @@ private:
 
 	/** Time since scan target was lost (for delayed reset) */
 	float ScanLostTime = 0.0f;
-
-	// === IMU Zeroing State ===
-
-	/** The component's original relative rotation, captured at BeginPlay.
-	 *  Used to restore the design-time base pose after applying IMU correction. */
-	FQuat BasePoseQuat = FQuat::Identity;
-
-	/** Whether the zero-reference quaternion has been captured */
-	bool bHasZeroReference = false;
-
-	/** The raw IMU quaternion captured at zero time (stored un-inverted for re-zeroing). */
-	FQuat ZeroQuat = FQuat::Identity;
-
-	/** Whether we have received at least one IMU sample (for sign-flip continuity) */
-	bool bHasLastRawQuat = false;
-
-	/** The last raw IMU quaternion received, used for sign-flip continuity check */
-	FQuat LastRawQuat = FQuat::Identity;
 };

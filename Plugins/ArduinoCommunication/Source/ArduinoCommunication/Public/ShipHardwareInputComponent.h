@@ -189,13 +189,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship Hardware|Weapon Mags")
 	TObjectPtr<UFiringComponent> FiringComponent;
 
+	/** If true, automatically apply IMU orientation to FiringComponent each packet */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship Hardware|Weapon Mags")
+	bool bAutoApplyImuRotation = true;
+
 	/** If true, automatically apply weapon mag config when tag is inserted */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship Hardware|Weapon Mags")
 	bool bAutoApplyWeaponMag = true;
-
-	/** If true, automatically apply IMU orientation to the FiringComponent each frame */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship Hardware|Weapon Mags")
-	bool bAutoApplyImuRotation = true;
 
 	// === Events ===
 
@@ -269,14 +269,6 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Ship Hardware|Weapon Mags")
 	bool ApplyWeaponMagByTagId(int64 TagId);
-
-	/**
-	 * Zero the weapon orientation on the linked FiringComponent.
-	 * The next IMU quaternion received will become the new "forward" reference.
-	 * All subsequent IMU updates produce rotation relative to this zeroed pose.
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Ship Hardware|Weapon Mags")
-	void ZeroWeaponOrientation();
 
 protected:
 	// === UActorComponent Interface ===

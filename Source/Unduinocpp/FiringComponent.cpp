@@ -16,9 +16,6 @@ void UFiringComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Capture the design-time base pose so IMU corrections produce absolute final rotations
-	BasePoseQuat = GetRelativeRotation().Quaternion();
-
 	// Initialize bullet cooldown based on rate of fire
 	BulletCooldown = 0.0f;
 }
@@ -729,80 +726,17 @@ FVector UFiringComponent::ApplySpread(const FVector& Direction, float SpreadAngl
 }
 
 // ============================================================================
-// IMU ORIENTATION / ZEROING
+// WEAPON IMU
 // ============================================================================
-
-void UFiringComponent::ZeroOrientation()
-{
-	if (bHasLastRawQuat)
-	{
-		// Re-zero immediately from cached last IMU sample
-		ZeroQuat = LastRawQuat;
-		bHasZeroReference = true;
-
-		// Snap weapon to base pose + mount correction so it looks correct immediately
-		FQuat MountQuat = MountCorrectionOffset.Quaternion();
-		FQuat SnapPose = BasePoseQuat * MountQuat;
-		SnapPose.Normalize();
-		SetRelativeRotation(SnapPose.Rotator());
-
-		UE_LOG(LogTemp, Log, TEXT("FiringComponent: Orientation zeroed from cached IMU sample"));
-	}
-	else
-	{
-		// No IMU data yet — just reset the flag; do NOT auto-zero on next sample
-		bHasZeroReference = false;
-		ZeroQuat = FQuat::Identity;
-
-		// Restore base pose
-		SetRelativeRotation(BasePoseQuat.Rotator());
-
-		UE_LOG(LogTemp, Log, TEXT("FiringComponent: Orientation zero requested but no IMU data yet"));
-	}
-}
 
 void UFiringComponent::ApplyImuOrientation(const FQuat& RawImuQuat)
 {
-	// Normalize the incoming quaternion
 	FQuat Raw = RawImuQuat;
 	Raw.Normalize();
 
-	// Sign-flip continuity: quaternions q and -q represent the same rotation,
-	// but interpolation/smoothing can jump if the sign flips. Keep the sign
-	// consistent with the previous sample by checking the dot product.
-	if (bHasLastRawQuat)
-	{
-		if ((Raw | LastRawQuat) < 0.0f)
-		{
-			Raw *= -1.0f;
-		}
-	}
-	LastRawQuat = Raw;
-	bHasLastRawQuat = true;
-
-	// Compute zeroed rotation: remove the zero-pose bias if calibrated
-	// When Raw == ZeroQuat, Zeroed == Identity (weapon at neutral pose)
-	FQuat Zeroed = bHasZeroReference ? (ZeroQuat.Inverse() * Raw) : Raw;
-	Zeroed.Normalize();
-
-	// Apply constant mount correction to compensate for physical mounting orientation
-	FQuat MountQuat = MountCorrectionOffset.Quaternion();
-	FQuat Mounted = MountQuat * Zeroed;
-	Mounted.Normalize();
-
-	// Compose with the design-time base pose to produce an absolute final rotation
-	// This preserves the original "snappy absolute aim" contract:
-	// IMU represents an absolute weapon pose in component space
-	FQuat FinalAbs = BasePoseQuat * Mounted;
-	FinalAbs.Normalize();
-
-	// Apply immediately on packet receive — no Tick smoothing
-	SetRelativeRotation(FinalAbs.Rotator());
-}
-
-bool UFiringComponent::IsOrientationZeroed() const
-{
-	return bHasZeroReference;
+	FRotator RawRot = Raw.Rotator();
+	FRotator FinalRot = RawRot + ManualAimOffset;
+	SetRelativeRotation(FinalRot);
 }
 
 // ============================================================================
