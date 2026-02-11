@@ -479,23 +479,21 @@ public:
 	/**
 	 * Zero the weapon orientation.
 	 * Captures the current raw IMU quaternion as the "zero reference".
-	 * All subsequent IMU updates will produce rotation deltas relative to this pose.
-	 * If no IMU data has been received yet, the next incoming quaternion will be used as zero.
+	 * All subsequent IMU updates will produce rotation relative to this zeroed pose,
+	 * composed with the original BasePoseQuat so the weapon returns to its design-time orientation.
+	 * Only zeroes when called explicitly — no auto-zero on first sample.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Firing|IMU")
 	void ZeroOrientation();
 
 	/**
 	 * Apply a raw IMU quaternion to this component's relative rotation.
-	 * The rotation is computed as the delta from the zero-reference quaternion,
-	 * so the weapon points "forward" at the zeroed pose and tracks movement from there.
-	 * If ZeroOrientation has not been called yet, the first quaternion received is
-	 * automatically used as the zero reference.
+	 * Produces an absolute final pose (not just a delta):
+	 *   Zeroed    = bHasZero ? (ZeroQuat.Inverse() * Raw) : Raw
+	 *   Mounted   = MountQuat * Zeroed
+	 *   FinalAbs  = BasePoseQuat * Mounted
 	 *
-	 * Uses pure quaternion math (no Euler deltas):
-	 *   Corrected = ZeroQuat.Inverse() * Raw
-	 *   Final = MountQuat * Corrected
-	 *
+	 * Applied immediately on packet receive (no Tick smoothing).
 	 * Includes sign-flip continuity protection via dot product check against LastQuat.
 	 *
 	 * @param RawImuQuat - The raw quaternion from the 9DOF sensor
@@ -505,7 +503,7 @@ public:
 
 	/**
 	 * Check whether the orientation has been zeroed
-	 * @return True if ZeroOrientation has been called (or auto-zeroed on first IMU data)
+	 * @return True if ZeroOrientation has been called explicitly
 	 */
 	UFUNCTION(BlueprintPure, Category = "Firing|IMU")
 	bool IsOrientationZeroed() const;
@@ -613,6 +611,10 @@ private:
 	float ScanLostTime = 0.0f;
 
 	// === IMU Zeroing State ===
+
+	/** The component's original relative rotation, captured at BeginPlay.
+	 *  Used to restore the design-time base pose after applying IMU correction. */
+	FQuat BasePoseQuat = FQuat::Identity;
 
 	/** Whether the zero-reference quaternion has been captured */
 	bool bHasZeroReference = false;
