@@ -726,6 +726,50 @@ FVector UFiringComponent::ApplySpread(const FVector& Direction, float SpreadAngl
 }
 
 // ============================================================================
+// IMU ORIENTATION / ZEROING
+// ============================================================================
+
+void UFiringComponent::ZeroOrientation()
+{
+	// Mark that we want a zero reference.
+	// If we already have IMU data cached in ZeroInverseQuat's "last raw" we could
+	// re-zero immediately, but the simplest approach is to flag it so the next
+	// ApplyImuOrientation call captures the zero reference.
+	bHasZeroReference = false;
+	ZeroInverseQuat = FQuat::Identity;
+
+	// Reset the component back to its default relative rotation so it
+	// snaps to "forward" immediately rather than holding a stale pose.
+	SetRelativeRotation(FRotator::ZeroRotator);
+
+	UE_LOG(LogTemp, Log, TEXT("FiringComponent: Orientation zeroed - awaiting next IMU sample as new reference"));
+}
+
+void UFiringComponent::ApplyImuOrientation(const FQuat& RawImuQuat)
+{
+	// Auto-zero on the very first IMU sample if we haven't zeroed yet
+	if (!bHasZeroReference)
+	{
+		ZeroInverseQuat = RawImuQuat.Inverse();
+		bHasZeroReference = true;
+
+		UE_LOG(LogTemp, Log, TEXT("FiringComponent: Auto-zeroed orientation from first IMU sample"));
+	}
+
+	// Compute the delta rotation: how much the sensor has rotated since the zero pose
+	// Delta = ZeroInverse * Current  →  identity when Current == ZeroPose
+	FQuat DeltaQuat = ZeroInverseQuat * RawImuQuat;
+	DeltaQuat.Normalize();
+
+	SetRelativeRotation(DeltaQuat.Rotator());
+}
+
+bool UFiringComponent::IsOrientationZeroed() const
+{
+	return bHasZeroReference;
+}
+
+// ============================================================================
 // WEAPON MAG INTEGRATION
 // ============================================================================
 

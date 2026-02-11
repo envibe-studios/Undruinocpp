@@ -387,7 +387,7 @@ void UMultiDisplayCameraComponent::CreateSecondaryWindow()
 
 	// Build the Slate window with a title that identifies this camera
 	AActor* Owner = GetOwner();
-	FString OwnerName = Owner ? Owner->GetActorLabel() : TEXT("Camera");
+	FString OwnerName = Owner ? Owner->GetActorNameOrLabel() : TEXT("Camera");
 	FText WindowTitle = FText::FromString(FString::Printf(TEXT("Camera - Display %d (%s)"), TargetDisplayIndex, *OwnerName));
 
 	SecondaryWindow = SNew(SWindow)

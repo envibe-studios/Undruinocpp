@@ -465,6 +465,37 @@ public:
 	void CancelScan();
 
 	// ============================================================================
+	// IMU ORIENTATION / ZEROING
+	// ============================================================================
+
+	/**
+	 * Zero the weapon orientation.
+	 * Captures the current raw IMU quaternion as the "zero reference".
+	 * All subsequent IMU updates will produce rotation deltas relative to this pose.
+	 * If no IMU data has been received yet, the next incoming quaternion will be used as zero.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Firing|IMU")
+	void ZeroOrientation();
+
+	/**
+	 * Apply a raw IMU quaternion to this component's relative rotation.
+	 * The rotation is computed as the delta from the zero-reference quaternion,
+	 * so the weapon points "forward" at the zeroed pose and tracks movement from there.
+	 * If ZeroOrientation has not been called yet, the first quaternion received is
+	 * automatically used as the zero reference.
+	 * @param RawImuQuat - The raw quaternion from the 9DOF sensor
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Firing|IMU")
+	void ApplyImuOrientation(const FQuat& RawImuQuat);
+
+	/**
+	 * Check whether the orientation has been zeroed
+	 * @return True if ZeroOrientation has been called (or auto-zeroed on first IMU data)
+	 */
+	UFUNCTION(BlueprintPure, Category = "Firing|IMU")
+	bool IsOrientationZeroed() const;
+
+	// ============================================================================
 	// WEAPON MAG INTEGRATION
 	// ============================================================================
 
@@ -565,4 +596,13 @@ private:
 
 	/** Time since scan target was lost (for delayed reset) */
 	float ScanLostTime = 0.0f;
+
+	// === IMU Zeroing State ===
+
+	/** Whether the zero-reference quaternion has been captured */
+	bool bHasZeroReference = false;
+
+	/** The inverse of the IMU quaternion captured at zero time.
+	 *  Delta = ZeroInverse * CurrentRaw gives the rotation relative to zero pose. */
+	FQuat ZeroInverseQuat = FQuat::Identity;
 };
