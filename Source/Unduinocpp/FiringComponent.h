@@ -126,9 +126,9 @@ struct FTractorBeamModeConfig : public FFiringModeConfig
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tractor Beam", meta = (ClampMin = "0.01", ClampMax = "1.0"))
 	float MinScaleForCollection = 0.1f;
 
-	/** Tag that objects must have to be tractored (empty = all physics objects) */
+	/** Tags that objects can have to be tractored (empty array = all objects are eligible) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tractor Beam")
-	FName TractorableTag = NAME_None;
+	TArray<FName> TractorableTags;
 
 	/** Maximum mass of objects that can be tractored (0 = unlimited) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tractor Beam", meta = (ClampMin = "0.0"))
@@ -154,9 +154,9 @@ struct FScannerModeConfig : public FFiringModeConfig
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scanner", meta = (ClampMin = "0.1"))
 	float ScanDuration = 2.0f;
 
-	/** Tag that objects must have to be scannable (empty = all objects) */
+	/** Tags that objects can have to be scannable (empty array = all objects are eligible) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scanner")
-	FName ScannableTag = NAME_None;
+	TArray<FName> ScannableTags;
 
 	/** Angle of the scanner cone (in degrees) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scanner", meta = (ClampMin = "0.0", ClampMax = "90.0"))

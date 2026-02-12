@@ -402,9 +402,16 @@ AActor* UFiringComponent::FindTractorTarget()
 	if (PerformTrace(HitResult, TractorBeamConfig.Range, TractorBeamConfig.TraceChannel))
 	{
 		AActor* HitActor = HitResult.GetActor();
-		if (HitActor && CanTractorActor(HitActor))
+		if (HitActor)
 		{
-			return HitActor;
+			if (CanTractorActor(HitActor))
+			{
+				return HitActor;
+			}
+			else if (bDrawDebug)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("TractorBeam: Trace hit '%s' but CanTractorActor returned false"), *HitActor->GetName());
+			}
 		}
 	}
 	return nullptr;
@@ -417,11 +424,26 @@ bool UFiringComponent::CanTractorActor(AActor* Actor) const
 		return false;
 	}
 
-	// Check tag if required
-	if (!TractorBeamConfig.TractorableTag.IsNone())
+	// Check tags if any are specified — actor must have at least one matching tag
+	if (TractorBeamConfig.TractorableTags.Num() > 0)
 	{
-		if (!Actor->ActorHasTag(TractorBeamConfig.TractorableTag))
+		bool bHasMatchingTag = false;
+		for (const FName& Tag : TractorBeamConfig.TractorableTags)
 		{
+			if (Actor->ActorHasTag(Tag))
+			{
+				bHasMatchingTag = true;
+				break;
+			}
+		}
+		if (!bHasMatchingTag)
+		{
+			if (bDrawDebug)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("TractorBeam: Actor '%s' rejected - missing required tag. Actor tags: [%s]"),
+					*Actor->GetName(),
+					*FString::JoinBy(Actor->Tags, TEXT(", "), [](const FName& T) { return T.ToString(); }));
+			}
 			return false;
 		}
 	}
@@ -618,10 +640,19 @@ bool UFiringComponent::CanScanActor(AActor* Actor) const
 		return false;
 	}
 
-	// Check tag if required
-	if (!ScannerConfig.ScannableTag.IsNone())
+	// Check tags if any are specified — actor must have at least one matching tag
+	if (ScannerConfig.ScannableTags.Num() > 0)
 	{
-		if (!Actor->ActorHasTag(ScannerConfig.ScannableTag))
+		bool bHasMatchingTag = false;
+		for (const FName& Tag : ScannerConfig.ScannableTags)
+		{
+			if (Actor->ActorHasTag(Tag))
+			{
+				bHasMatchingTag = true;
+				break;
+			}
+		}
+		if (!bHasMatchingTag)
 		{
 			return false;
 		}
