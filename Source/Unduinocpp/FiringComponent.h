@@ -562,6 +562,9 @@ private:
 	/** Whether weapon is actively firing */
 	bool bIsFiring = false;
 
+	/** Whether a weapon mag is currently driving this component (disables tractor beam physics manipulation) */
+	bool bWeaponMagActive = false;
+
 	/** Time until next bullet can be fired */
 	float BulletCooldown = 0.0f;
 

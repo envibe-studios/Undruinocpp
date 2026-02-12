@@ -182,8 +182,8 @@ void UFiringComponent::ResetModeState()
 	{
 		AActor* Target = TractorTarget.Get();
 
-		// Restore original scale
-		if (Target && Target->GetRootComponent())
+		// Restore original scale only if not in weapon mag mode
+		if (!bWeaponMagActive && Target && Target->GetRootComponent())
 		{
 			Target->GetRootComponent()->SetWorldScale3D(TractorTargetOriginalScale);
 		}
@@ -353,7 +353,7 @@ void UFiringComponent::ProcessTractorBeamMode(float DeltaTime)
 
 	FVector Origin = GetFiringOrigin();
 
-	// If we have a target, process pulling
+	// If we have a target, process it
 	if (TractorTarget.IsValid())
 	{
 		AActor* Target = TractorTarget.Get();
@@ -365,62 +365,82 @@ void UFiringComponent::ProcessTractorBeamMode(float DeltaTime)
 			return;
 		}
 
-		UPrimitiveComponent* TargetPrimitive = Cast<UPrimitiveComponent>(Target->GetRootComponent());
 		FVector TargetLocation = Target->GetActorLocation();
 		float Distance = FVector::Dist(Origin, TargetLocation);
 
 		// Check if target is still in range
 		if (Distance > TractorBeamConfig.Range * 1.5f) // Allow some buffer
 		{
-			// Restore original scale and release
-			Target->GetRootComponent()->SetWorldScale3D(TractorTargetOriginalScale);
+			if (!bWeaponMagActive)
+			{
+				// Restore original scale and release
+				Target->GetRootComponent()->SetWorldScale3D(TractorTargetOriginalScale);
+			}
 			OnTractorBeamLost.Broadcast(Target);
 			TractorTarget.Reset();
 			return;
 		}
 
-		// Apply pull force or direct movement
-		FVector PullDirection = (Origin - TargetLocation).GetSafeNormal();
-		if (TargetPrimitive && TargetPrimitive->IsSimulatingPhysics())
+		if (bWeaponMagActive)
 		{
-			FVector PullForce = PullDirection * TractorBeamConfig.PullForce;
-			TargetPrimitive->AddForce(PullForce);
+			// Weapon mag mode: only broadcast events with the actor, no physics manipulation
+			OnTractorBeamPulling.Broadcast(Target, Distance);
+
+			// Debug visualization
+			if (bDrawDebug)
+			{
+				DrawDebugLine(GetWorld(), Origin, TargetLocation, FColor::Cyan, false, -1.0f, 1, 3.0f);
+				DrawDebugSphere(GetWorld(), TargetLocation, 20.0f, 8, FColor::Cyan, false, -1.0f);
+			}
 		}
 		else
 		{
-			// Non-physics objects: move directly toward origin
-			float PullSpeed = TractorBeamConfig.PullForce * 0.01f; // Scale force to a reasonable movement speed
-			FVector NewLocation = TargetLocation + PullDirection * PullSpeed * DeltaTime;
-			Target->SetActorLocation(NewLocation);
-		}
+			// Standard mode: pull, shrink, and collect
+			UPrimitiveComponent* TargetPrimitive = Cast<UPrimitiveComponent>(Target->GetRootComponent());
 
-		// Shrink the object as it gets closer
-		FVector CurrentScale = Target->GetRootComponent()->GetComponentScale();
-		float ShrinkAmount = TractorBeamConfig.ShrinkRate * DeltaTime;
-		FVector NewScale = CurrentScale - FVector(ShrinkAmount);
-		NewScale = NewScale.ComponentMax(FVector(TractorBeamConfig.MinScaleForCollection));
-		Target->GetRootComponent()->SetWorldScale3D(NewScale);
+			// Apply pull force or direct movement
+			FVector PullDirection = (Origin - TargetLocation).GetSafeNormal();
+			if (TargetPrimitive && TargetPrimitive->IsSimulatingPhysics())
+			{
+				FVector PullForce = PullDirection * TractorBeamConfig.PullForce;
+				TargetPrimitive->AddForce(PullForce);
+			}
+			else
+			{
+				// Non-physics objects: move directly toward origin
+				float PullSpeed = TractorBeamConfig.PullForce * 0.01f; // Scale force to a reasonable movement speed
+				FVector NewLocation = TargetLocation + PullDirection * PullSpeed * DeltaTime;
+				Target->SetActorLocation(NewLocation);
+			}
 
-		// Broadcast pulling event
-		OnTractorBeamPulling.Broadcast(Target, Distance);
+			// Shrink the object as it gets closer
+			FVector CurrentScale = Target->GetRootComponent()->GetComponentScale();
+			float ShrinkAmount = TractorBeamConfig.ShrinkRate * DeltaTime;
+			FVector NewScale = CurrentScale - FVector(ShrinkAmount);
+			NewScale = NewScale.ComponentMax(FVector(TractorBeamConfig.MinScaleForCollection));
+			Target->GetRootComponent()->SetWorldScale3D(NewScale);
 
-		// Debug visualization
-		if (bDrawDebug)
-		{
-			DrawDebugLine(GetWorld(), Origin, TargetLocation, FColor::Cyan, false, -1.0f, 1, 3.0f);
-			DrawDebugSphere(GetWorld(), TargetLocation, 20.0f, 8, FColor::Cyan, false, -1.0f);
-		}
+			// Broadcast pulling event
+			OnTractorBeamPulling.Broadcast(Target, Distance);
 
-		// Check if object should be collected
-		if (Distance <= TractorBeamConfig.CollectionDistance ||
-			NewScale.GetMin() <= TractorBeamConfig.MinScaleForCollection)
-		{
-			// Collect the object
-			OnObjectCollected.Broadcast(Target);
+			// Debug visualization
+			if (bDrawDebug)
+			{
+				DrawDebugLine(GetWorld(), Origin, TargetLocation, FColor::Cyan, false, -1.0f, 1, 3.0f);
+				DrawDebugSphere(GetWorld(), TargetLocation, 20.0f, 8, FColor::Cyan, false, -1.0f);
+			}
 
-			// Destroy the actor
-			Target->Destroy();
-			TractorTarget.Reset();
+			// Check if object should be collected
+			if (Distance <= TractorBeamConfig.CollectionDistance ||
+				NewScale.GetMin() <= TractorBeamConfig.MinScaleForCollection)
+			{
+				// Collect the object
+				OnObjectCollected.Broadcast(Target);
+
+				// Destroy the actor
+				Target->Destroy();
+				TractorTarget.Reset();
+			}
 		}
 	}
 	else
@@ -430,7 +450,10 @@ void UFiringComponent::ProcessTractorBeamMode(float DeltaTime)
 		if (NewTarget)
 		{
 			TractorTarget = NewTarget;
-			TractorTargetOriginalScale = NewTarget->GetRootComponent()->GetComponentScale();
+			if (!bWeaponMagActive)
+			{
+				TractorTargetOriginalScale = NewTarget->GetRootComponent()->GetComponentScale();
+			}
 			OnTractorBeamStart.Broadcast(NewTarget);
 		}
 
@@ -561,8 +584,8 @@ void UFiringComponent::ReleaseTractorTarget()
 	{
 		AActor* Target = TractorTarget.Get();
 
-		// Restore original scale
-		if (Target && Target->GetRootComponent())
+		// Restore original scale only if not in weapon mag mode
+		if (!bWeaponMagActive && Target && Target->GetRootComponent())
 		{
 			Target->GetRootComponent()->SetWorldScale3D(TractorTargetOriginalScale);
 		}
@@ -879,12 +902,15 @@ void UFiringComponent::ApplyWeaponMagConfig(
 	float ScanDuration
 )
 {
-	// If not active, log and skip applying config
+	// If not active, clear weapon mag flag and skip applying config
 	if (!bActive)
 	{
+		bWeaponMagActive = false;
 		UE_LOG(LogTemp, Log, TEXT("FiringComponent: WeaponMag is not active, skipping config apply"));
 		return;
 	}
+
+	bWeaponMagActive = true;
 
 	// Set the firing mode
 	EFiringModeType NewMode = static_cast<EFiringModeType>(FMath::Clamp(static_cast<int32>(FiringMode), 0, 3));
