@@ -33,14 +33,14 @@ public class ArduinoCommunication : ModuleRules
 				"Slate",
 				"SlateCore",
 				"RHI",
-				"RenderCore"
+				"RenderCore",
+				"Unduinocpp"
 			}
 		);
 
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"Unduinocpp"
 			}
 		);
 
