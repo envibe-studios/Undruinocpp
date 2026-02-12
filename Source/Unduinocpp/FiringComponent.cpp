@@ -331,12 +331,19 @@ void UFiringComponent::ProcessTractorBeamMode(float DeltaTime)
 			return;
 		}
 
-		// Apply pull force
+		// Apply pull force or direct movement
+		FVector PullDirection = (Origin - TargetLocation).GetSafeNormal();
 		if (TargetPrimitive && TargetPrimitive->IsSimulatingPhysics())
 		{
-			FVector PullDirection = (Origin - TargetLocation).GetSafeNormal();
 			FVector PullForce = PullDirection * TractorBeamConfig.PullForce;
 			TargetPrimitive->AddForce(PullForce);
+		}
+		else
+		{
+			// Non-physics objects: move directly toward origin
+			float PullSpeed = TractorBeamConfig.PullForce * 0.01f; // Scale force to a reasonable movement speed
+			FVector NewLocation = TargetLocation + PullDirection * PullSpeed * DeltaTime;
+			Target->SetActorLocation(NewLocation);
 		}
 
 		// Shrink the object as it gets closer
@@ -410,13 +417,6 @@ bool UFiringComponent::CanTractorActor(AActor* Actor) const
 		return false;
 	}
 
-	// Check if it has a physics-simulating primitive
-	UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Actor->GetRootComponent());
-	if (!Primitive || !Primitive->IsSimulatingPhysics())
-	{
-		return false;
-	}
-
 	// Check tag if required
 	if (!TractorBeamConfig.TractorableTag.IsNone())
 	{
@@ -426,13 +426,17 @@ bool UFiringComponent::CanTractorActor(AActor* Actor) const
 		}
 	}
 
-	// Check mass limit
+	// Check mass limit if the object has a physics-simulating primitive
 	if (TractorBeamConfig.MaxMass > 0.0f)
 	{
-		float Mass = Primitive->GetMass();
-		if (Mass > TractorBeamConfig.MaxMass)
+		UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Actor->GetRootComponent());
+		if (Primitive && Primitive->IsSimulatingPhysics())
 		{
-			return false;
+			float Mass = Primitive->GetMass();
+			if (Mass > TractorBeamConfig.MaxMass)
+			{
+				return false;
+			}
 		}
 	}
 
