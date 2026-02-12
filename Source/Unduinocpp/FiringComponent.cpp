@@ -24,6 +24,53 @@ void UFiringComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	// Draw debug trace line whenever firing is active
+	if (bIsFiring && bDrawDebug)
+	{
+		FVector Origin = GetFiringOrigin();
+		FVector Direction = GetFiringDirection();
+
+		// Use the range from the current mode's config
+		float DebugRange = 0.0f;
+		FColor DebugColor = FColor::White;
+		switch (CurrentFiringMode)
+		{
+			case EFiringModeType::Bullet:
+				DebugRange = BulletConfig.Range;
+				DebugColor = FColor::Red;
+				break;
+			case EFiringModeType::TractorBeam:
+				DebugRange = TractorBeamConfig.Range;
+				DebugColor = FColor::Cyan;
+				break;
+			case EFiringModeType::Scanner:
+				DebugRange = ScannerConfig.Range;
+				DebugColor = FColor::Green;
+				break;
+			default:
+				DebugRange = 5000.0f;
+				DebugColor = FColor::White;
+				break;
+		}
+
+		FVector TraceEnd = Origin + Direction * DebugRange;
+
+		// Perform a trace to see if we hit something
+		FHitResult DebugHit;
+		FCollisionQueryParams DebugQueryParams;
+		DebugQueryParams.AddIgnoredActor(GetOwner());
+		bool bDebugHit = GetWorld()->LineTraceSingleByChannel(
+			DebugHit, Origin, TraceEnd, ECC_Visibility, DebugQueryParams);
+
+		FVector EndPoint = bDebugHit ? DebugHit.ImpactPoint : TraceEnd;
+		DrawDebugLine(GetWorld(), Origin, EndPoint, DebugColor, false, 0.0f, 0, 1.5f);
+
+		if (bDebugHit)
+		{
+			DrawDebugPoint(GetWorld(), DebugHit.ImpactPoint, 8.0f, DebugColor, false, 0.0f);
+		}
+	}
+
 	if (!bIsFiring)
 	{
 		return;
