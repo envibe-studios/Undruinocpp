@@ -126,7 +126,7 @@ struct FTractorBeamModeConfig : public FFiringModeConfig
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tractor Beam", meta = (ClampMin = "0.01", ClampMax = "1.0"))
 	float MinScaleForCollection = 0.1f;
 
-	/** Tags that objects can have to be tractored (empty array = all objects are eligible) */
+	/** Tags that objects must have (Actor Tags or Component Tags) to be tractored. Empty = all objects eligible. Checks both Actor->Tags and RootComponent->ComponentTags. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tractor Beam")
 	TArray<FName> TractorableTags;
 
@@ -154,7 +154,7 @@ struct FScannerModeConfig : public FFiringModeConfig
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scanner", meta = (ClampMin = "0.1"))
 	float ScanDuration = 2.0f;
 
-	/** Tags that objects can have to be scannable (empty array = all objects are eligible) */
+	/** Tags that objects must have (Actor Tags or Component Tags) to be scannable. Empty = all objects eligible. Checks both Actor->Tags and RootComponent->ComponentTags. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scanner")
 	TArray<FName> ScannableTags;
 

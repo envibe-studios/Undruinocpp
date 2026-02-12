@@ -63,11 +63,12 @@ void UFiringComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 			DebugHit, Origin, TraceEnd, ECC_Visibility, DebugQueryParams);
 
 		FVector EndPoint = bDebugHit ? DebugHit.ImpactPoint : TraceEnd;
-		DrawDebugLine(GetWorld(), Origin, EndPoint, DebugColor, false, 0.0f, 0, 1.5f);
+		// Use SDPG_Foreground (depth priority 1) so the line draws on top of geometry
+		DrawDebugLine(GetWorld(), Origin, EndPoint, DebugColor, false, -1.0f, 1, 2.0f);
 
 		if (bDebugHit)
 		{
-			DrawDebugPoint(GetWorld(), DebugHit.ImpactPoint, 8.0f, DebugColor, false, 0.0f);
+			DrawDebugPoint(GetWorld(), DebugHit.ImpactPoint, 10.0f, DebugColor, false, -1.0f);
 		}
 	}
 
@@ -406,7 +407,7 @@ void UFiringComponent::ProcessTractorBeamMode(float DeltaTime)
 		// Debug visualization
 		if (bDrawDebug)
 		{
-			DrawDebugLine(GetWorld(), Origin, TargetLocation, FColor::Cyan, false, -1.0f, 0, 3.0f);
+			DrawDebugLine(GetWorld(), Origin, TargetLocation, FColor::Cyan, false, -1.0f, 1, 3.0f);
 			DrawDebugSphere(GetWorld(), TargetLocation, 20.0f, 8, FColor::Cyan, false, -1.0f);
 		}
 
@@ -438,7 +439,7 @@ void UFiringComponent::ProcessTractorBeamMode(float DeltaTime)
 		{
 			FVector Direction = GetFiringDirection();
 			FVector TraceEnd = Origin + Direction * TractorBeamConfig.Range;
-			DrawDebugLine(GetWorld(), Origin, TraceEnd, FColor::Blue, false, -1.0f, 0, 1.0f);
+			DrawDebugLine(GetWorld(), Origin, TraceEnd, FColor::Blue, false, -1.0f, 1, 1.0f);
 		}
 	}
 }
@@ -451,8 +452,18 @@ AActor* UFiringComponent::FindTractorTarget()
 		AActor* HitActor = HitResult.GetActor();
 		if (HitActor)
 		{
+			if (bDrawDebug)
+			{
+				UE_LOG(LogTemp, Log, TEXT("TractorBeam: Trace hit '%s'. TractorableTags configured: %d"),
+					*HitActor->GetName(), TractorBeamConfig.TractorableTags.Num());
+			}
+
 			if (CanTractorActor(HitActor))
 			{
+				if (bDrawDebug)
+				{
+					UE_LOG(LogTemp, Log, TEXT("TractorBeam: Accepted target '%s'"), *HitActor->GetName());
+				}
 				return HitActor;
 			}
 			else if (bDrawDebug)
@@ -472,6 +483,7 @@ bool UFiringComponent::CanTractorActor(AActor* Actor) const
 	}
 
 	// Check tags if any are specified — actor must have at least one matching tag
+	// Checks both Actor Tags and Component Tags on the root component
 	if (TractorBeamConfig.TractorableTags.Num() > 0)
 	{
 		bool bHasMatchingTag = false;
@@ -482,16 +494,37 @@ bool UFiringComponent::CanTractorActor(AActor* Actor) const
 				bHasMatchingTag = true;
 				break;
 			}
+			// Also check component tags on the root component
+			if (Actor->GetRootComponent()->ComponentHasTag(Tag))
+			{
+				bHasMatchingTag = true;
+				break;
+			}
 		}
 		if (!bHasMatchingTag)
 		{
 			if (bDrawDebug)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("TractorBeam: Actor '%s' rejected - missing required tag. Actor tags: [%s]"),
+				TArray<FString> ComponentTagStrings;
+				for (const FName& T : Actor->GetRootComponent()->ComponentTags)
+				{
+					ComponentTagStrings.Add(T.ToString());
+				}
+				UE_LOG(LogTemp, Warning, TEXT("TractorBeam: Actor '%s' rejected - missing required tag. Actor tags: [%s], Component tags: [%s], Required tags: [%s]"),
 					*Actor->GetName(),
-					*FString::JoinBy(Actor->Tags, TEXT(", "), [](const FName& T) { return T.ToString(); }));
+					*FString::JoinBy(Actor->Tags, TEXT(", "), [](const FName& T) { return T.ToString(); }),
+					*FString::Join(ComponentTagStrings, TEXT(", ")),
+					*FString::JoinBy(TractorBeamConfig.TractorableTags, TEXT(", "), [](const FName& T) { return T.ToString(); }));
 			}
 			return false;
+		}
+	}
+	else
+	{
+		// No tags configured — all actors pass tag filter
+		if (bDrawDebug)
+		{
+			UE_LOG(LogTemp, Verbose, TEXT("TractorBeam: No TractorableTags configured — all actors are eligible. Actor: '%s'"), *Actor->GetName());
 		}
 	}
 
@@ -619,7 +652,7 @@ void UFiringComponent::ProcessScannerMode(float DeltaTime)
 		// Debug visualization
 		if (bDrawDebug)
 		{
-			DrawDebugLine(GetWorld(), Origin, TargetLocation, FColor::Green, false, -1.0f, 0, 2.0f);
+			DrawDebugLine(GetWorld(), Origin, TargetLocation, FColor::Green, false, -1.0f, 1, 2.0f);
 			DrawDebugSphere(GetWorld(), TargetLocation, 30.0f * CurrentScanProgress + 10.0f, 12, FColor::Green, false, -1.0f);
 		}
 
@@ -647,7 +680,7 @@ void UFiringComponent::ProcessScannerMode(float DeltaTime)
 		if (bDrawDebug)
 		{
 			FVector TraceEnd = Origin + Direction * ScannerConfig.Range;
-			DrawDebugLine(GetWorld(), Origin, TraceEnd, FColor::Yellow, false, -1.0f, 0, 1.0f);
+			DrawDebugLine(GetWorld(), Origin, TraceEnd, FColor::Yellow, false, -1.0f, 1, 1.0f);
 
 			// Draw cone edges
 			float ConeRad = FMath::DegreesToRadians(ScannerConfig.ScanConeAngle);
@@ -660,7 +693,7 @@ void UFiringComponent::ProcessScannerMode(float DeltaTime)
 				FVector ConeDir = Direction + (FMath::Sin(AngleStep) * Right + FMath::Cos(AngleStep) * Up) * FMath::Tan(ConeRad);
 				ConeDir.Normalize();
 				FVector ConeEnd = Origin + ConeDir * ScannerConfig.Range;
-				DrawDebugLine(GetWorld(), Origin, ConeEnd, FColor::Yellow, false, -1.0f, 0, 0.5f);
+				DrawDebugLine(GetWorld(), Origin, ConeEnd, FColor::Yellow, false, -1.0f, 1, 0.5f);
 			}
 		}
 	}
@@ -688,12 +721,19 @@ bool UFiringComponent::CanScanActor(AActor* Actor) const
 	}
 
 	// Check tags if any are specified — actor must have at least one matching tag
+	// Checks both Actor Tags and Component Tags on the root component
 	if (ScannerConfig.ScannableTags.Num() > 0)
 	{
 		bool bHasMatchingTag = false;
 		for (const FName& Tag : ScannerConfig.ScannableTags)
 		{
 			if (Actor->ActorHasTag(Tag))
+			{
+				bHasMatchingTag = true;
+				break;
+			}
+			// Also check component tags on the root component
+			if (Actor->GetRootComponent() && Actor->GetRootComponent()->ComponentHasTag(Tag))
 			{
 				bHasMatchingTag = true;
 				break;
