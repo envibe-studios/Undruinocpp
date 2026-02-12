@@ -64,10 +64,6 @@ struct ARDUINOCOMMUNICATION_API FWeaponMag
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Mag", meta = (ClampMin = "0.0"))
 	float Range = 5000.0f;
 
-	/** Pull force for tractor beam mode */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Mag|Tractor Beam", meta = (ClampMin = "0.0"))
-	float TractorPullForce = 50000.0f;
-
 	/** Scan duration for scanner mode */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Mag|Scanner", meta = (ClampMin = "0.1"))
 	float ScanDuration = 2.0f;

@@ -97,6 +97,8 @@ struct FBulletModeConfig : public FFiringModeConfig
 
 /**
  * Tractor beam mode configuration
+ * Note: Tractor beam only performs trace detection and broadcasts delegate events.
+ * No physics manipulation (pulling, shrinking, collecting) is performed.
  */
 USTRUCT(BlueprintType)
 struct FTractorBeamModeConfig : public FFiringModeConfig
@@ -110,29 +112,9 @@ struct FTractorBeamModeConfig : public FFiringModeConfig
 		Range = 3000.0f;
 	}
 
-	/** Force applied to pull objects (in Newtons) */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tractor Beam", meta = (ClampMin = "0.0"))
-	float PullForce = 50000.0f;
-
-	/** Distance at which object is considered "collected" (in cm) */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tractor Beam", meta = (ClampMin = "1.0"))
-	float CollectionDistance = 100.0f;
-
-	/** Rate at which captured object shrinks (scale per second) */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tractor Beam", meta = (ClampMin = "0.0"))
-	float ShrinkRate = 2.0f;
-
-	/** Minimum scale before object is collected */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tractor Beam", meta = (ClampMin = "0.01", ClampMax = "1.0"))
-	float MinScaleForCollection = 0.1f;
-
 	/** Tags that objects must have (Actor Tags or Component Tags) to be tractored. Empty = all objects eligible. Checks both Actor->Tags and RootComponent->ComponentTags. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tractor Beam")
 	TArray<FName> TractorableTags;
-
-	/** Maximum mass of objects that can be tractored (0 = unlimited) */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tractor Beam", meta = (ClampMin = "0.0"))
-	float MaxMass = 0.0f;
 };
 
 /**
@@ -206,7 +188,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnFiringStopped, EFiringModeType, M
  *
  * Features:
  * - Bullet mode: High rate of fire projectile weapon with damage
- * - Tractor beam: Pulls objects toward the gun, shrinks and collects them
+ * - Tractor beam: Detects targets and broadcasts delegate events (no physics manipulation)
  * - Scanner: Scans objects over time with progress events
  * - Extensible architecture for custom firing modes
  *
@@ -415,14 +397,14 @@ public:
 
 	/**
 	 * Check if tractor beam has a target
-	 * @return True if currently tractoring an object
+	 * @return True if currently locked onto an object
 	 */
 	UFUNCTION(BlueprintPure, Category = "Firing|Tractor Beam")
 	bool HasTractorTarget() const;
 
 	/**
 	 * Get the current tractor beam target
-	 * @return The actor being tractored, or nullptr
+	 * @return The actor being targeted, or nullptr
 	 */
 	UFUNCTION(BlueprintPure, Category = "Firing|Tractor Beam")
 	AActor* GetTractorTarget() const;
@@ -496,7 +478,6 @@ public:
 	 * @param MaxAmmo - Maximum ammo capacity
 	 * @param CurrentAmmo - Current ammo in the mag (if -1, uses MaxAmmo)
 	 * @param Range - Firing range in cm
-	 * @param TractorPullForce - Pull force for tractor beam mode
 	 * @param ScanDuration - Scan duration for scanner mode
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Firing|Weapon Mag")
@@ -510,7 +491,6 @@ public:
 		int32 MaxAmmo,
 		int32 CurrentAmmo,
 		float Range,
-		float TractorPullForce,
 		float ScanDuration
 	);
 
@@ -528,10 +508,7 @@ protected:
 	/** Process tractor beam mode */
 	void ProcessTractorBeamMode(float DeltaTime);
 
-	/** Find a valid tractor target */
-	AActor* FindTractorTarget();
-
-	/** Check if an actor can be tractored */
+	/** Check if an actor can be tractored (tag check) */
 	bool CanTractorActor(AActor* Actor) const;
 
 	/** Process scanner mode */
@@ -562,18 +539,12 @@ private:
 	/** Whether weapon is actively firing */
 	bool bIsFiring = false;
 
-	/** Whether a weapon mag is currently driving this component (disables tractor beam physics manipulation) */
-	bool bWeaponMagActive = false;
-
 	/** Time until next bullet can be fired */
 	float BulletCooldown = 0.0f;
 
 	/** Current tractor beam target */
 	UPROPERTY()
 	TWeakObjectPtr<AActor> TractorTarget;
-
-	/** Original scale of tractored object (for restoration if released) */
-	FVector TractorTargetOriginalScale = FVector::OneVector;
 
 	/** Current scan target */
 	UPROPERTY()

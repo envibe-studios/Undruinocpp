@@ -301,7 +301,6 @@ bool UShipHardwareInputComponent::ApplyWeaponMag(const FWeaponMag& WeaponMag)
 		WeaponMag.MaxAmmo,
 		WeaponMag.CurrentAmmo,
 		WeaponMag.Range,
-		WeaponMag.TractorPullForce,
 		WeaponMag.ScanDuration
 	);
 
