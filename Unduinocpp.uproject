@@ -29,6 +29,11 @@
 		{
 			"Name": "GaeaUnrealTools",
 			"Enabled": false
+		},
+		{
+			"Name": "ScreenBridge",
+			"Enabled": true,
+			"MarketplaceURL": "com.epicgames.launcher.ue.Fab.product.3eec0414-a196-4763-ac67-59cf3a0cf531"
 		}
 	]
 }

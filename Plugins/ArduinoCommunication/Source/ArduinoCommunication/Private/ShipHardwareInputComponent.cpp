@@ -165,10 +165,28 @@ void UShipHardwareInputComponent::OnFrameParsedHandler(FName InShipId, uint8 Src
 				FVector EulerAngles = ImuData.EulerAngles;
 				OnWeaponImu.Broadcast(Src, Type, Seq, Orientation, EulerAngles, bTriggerHeld, Payload);
 
-				// Auto-apply IMU orientation to the FiringComponent
-				if (bAutoApplyImuRotation && FiringComponent)
+				// Auto-apply IMU orientation to the side-matched FiringComponent.
+				// Priority: side-specific ref (Port/Starboard) -> generic fallback (FiringComponent).
+				if (bAutoApplyImuRotation)
 				{
-					FiringComponent->ApplyImuOrientation(Orientation);
+					UFiringComponent* TargetFiring = nullptr;
+					if (ImuData.Side == 0 && FiringComponentPort)
+					{
+						TargetFiring = FiringComponentPort;
+					}
+					else if (ImuData.Side == 1 && FiringComponentStarboard)
+					{
+						TargetFiring = FiringComponentStarboard;
+					}
+					else if (FiringComponent)
+					{
+						TargetFiring = FiringComponent;
+					}
+
+					if (TargetFiring)
+					{
+						TargetFiring->ApplyImuOrientation(Orientation);
+					}
 				}
 			}
 		}
@@ -293,7 +311,7 @@ bool UShipHardwareInputComponent::ApplyWeaponMag(const FWeaponMag& WeaponMag)
 
 	FiringComponent->ApplyWeaponMagConfig(
 		WeaponMag.bActive,
-		WeaponMag.FiringMode,
+		static_cast<uint8>(WeaponMag.FiringMode),
 		WeaponMag.Damage,
 		WeaponMag.RateOfFire,
 		WeaponMag.SpreadAngle,

@@ -185,11 +185,21 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship Hardware|Weapon Mags")
 	TArray<FWeaponMag> WeaponMags;
 
-	/** Reference to the FiringComponent to modify when weapon tags change */
+	/** Reference to the FiringComponent used as a fallback for weapon-mag / IMU routing when
+	 *  side-specific refs (FiringComponentPort / FiringComponentStarboard) are not set. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship Hardware|Weapon Mags")
 	TObjectPtr<UFiringComponent> FiringComponent;
 
-	/** If true, automatically apply IMU orientation to FiringComponent each packet */
+	/** FiringComponent that receives PORT (Side=0) IMU data. Set this for ships with two guns. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship Hardware|Weapon Mags")
+	TObjectPtr<UFiringComponent> FiringComponentPort;
+
+	/** FiringComponent that receives STARBOARD (Side=1) IMU data. Set this for ships with two guns. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship Hardware|Weapon Mags")
+	TObjectPtr<UFiringComponent> FiringComponentStarboard;
+
+	/** If true, automatically apply IMU orientation to the matching FiringComponent each packet.
+	 *  Routing priority: FiringComponentPort/Starboard (by Side byte) -> FiringComponent (fallback). */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship Hardware|Weapon Mags")
 	bool bAutoApplyImuRotation = true;
 

@@ -450,17 +450,44 @@ public:
 	// WEAPON IMU
 	// ============================================================================
 
-	/** Manual aim offset applied after raw IMU rotation — tune in editor to remove skew */
+	/** If true, converts the IMU's right-handed quaternion to Unreal's left-handed frame.
+	 *  Most IMUs (BNO055, MPU6050+DMP, ICM-20948, etc.) output right-handed quaternions
+	 *  and need this. If your firmware already converts, set this to false.
+	 *  Symptom of needing this: yaw works fine, but pitch/roll cross-couple. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon IMU|Calibration")
+	bool bConvertImuHandedness = true;
+
+	/** Static rotation applied to the IMU quaternion (after handedness conversion) to align
+	 *  the sensor's frame with the gun barrel. Use this to compensate for how the IMU is
+	 *  physically mounted (e.g., if the chip's +X points right instead of forward).
+	 *  Try multiples of 90 first. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon IMU|Calibration")
+	FRotator SensorMountOffset = FRotator::ZeroRotator;
+
+	/** Fine-tune rotation applied AFTER the runtime calibration. Use for small static nudges. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon IMU")
 	FRotator ManualAimOffset = FRotator::ZeroRotator;
 
 	/**
-	 * Apply raw IMU quaternion orientation to this component
-	 * Converts to rotator, adds ManualAimOffset, and sets relative rotation
+	 * Apply raw IMU quaternion orientation to this component.
+	 * Pipeline: handedness convert -> mount offset -> runtime calibration -> manual offset.
 	 * @param RawImuQuat - Raw quaternion from IMU sensor (X,Y,Z,W)
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Weapon IMU")
 	void ApplyImuOrientation(const FQuat& RawImuQuat);
+
+	/**
+	 * Capture the current sensor pose as the "neutral" / forward-pointing orientation.
+	 * Bind this to your "*" / CalibrateWeapons action instead of zeroing ManualAimOffset.
+	 * Unlike the old additive offset, this works correctly at any pitch/roll because it
+	 * composes as a quaternion rather than adding Euler angles.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Weapon IMU|Calibration")
+	void RecalibrateWeapon();
+
+	/** Clear the runtime calibration captured by RecalibrateWeapon (gun follows IMU raw again). */
+	UFUNCTION(BlueprintCallable, Category = "Weapon IMU|Calibration")
+	void ResetCalibration();
 
 	// ============================================================================
 	// WEAPON MAG INTEGRATION
@@ -555,4 +582,17 @@ private:
 
 	/** Time since scan target was lost (for delayed reset) */
 	float ScanLostTime = 0.0f;
+
+	/** Runtime calibration offset captured by RecalibrateWeapon().
+	 *  Applied as a left-multiplication on the incoming sensor quaternion so the "neutral"
+	 *  pose maps to identity regardless of current pitch/roll. */
+	FQuat CalibrationOffset = FQuat::Identity;
+
+	/** Most recent remapped (post-handedness, post-mount) IMU quaternion.
+	 *  Used by RecalibrateWeapon() to compute CalibrationOffset = Inverse(LastRemappedImuQuat). */
+	FQuat LastRemappedImuQuat = FQuat::Identity;
+
+	/** True once ApplyImuOrientation has been called at least once on this component.
+	 *  Used to warn if RecalibrateWeapon is called on a component that has never received IMU data. */
+	bool bHasReceivedImu = false;
 };

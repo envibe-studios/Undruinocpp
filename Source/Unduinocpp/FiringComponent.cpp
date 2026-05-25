@@ -733,12 +733,65 @@ FVector UFiringComponent::ApplySpread(const FVector& Direction, float SpreadAngl
 
 void UFiringComponent::ApplyImuOrientation(const FQuat& RawImuQuat)
 {
+	// 1) Normalize the raw sensor quaternion.
 	FQuat Raw = RawImuQuat;
 	Raw.Normalize();
 
-	FRotator RawRot = Raw.Rotator();
-	FRotator FinalRot = RawRot + ManualAimOffset;
-	SetRelativeRotation(FinalRot);
+	// 2) Handedness conversion (right-handed sensor -> left-handed Unreal).
+	//    Flipping the Y axis of the basis is equivalent to negating qy and qw on the quaternion.
+	//    This is what fixes the "yaw works fine but pitch cross-couples into roll" symptom
+	//    caused by feeding a right-handed quaternion straight into a left-handed engine.
+	const FQuat Remapped = bConvertImuHandedness
+		? FQuat(Raw.X, -Raw.Y, Raw.Z, -Raw.W)
+		: Raw;
+
+	// 3) Static mount offset: rotates the sensor's frame to match the gun barrel
+	//    (handles the case where the IMU chip's +X doesn't point down the barrel).
+	const FQuat Mounted = SensorMountOffset.Quaternion() * Remapped;
+
+	// Cache for RecalibrateWeapon().
+	LastRemappedImuQuat = Mounted;
+	bHasReceivedImu = true;
+
+	// 4) Runtime calibration (multiplicative, so it works correctly at any pose -
+	//    unlike additive Euler offsets, which only worked near identity).
+	const FQuat Calibrated = CalibrationOffset * Mounted;
+
+	// 5) Manual fine-tune offset (still a quaternion compose, not Euler addition).
+	const FQuat Final = ManualAimOffset.Quaternion() * Calibrated;
+
+	SetRelativeRotation(Final);
+}
+
+void UFiringComponent::RecalibrateWeapon()
+{
+	// Capture the inverse of the current sensor pose so that subsequent frames at this
+	// orientation map to identity. Works correctly even if the gun is pitched/rolled
+	// when calibration is triggered.
+	CalibrationOffset = LastRemappedImuQuat.Inverse();
+
+	const AActor* OwnerActor = GetOwner();
+	const FString OwnerName = OwnerActor ? OwnerActor->GetName() : TEXT("<no owner>");
+
+	if (!bHasReceivedImu)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FiringComponent[%s on %s]: RecalibrateWeapon called but ApplyImuOrientation has NEVER run on this component. ")
+			TEXT("Calibration will be a no-op. Check that ApplyImuOrientation is being called on THIS instance (auto-apply on ShipHardwareInputComponent, or your BP graph for OnWeaponImu)."),
+			*GetName(), *OwnerName);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("FiringComponent[%s on %s]: Recalibrated. LastRemapped=(X=%.3f Y=%.3f Z=%.3f W=%.3f) -> CalOffset=(X=%.3f Y=%.3f Z=%.3f W=%.3f)"),
+			*GetName(), *OwnerName,
+			LastRemappedImuQuat.X, LastRemappedImuQuat.Y, LastRemappedImuQuat.Z, LastRemappedImuQuat.W,
+			CalibrationOffset.X, CalibrationOffset.Y, CalibrationOffset.Z, CalibrationOffset.W);
+	}
+}
+
+void UFiringComponent::ResetCalibration()
+{
+	CalibrationOffset = FQuat::Identity;
+	UE_LOG(LogTemp, Log, TEXT("FiringComponent[%s]: Weapon calibration reset."), *GetName());
 }
 
 // ============================================================================

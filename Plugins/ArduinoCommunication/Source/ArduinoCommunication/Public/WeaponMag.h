@@ -4,6 +4,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "FiringComponent.h"
 #include "WeaponMag.generated.h"
 
 // ============================================================================
@@ -32,9 +33,9 @@ struct ARDUINOCOMMUNICATION_API FWeaponMag
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Mag")
 	FName WeaponName = NAME_None;
 
-	/** Firing mode to activate when this mag is inserted */
+	/** Firing mode to activate when this mag is inserted. Shown as a dropdown in the editor. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Mag")
-	uint8 FiringMode = 0; // Maps to EFiringModeType (0=Bullet, 1=TractorBeam, 2=Scanner)
+	EFiringModeType FiringMode = EFiringModeType::Bullet;
 
 	/** Damage per bullet (only applies to Bullet mode) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Mag|Bullet", meta = (ClampMin = "0.0"))
