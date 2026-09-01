@@ -1,0 +1,9 @@
+[
+  { "label": "find update mags", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes", "args": { "graph": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph" }, "title": "*UpdateMags*" } },
+  { "label": "find sync", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes", "args": { "graph": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph" }, "title": "*SyncWeapon*" } },
+  { "label": "find ToString", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes", "args": { "graph": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph" }, "title": "*ToString*" } },
+  { "label": "find PrintString type", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes", "args": { "graph": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph" }, "title": "Print String" } },
+  { "label": "find bullet fired", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes", "args": { "graph": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph" }, "title": "*BulletFired*" } },
+  { "label": "find Firing PORT hover", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes", "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "title": "Print String" } },
+  { "label": "hover OnBulletFired prints", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes", "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "title": "*Bullet*" } }
+]

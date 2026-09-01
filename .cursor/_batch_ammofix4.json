@@ -1,0 +1,12 @@
+[
+  { "label": "gt left", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "create_node",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "type_id": "Math|Integer|integer>integer", "pos": { "x": -1100, "y": 960 } } },
+  { "label": "select left", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "create_node",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "type_id": "Utilities|Select|SelectInt", "pos": { "x": -980, "y": 880 } } },
+  { "label": "gt right", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "create_node",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "type_id": "Math|Integer|integer>integer", "pos": { "x": -1100, "y": 700 } } },
+  { "label": "select right", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "create_node",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "type_id": "Utilities|Select|SelectInt", "pos": { "x": -980, "y": 624 } } },
+  { "label": "break right mag", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "create_node",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "type_id": "Utilities|Struct|BreakWeaponMag", "pos": { "x": -544, "y": 640 } } }
+]

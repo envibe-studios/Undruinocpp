@@ -1,0 +1,6 @@
+[
+  { "label": "byte to enum pins", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_node_type_pins",
+    "args": { "graph": { "refPath": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest:EventGraph" }, "type_id": "Utilities|Enum|BytetoEnumEFiringModeType" } },
+  { "label": "cast pins", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_node_type_pins",
+    "args": { "graph": { "refPath": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest:EventGraph" }, "type_id": "Utilities|Casting|CastToFiringComponent" } }
+]

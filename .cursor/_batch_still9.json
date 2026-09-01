@@ -1,0 +1,4 @@
+[
+  { "label": "visible", "toolset": "EditorToolset.EditorAppToolset", "tool": "GetVisibleActors", "args": {} },
+  { "label": "selected", "toolset": "EditorToolset.EditorAppToolset", "tool": "GetSelectedActors", "args": {} }
+]

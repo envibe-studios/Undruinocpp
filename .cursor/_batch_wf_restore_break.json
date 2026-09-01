@@ -1,0 +1,6 @@
+[
+  { "label": "create break mag", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "create_node",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire" }, "type_id": "Utilities|Struct|BreakWeaponMag", "pos": { "x": 500, "y": 80 } } },
+  { "label": "setcur pins", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_node_infos",
+    "args": { "nodes": [{ "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire.K2Node_VariableSet_0" }] } }
+]

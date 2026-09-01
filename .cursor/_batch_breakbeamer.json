@@ -1,0 +1,14 @@
+[
+  { "label": "break left beamer", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "break_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_VariableGet_26" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 3, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_Message_11" } }
+    } },
+  { "label": "break right beamer", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "break_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_VariableGet_28" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 3, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_Message_10" } }
+    } },
+  { "label": "compile hover", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "compile_blueprint",
+    "args": { "blueprint": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft" } } }
+]

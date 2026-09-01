@@ -1,0 +1,411 @@
+// Arduino Communication Plugin - Ship Hardware Input Component
+// ActorComponent that filters UAndySerialSubsystem events by ShipId and exposes friendly Blueprint events
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Components/ActorComponent.h"
+#include "EspPacketBP.h"
+#include "WeaponMag.h"
+#include "ShipHardwareInputComponent.generated.h"
+
+// Forward declarations
+class UAndySerialSubsystem;
+class UFiringComponent;
+
+// ============================================================================
+// Event Delegates - Friendly Blueprint events for ship hardware input
+// All delegates include the same fields as OnFrameParsed for consistency
+// ============================================================================
+
+/**
+ * Event fired when weapon IMU data is received
+ * @param Src - Source identifier from the packet
+ * @param Type - Packet type (EEspMsgType::WeaponImu = 6)
+ * @param Seq - Sequence number from the packet
+ * @param Orientation - Weapon orientation as quaternion
+ * @param EulerAngles - Euler angles (X=Pitch, Y=Yaw, Z=Roll in degrees)
+ * @param bTriggerHeld - True if trigger button is pressed
+ * @param Payload - Raw payload bytes
+ */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_SevenParams(
+	FOnWeaponImu,
+	uint8, Src,
+	uint8, Type,
+	int32, Seq,
+	FQuat, Orientation,
+	FVector, EulerAngles,
+	bool, bTriggerHeld,
+	const TArray<uint8>&, Payload
+);
+
+/**
+ * Event fired when wheel turn input is received
+ * @param Src - Source identifier from the packet
+ * @param Type - Packet type (EEspMsgType::WheelTurn = 1)
+ * @param Seq - Sequence number from the packet
+ * @param WheelIndex - Index of the wheel (0-based)
+ * @param Delta - Turn delta (+1 for right/clockwise, -1 for left/counter-clockwise)
+ * @param Payload - Raw payload bytes
+ */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(
+	FOnWheelTurn,
+	uint8, Src,
+	uint8, Type,
+	int32, Seq,
+	uint8, WheelIndex,
+	int32, Delta,
+	const TArray<uint8>&, Payload
+);
+
+/**
+ * Event fired when jack state changes
+ * @param Src - Source identifier from the packet
+ * @param Type - Packet type (EEspMsgType::JackState = 3)
+ * @param Seq - Sequence number from the packet
+ * @param State - Jack state value
+ * @param Payload - Raw payload bytes
+ */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FiveParams(
+	FOnJackState,
+	uint8, Src,
+	uint8, Type,
+	int32, Seq,
+	uint8, State,
+	const TArray<uint8>&, Payload
+);
+
+/**
+ * Event fired when weapon tag is inserted or removed
+ * @param Src - Source identifier from the packet
+ * @param Type - Packet type (EEspMsgType::WeaponTag = 4)
+ * @param Seq - Sequence number from the packet
+ * @param TagId - RFID/NFC tag unique identifier
+ * @param bInserted - True if tag was inserted, false if removed
+ * @param Payload - Raw payload bytes
+ */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(
+	FOnWeaponTag,
+	uint8, Src,
+	uint8, Type,
+	int32, Seq,
+	int64, TagId,
+	bool, bInserted,
+	const TArray<uint8>&, Payload
+);
+
+/**
+ * Event fired when reload tag is inserted or removed
+ * @param Src - Source identifier from the packet
+ * @param Type - Packet type (EEspMsgType::ReloadTag = 5)
+ * @param Seq - Sequence number from the packet
+ * @param TagId - RFID/NFC tag unique identifier
+ * @param bInserted - True if tag was inserted, false if removed
+ * @param Payload - Raw payload bytes
+ */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(
+	FOnReloadTag,
+	uint8, Src,
+	uint8, Type,
+	int32, Seq,
+	int64, TagId,
+	bool, bInserted,
+	const TArray<uint8>&, Payload
+);
+
+/**
+ * Event fired when connection status changes for this ship
+ * @param bConnected - True if connected, false if disconnected
+ */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
+	FOnShipConnectionChanged,
+	bool, bConnected
+);
+
+/**
+ * Event fired when weapon tag Inserted state changes (transition only)
+ * @param TagId - RFID/NFC tag unique identifier
+ * @param bInserted - New inserted state (true = inserted, false = removed)
+ * @param ReaderIndex - Which RFID reader triggered the event (0=Port Weapon, 1=Starboard Weapon, 2=Reload Box)
+ */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(
+	FEvtTagChanged,
+	int64, TagId,
+	bool, bInserted,
+	uint8, ReaderIndex
+);
+
+/**
+ * Ship Hardware Input Component
+ *
+ * Provides a clean interface between hardware input from an ESP32 "Andy" hub
+ * and ship gameplay logic. Attach this component to your Ship Pawn/Actor and
+ * configure the ShipId to match the port registered in UAndySerialSubsystem.
+ *
+ * Features:
+ * - Filters frames by ShipId (only receives events for this ship)
+ * - Parses packet payloads into typed, Blueprint-friendly events
+ * - Server-only operation (respects authority for networked games)
+ *
+ * Exposed Events:
+ * - OnWeaponImu: IMU orientation + trigger state from weapon controllers
+ * - OnWheelTurn: Rotary encoder input from steering/helm wheels
+ * - OnJackState: Jack plug insertion/removal state
+ * - OnWeaponTag: RFID/NFC weapon tag insertion/removal
+ * - OnReloadTag: RFID/NFC reload tag insertion/removal
+ * - OnShipConnectionChanged: ESP32 connection status
+ *
+ * Usage:
+ *   1. Add UShipHardwareInputComponent to your Ship Actor
+ *   2. Set ShipId to match the port name (e.g., "ShipA")
+ *   3. Bind to the events you need in Blueprint
+ *   4. Ensure UAndySerialSubsystem has the port registered and started
+ */
+UCLASS(ClassGroup=(Common), meta=(BlueprintSpawnableComponent), BlueprintType, Blueprintable)
+class ARDUINOCOMMUNICATION_API UShipHardwareInputComponent : public UActorComponent
+{
+	GENERATED_BODY()
+
+public:
+	UShipHardwareInputComponent();
+
+	// === Configuration ===
+
+	/** Ship identifier - must match the ShipId used in UAndySerialSubsystem::AddPort */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship Hardware|Config")
+	FName ShipId;
+
+	/** If true, only bind and process events on the server (HasAuthority check) */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship Hardware|Config")
+	bool bServerOnly = true;
+
+	// === Weapon Magazine Configuration ===
+
+	/** Array of weapon magazine configurations mapped to RFID tag IDs */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship Hardware|Weapon Mags")
+	TArray<FWeaponMag> WeaponMags;
+
+	/** Reference to the FiringComponent used as a fallback for weapon-mag / IMU routing when
+	 *  side-specific refs (FiringComponentPort / FiringComponentStarboard) are not set. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship Hardware|Weapon Mags")
+	TObjectPtr<UFiringComponent> FiringComponent;
+
+	/** FiringComponent that receives PORT (Side=0) IMU data. Set this for ships with two guns. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship Hardware|Weapon Mags")
+	TObjectPtr<UFiringComponent> FiringComponentPort;
+
+	/** FiringComponent that receives STARBOARD (Side=1) IMU data. Set this for ships with two guns. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship Hardware|Weapon Mags")
+	TObjectPtr<UFiringComponent> FiringComponentStarboard;
+
+	/** If true, automatically apply IMU orientation to the matching FiringComponent each packet.
+	 *  Routing priority: FiringComponentPort/Starboard (by Side byte) -> FiringComponent (fallback). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship Hardware|Weapon Mags")
+	bool bAutoApplyImuRotation = true;
+
+	/** If true, call SetFiring on the side-matched FiringComponent from the IMU trigger bit.
+	 *  This is the reliable path for shot/beam visuals (does not depend on BP ProcessEvent). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship Hardware|Weapon Mags")
+	bool bAutoApplyTriggerFiring = true;
+
+	/** If true, call the owner pawn's SendWeaponAim Blueprint function (Weapon_Left / Weapon_Right).
+	 *  Enable this when the visible gun mesh is driven by SendWeaponAim rather than FiringComponent. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship Hardware|Weapon Mags")
+	bool bForwardAimToSendWeaponAim = true;
+
+	/** If true, call the owner pawn's SendFire Blueprint function on each WeaponImu packet.
+	 *  BP_Hovercraft::SendFire -> WeaponFire -> SetFiring (mag-gated). Without this, trigger
+	 *  only aims the mesh and never starts UFiringComponent (no shots / beam visuals). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship Hardware|Weapon Mags")
+	bool bForwardTriggerToSendFire = true;
+
+	/** If true, automatically apply weapon mag config when tag is inserted */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship Hardware|Weapon Mags")
+	bool bAutoApplyWeaponMag = true;
+
+	// === Events ===
+
+	/** Event fired when weapon IMU data is received (orientation + euler angles + trigger) */
+	UPROPERTY(BlueprintAssignable, Category = "Ship Hardware|Events")
+	FOnWeaponImu OnWeaponImu;
+
+	/** Event fired when wheel turn input is received (includes WheelIndex) */
+	UPROPERTY(BlueprintAssignable, Category = "Ship Hardware|Events")
+	FOnWheelTurn OnWheelTurn;
+
+	/** Event fired when jack state changes */
+	UPROPERTY(BlueprintAssignable, Category = "Ship Hardware|Events")
+	FOnJackState OnJackState;
+
+	/** Event fired when weapon tag is inserted or removed */
+	UPROPERTY(BlueprintAssignable, Category = "Ship Hardware|Events")
+	FOnWeaponTag OnWeaponTag;
+
+	/** Event fired when reload tag is inserted or removed */
+	UPROPERTY(BlueprintAssignable, Category = "Ship Hardware|Events")
+	FOnReloadTag OnReloadTag;
+
+	/** Event fired when connection status changes for this ship's port */
+	UPROPERTY(BlueprintAssignable, Category = "Ship Hardware|Events")
+	FOnShipConnectionChanged OnShipConnectionChanged;
+
+	/** Event fired when weapon tag Inserted state changes (fires only on transitions) */
+	UPROPERTY(BlueprintAssignable, Category = "Ship Hardware|Events")
+	FEvtTagChanged EvtTagChanged;
+
+	// === Status ===
+
+	/**
+	 * Check if this ship's serial port is currently connected
+	 * @return True if connected
+	 */
+	UFUNCTION(BlueprintPure, Category = "Ship Hardware|Status")
+	bool IsConnected() const;
+
+	/**
+	 * Get the subsystem managing serial connections
+	 * @return The UAndySerialSubsystem instance, or nullptr if not available
+	 */
+	UFUNCTION(BlueprintPure, Category = "Ship Hardware|Status")
+	UAndySerialSubsystem* GetSerialSubsystem() const;
+
+	// === Weapon Mag Functions ===
+
+	/**
+	 * Find a weapon mag configuration by tag ID
+	 * @param TagId - The RFID tag ID to look up
+	 * @param OutWeaponMag - The found weapon mag configuration
+	 * @return True if a matching weapon mag was found
+	 */
+	UFUNCTION(BlueprintPure, Category = "Ship Hardware|Weapon Mags")
+	bool FindWeaponMagByTagId(int64 TagId, FWeaponMag& OutWeaponMag) const;
+
+	/**
+	 * Apply a weapon mag configuration to the FiringComponent
+	 * @param WeaponMag - The weapon mag configuration to apply
+	 * @return True if successfully applied
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Ship Hardware|Weapon Mags")
+	bool ApplyWeaponMag(const FWeaponMag& WeaponMag);
+
+	/**
+	 * Apply a weapon mag configuration by tag ID
+	 * @param TagId - The RFID tag ID to look up and apply
+	 * @return True if a matching weapon mag was found and applied
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Ship Hardware|Weapon Mags")
+	bool ApplyWeaponMagByTagId(int64 TagId);
+
+	/**
+	 * Isolation test: drive Port (0) or Starboard (1) aim without hardware.
+	 * Console: WeaponImu.Sweep Port | WeaponImu.Sweep Starboard
+	 */
+	void StartAimIsolationSweep(uint8 Side, float DurationSeconds = 5.f);
+
+	/**
+	 * Isolation test: snap one gun to a known yaw so mesh movement is obvious.
+	 * Console: WeaponImu.Nudge Port | WeaponImu.Nudge Starboard
+	 */
+	void ApplyAimIsolationNudge(uint8 Side, float YawDegrees = 35.f);
+
+	/** Isolation test: SetFiring(true) on Port (0) or Starboard (1). Console: WeaponFire.Burst Port */
+	void ApplyFireIsolationBurst(uint8 Side);
+
+	/** First primary handler in a PIE/game world. Used by WeaponImu.* console commands. */
+	static UShipHardwareInputComponent* FindPrimaryInPlayWorld();
+
+protected:
+	// === UActorComponent Interface ===
+
+	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+	// === Internal Event Handlers ===
+
+	/** Handler for raw frame events from subsystem - filters by ShipId and dispatches */
+	UFUNCTION()
+	void OnFrameParsedHandler(FName InShipId, uint8 Src, uint8 Type, int32 Seq, const TArray<uint8>& Payload);
+
+	/** Handler for connection changed events from subsystem - filters by ShipId */
+	UFUNCTION()
+	void OnConnectionChangedHandler(FName InShipId, bool bConnected);
+
+private:
+	/** Cached reference to the serial subsystem */
+	UPROPERTY()
+	TObjectPtr<UAndySerialSubsystem> CachedSubsystem;
+
+	/** Whether we are currently bound to subsystem events */
+	bool bIsBound = false;
+
+	/** Track previous weapon tag inserted state for change detection (keyed by TagId) */
+	TMap<int64, bool> WeaponTagInsertedState;
+
+	/** Track previous reload tag inserted state for change detection (keyed by TagId) */
+	TMap<int64, bool> ReloadTagInsertedState;
+
+	/** True while the reload bay reports a present RFID tag (reader index 2). */
+	bool bReloadBayOccupied = false;
+
+	/** Last non-zero reload-bay UID while occupied; used when firmware sends remove with UID=0. */
+	int64 LastReloadBayUID = 0;
+
+	/** Bind to the subsystem's delegates */
+	void BindToSubsystem();
+
+	/** Unbind from the subsystem's delegates */
+	void UnbindFromSubsystem();
+
+	/** Auto-wire FiringComponentPort/Starboard from owner child components when unset. */
+	void ResolveFiringComponentRefs();
+
+	/** Resolve weapon side from payload byte, with Src device-id fallback (3=Port, 6=Starboard). */
+	static uint8 ResolveImuSide(uint8 PayloadSide, uint8 Src);
+
+	/** Pick the FiringComponent that should receive IMU data for this side/src. */
+	UFiringComponent* ResolveFiringComponentForImu(uint8 Side, uint8 Src) const;
+
+	/** Pawn that owns Weapon_Left/Weapon_Right and FiringComponents (may differ from GetOwner on PC). */
+	AActor* ResolveWeaponActor() const;
+
+	/** Only one ShipHardwareInput per ShipId should bind to the serial subsystem (prefer PlayerController). */
+	bool TryRegisterAsPrimaryHandler();
+	void UnregisterPrimaryHandler();
+
+	/** Log one decoded WEAPON_IMU packet and routing decision. */
+	void LogWeaponImuPacket(uint8 Src, uint8 Type, int32 Seq, uint8 PayloadSide, uint8 ResolvedSide, const FWeaponImuData& ImuData, UFiringComponent* TargetFiring) const;
+
+	/** Accumulate per-src IMU counts and emit a summary every few seconds. */
+	void TrackWeaponImuStats(uint8 Src, uint8 ResolvedSide, UFiringComponent* TargetFiring);
+
+	/** Call the pawn's Blueprint SendWeaponAim (Weapon_Left/Weapon_Right visual path + trigger). */
+	void InvokeSendWeaponAimOnOwner(uint8 ResolvedSide, const FQuat& Orientation, bool bTriggerHeld) const;
+
+	/** Call the pawn's Blueprint SendFire (mag-gated SetFiring via WeaponFire). */
+	void InvokeSendFireOnOwner(uint8 ResolvedSide, bool bTriggerHeld) const;
+
+	/** Per-source WEAPON_IMU counters (since last summary). */
+	int32 ImuCountPortSrc = 0;
+	int32 ImuCountStarboardSrc = 0;
+	int32 ImuCountOtherSrc = 0;
+	int32 ImuCountNoTarget = 0;
+	double LastImuStatsLogSeconds = 0.0;
+
+	/** Any decoded packet from Port/Starboard device IDs (not only IMU). */
+	int32 AnyCountPortSrc = 0;
+	int32 AnyCountStarboardSrc = 0;
+	int32 TagCountPortSrc = 0;
+	int32 TagCountStarboardSrc = 0;
+
+	FTimerHandle AimSweepTimer;
+	uint8 AimSweepSide = 0;
+	float AimSweepElapsed = 0.f;
+	float AimSweepDuration = 5.f;
+
+	void TickAimIsolationSweep();
+	void StopAimIsolationSweep();
+	void ApplyIsolationAim(uint8 Side, const FQuat& Orientation) const;
+
+	/** Primary handler per ShipId — avoids duplicate IMU when both PC and pawn have this component. */
+	bool bIsPrimaryHandler = false;
+};

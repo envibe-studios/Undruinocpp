@@ -1,0 +1,9 @@
+[
+  { "label": "left class", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
+    "args": {
+      "instance": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:Firing_Left_GEN_VARIABLE" },
+      "properties": ["Class", "bIsActive", "bIsEditorOnly"]
+    } },
+  { "label": "left class name", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "get_component_class",
+    "args": { "component": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:Firing_Left_GEN_VARIABLE" } } }
+]

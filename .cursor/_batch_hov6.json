@@ -1,0 +1,13 @@
+[
+  { "label": "left tick", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
+    "args": {
+      "instance": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:Firing_Left_GEN_VARIABLE" },
+      "properties": ["PrimaryComponentTick"]
+    } },
+  { "label": "find firetracer", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "title": "FireTracer" } },
+  { "label": "find initvis", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "title": "InitWeapon" } },
+  { "label": "find onbullet", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "title": "Bullet Fired" } }
+]

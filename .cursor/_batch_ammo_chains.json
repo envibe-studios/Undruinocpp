@@ -1,0 +1,8 @@
+[
+  { "label": "left chain", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_connected_subgraph",
+    "args": { "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_ComponentBoundEvent_1" } } },
+  { "label": "right chain", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_connected_subgraph",
+    "args": { "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_ComponentBoundEvent_0" } } },
+  { "label": "wf print chain", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_connected_subgraph",
+    "args": { "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire.K2Node_CallFunction_1" } } }
+]

@@ -1,0 +1,12 @@
+[
+  { "label": "beam0 xform", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "get_actor_transform",
+    "args": { "actor": { "refPath": "/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_WeaponBeam_C_0" } } },
+  { "label": "beam0 hidden", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
+    "args": { "instance": { "refPath": "/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_WeaponBeam_C_0" },
+      "properties": ["bHidden", "IsReady", "BeamRange", "TractorThickness"] } },
+  { "label": "beam0 pivot", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
+    "args": { "instance": { "refPath": "/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_WeaponBeam_C_0.BeamPivot" },
+      "properties": ["RelativeScale3D"] } },
+  { "label": "beam1 xform", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "get_actor_transform",
+    "args": { "actor": { "refPath": "/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_WeaponBeam_C_1" } } }
+]

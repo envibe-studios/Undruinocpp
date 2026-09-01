@@ -1,0 +1,6 @@
+[
+  { "label": "cdo comps", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "get_components",
+    "args": { "actor": { "refPath": "/Game/Blueprints/BP_Hovercraft.Default__BP_Hovercraft_C" } } },
+  { "label": "hover fns", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "list_functions",
+    "args": { "blueprint": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft" } } }
+]

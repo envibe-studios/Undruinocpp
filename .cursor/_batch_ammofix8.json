@@ -1,0 +1,16 @@
+[
+  { "label": "find firing left get", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "title": "Get Firing_Left" } },
+  { "label": "find firing right get", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "title": "Get Firing_Right" } },
+  { "label": "disconnect left sub", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "break_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_PromotableOperator_0" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 2, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_SetFieldsInStruct_0" } }
+    } },
+  { "label": "disconnect right sub", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "break_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_PromotableOperator_3" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 2, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_SetFieldsInStruct_1" } }
+    } }
+]

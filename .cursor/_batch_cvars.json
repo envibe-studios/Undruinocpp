@@ -1,0 +1,6 @@
+[
+  { "label": "search live", "toolset": "EditorToolset.EditorAppToolset", "tool": "SearchCVars",
+    "args": { "filter": "LiveCoding" } },
+  { "label": "search exec", "toolset": "EditorToolset.EditorAppToolset", "tool": "SearchCVars",
+    "args": { "filter": "Execute" } }
+]

@@ -1,0 +1,952 @@
+// Firing Component Implementation
+
+#include "FiringComponent.h"
+#include "GameFramework/Actor.h"
+#include "DrawDebugHelpers.h"
+#include "Engine/Engine.h"
+#include "Engine/World.h"
+
+UFiringComponent::UFiringComponent()
+{
+	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bStartWithTickEnabled = true;
+	PrimaryComponentTick.TickGroup = TG_PrePhysics;
+	bAutoActivate = true;
+}
+
+void UFiringComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+	// BP instances had bAutoActivate=false, which leaves the component inactive
+	// so TickComponent / ProcessBulletMode never run.
+	if (!IsActive())
+	{
+		Activate(false);
+	}
+	SetComponentTickEnabled(true);
+
+	BulletCooldown = 0.0f;
+}
+
+void UFiringComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	// Draw debug trace line whenever firing is active
+	if (bIsFiring && bDrawDebug)
+	{
+		FVector Origin = GetFiringOrigin();
+		FVector Direction = GetFiringDirection();
+
+		// Use the range from the current mode's config
+		float DebugRange = 0.0f;
+		FColor DebugColor = FColor::White;
+		switch (CurrentFiringMode)
+		{
+			case EFiringModeType::Bullet:
+				DebugRange = BulletConfig.Range;
+				DebugColor = FColor::Red;
+				break;
+			case EFiringModeType::TractorBeam:
+				DebugRange = TractorBeamConfig.Range;
+				DebugColor = FColor::Cyan;
+				break;
+			case EFiringModeType::Scanner:
+				DebugRange = ScannerConfig.Range;
+				DebugColor = FColor::Green;
+				break;
+			default:
+				DebugRange = 5000.0f;
+				DebugColor = FColor::White;
+				break;
+		}
+
+		FVector TraceEnd = Origin + Direction * DebugRange;
+
+		// Perform a trace to see if we hit something
+		FHitResult DebugHit;
+		FCollisionQueryParams DebugQueryParams;
+		DebugQueryParams.AddIgnoredActor(GetOwner());
+		bool bDebugHit = GetWorld()->LineTraceSingleByChannel(
+			DebugHit, Origin, TraceEnd, ECC_Visibility, DebugQueryParams);
+
+		FVector EndPoint = bDebugHit ? DebugHit.ImpactPoint : TraceEnd;
+		// Use SDPG_Foreground (depth priority 1) so the line draws on top of geometry
+		DrawDebugLine(GetWorld(), Origin, EndPoint, DebugColor, false, -1.0f, 1, 2.0f);
+
+		if (bDebugHit)
+		{
+			DrawDebugPoint(GetWorld(), DebugHit.ImpactPoint, 10.0f, DebugColor, false, -1.0f);
+		}
+	}
+
+	if (!bIsFiring)
+	{
+		return;
+	}
+
+	// Process the current firing mode
+	switch (CurrentFiringMode)
+	{
+		case EFiringModeType::Bullet:
+			ProcessBulletMode(DeltaTime);
+			break;
+
+		case EFiringModeType::TractorBeam:
+			ProcessTractorBeamMode(DeltaTime);
+			break;
+
+		case EFiringModeType::Scanner:
+			ProcessScannerMode(DeltaTime);
+			break;
+
+		default:
+			break;
+	}
+}
+
+// ============================================================================
+// CONTROL FUNCTIONS
+// ============================================================================
+
+void UFiringComponent::SetFiring(bool bShouldFire)
+{
+	if (bIsFiring != bShouldFire)
+	{
+		bIsFiring = bShouldFire;
+
+		UE_LOG(LogTemp, Warning, TEXT("FiringComponent[%s]: SetFiring(%s) mode=%d enabled=%d active=%d tick=%d"),
+			*GetName(),
+			bIsFiring ? TEXT("true") : TEXT("false"),
+			static_cast<int32>(CurrentFiringMode),
+			BulletConfig.bEnabled ? 1 : 0,
+			IsActive() ? 1 : 0,
+			IsComponentTickEnabled() ? 1 : 0);
+
+		if (bIsFiring)
+		{
+			OnFiringStarted.Broadcast(CurrentFiringMode);
+		}
+		else
+		{
+			OnFiringStopped.Broadcast(CurrentFiringMode);
+
+			if (CurrentFiringMode == EFiringModeType::TractorBeam && TractorTarget.IsValid())
+			{
+				AActor* Target = TractorTarget.Get();
+				OnTractorBeamLost.Broadcast(Target);
+				TractorTarget.Reset();
+			}
+			else if (CurrentFiringMode == EFiringModeType::Scanner && ScanTarget.IsValid())
+			{
+				AActor* Target = ScanTarget.Get();
+				OnScanCancelled.Broadcast(Target, CurrentScanProgress);
+				ScanTarget.Reset();
+				CurrentScanProgress = 0.0f;
+			}
+		}
+	}
+
+	// Hardware calls SetFiring(true) on every IMU packet. Do not depend on Tick
+	// observing bIsFiring — fire here, rate-limited by ProcessBulletMode.
+	if (bIsFiring)
+	{
+		ForceFireShot();
+	}
+}
+
+bool UFiringComponent::IsFiring() const
+{
+	return bIsFiring;
+}
+
+void UFiringComponent::TryFireIfReady()
+{
+	ForceFireShot();
+}
+
+void UFiringComponent::ForceFireShot()
+{
+	if (!IsActive())
+	{
+		Activate(false);
+	}
+	SetComponentTickEnabled(true);
+
+	if (CurrentFiringMode != EFiringModeType::Bullet)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FiringComponent[%s]: ForceFireShot overriding mode %d -> Bullet"),
+			*GetName(), static_cast<int32>(CurrentFiringMode));
+		CurrentFiringMode = EFiringModeType::Bullet;
+	}
+
+	if (!BulletConfig.bEnabled)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FiringComponent[%s]: ForceFireShot enabling BulletConfig"), *GetName());
+		BulletConfig.bEnabled = true;
+	}
+
+	// Hardware trigger path requires a mag to have enabled ammo (ApplyWeaponMagConfig / SetAmmo).
+	// Without that, do not dry-fire forever and drive MagLeft.CurrentAmmo negative in BP.
+	if (!BulletConfig.bUseAmmo)
+	{
+		return;
+	}
+
+	if (BulletConfig.CurrentAmmo <= 0)
+	{
+		if (bIsFiring)
+		{
+			SetFiring(false);
+		}
+		return;
+	}
+
+	ProcessBulletMode(0.0f);
+}
+
+void UFiringComponent::SetFiringMode(EFiringModeType NewMode)
+{
+	if (CurrentFiringMode == NewMode)
+	{
+		return;
+	}
+
+	// Reset state from previous mode
+	ResetModeState();
+
+	EFiringModeType OldMode = CurrentFiringMode;
+	CurrentFiringMode = NewMode;
+
+	OnFiringModeChanged.Broadcast(CurrentFiringMode);
+}
+
+EFiringModeType UFiringComponent::GetFiringMode() const
+{
+	return CurrentFiringMode;
+}
+
+void UFiringComponent::CycleNextFiringMode()
+{
+	int32 CurrentIndex = static_cast<int32>(CurrentFiringMode);
+	int32 NextIndex = (CurrentIndex + 1) % 3; // Cycle through Bullet, TractorBeam, Scanner
+	SetFiringMode(static_cast<EFiringModeType>(NextIndex));
+}
+
+void UFiringComponent::CyclePreviousFiringMode()
+{
+	int32 CurrentIndex = static_cast<int32>(CurrentFiringMode);
+	int32 PrevIndex = (CurrentIndex + 2) % 3; // Cycle backwards
+	SetFiringMode(static_cast<EFiringModeType>(PrevIndex));
+}
+
+void UFiringComponent::ResetModeState()
+{
+	// Release tractor target if switching away from tractor beam
+	if (TractorTarget.IsValid())
+	{
+		OnTractorBeamLost.Broadcast(TractorTarget.Get());
+		TractorTarget.Reset();
+	}
+
+	// Cancel scan if switching away from scanner
+	if (ScanTarget.IsValid())
+	{
+		OnScanCancelled.Broadcast(ScanTarget.Get(), CurrentScanProgress);
+		ScanTarget.Reset();
+		CurrentScanProgress = 0.0f;
+		ScanLostTime = 0.0f;
+	}
+
+	// Reset bullet cooldown
+	BulletCooldown = 0.0f;
+}
+
+// ============================================================================
+// BULLET MODE
+// ============================================================================
+
+void UFiringComponent::ProcessBulletMode(float DeltaTime)
+{
+	if (!BulletConfig.bEnabled)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FiringComponent[%s]: ProcessBulletMode skipped — BulletConfig disabled"), *GetName());
+		return;
+	}
+
+	const UWorld* World = GetWorld();
+	if (!World)
+	{
+		UE_LOG(LogTemp, Error, TEXT("FiringComponent[%s]: ProcessBulletMode skipped — no World"), *GetName());
+		return;
+	}
+
+	if (BulletCooldown > 0.0f)
+	{
+		BulletCooldown -= DeltaTime;
+	}
+
+	const double Now = World->GetTimeSeconds();
+	const float FireInterval = 1.0f / FMath::Max(0.1f, BulletConfig.RateOfFire);
+	const bool bReady = (BulletCooldown <= 0.0f) || ((Now - LastBulletFireTime) >= FireInterval);
+
+	if (!bReady)
+	{
+		return;
+	}
+
+	if (BulletConfig.bUseAmmo && BulletConfig.CurrentAmmo <= 0)
+	{
+		OnAmmoEmpty.Broadcast();
+		if (bIsFiring)
+		{
+			SetFiring(false);
+		}
+		return;
+	}
+
+	FireBullet();
+	BulletCooldown = FireInterval;
+	LastBulletFireTime = Now;
+}
+
+void UFiringComponent::FireBullet()
+{
+	UE_LOG(LogTemp, Warning, TEXT("FiringComponent[%s]: FireBullet ENTER"), *GetName());
+
+	FVector Origin = GetFiringOrigin();
+	FVector BaseDirection = GetFiringDirection();
+
+	// Consume ammo
+	if (BulletConfig.bUseAmmo)
+	{
+		BulletConfig.CurrentAmmo = FMath::Max(0, BulletConfig.CurrentAmmo - 1);
+		OnAmmoChanged.Broadcast(BulletConfig.CurrentAmmo, BulletConfig.MaxAmmo);
+	}
+
+	// Fire each bullet in the burst
+	for (int32 i = 0; i < BulletConfig.BulletsPerShot; i++)
+	{
+		FVector Direction = ApplySpread(BaseDirection, BulletConfig.SpreadAngle);
+
+		// Broadcast bullet fired event
+		OnBulletFired.Broadcast(Origin, Direction, BulletConfig.Damage, i);
+
+		// Perform hit trace
+		FHitResult HitResult;
+		FVector TraceEnd = Origin + Direction * BulletConfig.Range;
+
+		FCollisionQueryParams QueryParams;
+		QueryParams.AddIgnoredActor(GetOwner());
+		QueryParams.bTraceComplex = true;
+
+		bool bHit = GetWorld()->LineTraceSingleByChannel(
+			HitResult,
+			Origin,
+			TraceEnd,
+			BulletConfig.TraceChannel,
+			QueryParams
+		);
+
+		if (bDrawDebug)
+		{
+			FColor TraceColor = bHit ? FColor::Red : FColor::Yellow;
+			DrawDebugLine(GetWorld(), Origin, bHit ? HitResult.ImpactPoint : TraceEnd, TraceColor, false, 0.1f, 0, 1.0f);
+
+			if (bHit)
+			{
+				DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 5.0f, 8, FColor::Red, false, 0.1f);
+			}
+		}
+
+		// Shot flash: visible even when content tracers are unwired.
+		DrawDebugLine(
+			GetWorld(),
+			Origin,
+			bHit ? HitResult.ImpactPoint : TraceEnd,
+			bHit ? FColor::Orange : FColor::Yellow,
+			false,
+			0.2f,
+			0,
+			3.0f);
+
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(
+				-1,
+				0.35f,
+				FColor::Yellow,
+				FString::Printf(TEXT("%s shot"), *GetName()));
+		}
+
+		UE_LOG(LogTemp, Warning, TEXT("FiringComponent[%s]: FireBullet origin=%s dir=%s"),
+			*GetName(), *Origin.ToCompactString(), *Direction.ToCompactString());
+
+		if (bHit && HitResult.GetActor())
+		{
+			OnBulletHit.Broadcast(
+				HitResult.GetActor(),
+				HitResult.ImpactPoint,
+				HitResult.ImpactNormal,
+				BulletConfig.Damage,
+				HitResult.GetComponent()
+			);
+		}
+	}
+}
+
+int32 UFiringComponent::AddAmmo(int32 Amount)
+{
+	if (Amount <= 0)
+	{
+		return BulletConfig.CurrentAmmo;
+	}
+
+	int32 OldAmmo = BulletConfig.CurrentAmmo;
+	BulletConfig.CurrentAmmo = FMath::Min(BulletConfig.CurrentAmmo + Amount, BulletConfig.MaxAmmo);
+
+	if (BulletConfig.CurrentAmmo != OldAmmo)
+	{
+		OnAmmoChanged.Broadcast(BulletConfig.CurrentAmmo, BulletConfig.MaxAmmo);
+	}
+
+	return BulletConfig.CurrentAmmo;
+}
+
+void UFiringComponent::SetAmmo(int32 Amount)
+{
+	int32 OldAmmo = BulletConfig.CurrentAmmo;
+	BulletConfig.bUseAmmo = true;
+	BulletConfig.CurrentAmmo = FMath::Clamp(Amount, 0, BulletConfig.MaxAmmo);
+
+	if (BulletConfig.CurrentAmmo != OldAmmo)
+	{
+		OnAmmoChanged.Broadcast(BulletConfig.CurrentAmmo, BulletConfig.MaxAmmo);
+	}
+}
+
+int32 UFiringComponent::GetCurrentAmmo() const
+{
+	return BulletConfig.CurrentAmmo;
+}
+
+int32 UFiringComponent::GetMaxAmmo() const
+{
+	return BulletConfig.MaxAmmo;
+}
+
+// ============================================================================
+// TRACTOR BEAM MODE
+// ============================================================================
+
+void UFiringComponent::ProcessTractorBeamMode(float DeltaTime)
+{
+	if (!TractorBeamConfig.bEnabled)
+	{
+		return;
+	}
+
+	FVector Origin = GetFiringOrigin();
+
+	// If we have a target, broadcast events
+	if (TractorTarget.IsValid())
+	{
+		AActor* Target = TractorTarget.Get();
+
+		if (!Target)
+		{
+			OnTractorBeamLost.Broadcast(Target);
+			TractorTarget.Reset();
+			return;
+		}
+
+		FVector TargetLocation = Target->GetActorLocation();
+		float Distance = FVector::Dist(Origin, TargetLocation);
+
+		// Check if target is still in range
+		if (Distance > TractorBeamConfig.Range * 1.5f)
+		{
+			OnTractorBeamLost.Broadcast(Target);
+			TractorTarget.Reset();
+			return;
+		}
+
+		// Broadcast pulling event with distance
+		OnTractorBeamPulling.Broadcast(Target, Distance);
+
+		// Debug visualization
+		if (bDrawDebug)
+		{
+			DrawDebugLine(GetWorld(), Origin, TargetLocation, FColor::Cyan, false, -1.0f, 1, 3.0f);
+			DrawDebugSphere(GetWorld(), TargetLocation, 20.0f, 8, FColor::Cyan, false, -1.0f);
+		}
+	}
+	else
+	{
+		// Look for a new target via trace
+		FHitResult HitResult;
+		if (PerformTrace(HitResult, TractorBeamConfig.Range, TractorBeamConfig.TraceChannel))
+		{
+			AActor* HitActor = HitResult.GetActor();
+			if (HitActor && CanTractorActor(HitActor))
+			{
+				TractorTarget = HitActor;
+				OnTractorBeamStart.Broadcast(HitActor);
+			}
+		}
+
+		// Debug: show tractor beam searching
+		if (bDrawDebug)
+		{
+			FVector Direction = GetFiringDirection();
+			FVector TraceEnd = Origin + Direction * TractorBeamConfig.Range;
+			DrawDebugLine(GetWorld(), Origin, TraceEnd, FColor::Blue, false, -1.0f, 1, 1.0f);
+		}
+	}
+}
+
+bool UFiringComponent::CanTractorActor(AActor* Actor) const
+{
+	if (!Actor)
+	{
+		return false;
+	}
+
+	// Check tags if any are specified — actor must have at least one matching tag
+	// Checks both Actor Tags and Component Tags on the root component
+	if (TractorBeamConfig.TractorableTags.Num() > 0)
+	{
+		bool bHasMatchingTag = false;
+		for (const FName& Tag : TractorBeamConfig.TractorableTags)
+		{
+			if (Actor->ActorHasTag(Tag))
+			{
+				bHasMatchingTag = true;
+				break;
+			}
+			if (Actor->GetRootComponent() && Actor->GetRootComponent()->ComponentHasTag(Tag))
+			{
+				bHasMatchingTag = true;
+				break;
+			}
+		}
+		if (!bHasMatchingTag)
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool UFiringComponent::HasTractorTarget() const
+{
+	return TractorTarget.IsValid();
+}
+
+AActor* UFiringComponent::GetTractorTarget() const
+{
+	return TractorTarget.Get();
+}
+
+void UFiringComponent::ReleaseTractorTarget()
+{
+	if (TractorTarget.IsValid())
+	{
+		OnTractorBeamLost.Broadcast(TractorTarget.Get());
+		TractorTarget.Reset();
+	}
+}
+
+// ============================================================================
+// SCANNER MODE
+// ============================================================================
+
+void UFiringComponent::ProcessScannerMode(float DeltaTime)
+{
+	if (!ScannerConfig.bEnabled)
+	{
+		return;
+	}
+
+	FVector Origin = GetFiringOrigin();
+	FVector Direction = GetFiringDirection();
+
+	// If we have a scan target, continue scanning
+	if (ScanTarget.IsValid())
+	{
+		AActor* Target = ScanTarget.Get();
+
+		if (!Target)
+		{
+			OnScanCancelled.Broadcast(nullptr, CurrentScanProgress);
+			ScanTarget.Reset();
+			CurrentScanProgress = 0.0f;
+			return;
+		}
+
+		FVector TargetLocation = Target->GetActorLocation();
+		float Distance = FVector::Dist(Origin, TargetLocation);
+
+		// Check if target is still in range
+		bool bInRange = Distance <= ScannerConfig.Range;
+
+		// Check if target is still in cone
+		FVector ToTarget = (TargetLocation - Origin).GetSafeNormal();
+		float Angle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(Direction, ToTarget)));
+		bool bInCone = Angle <= ScannerConfig.ScanConeAngle;
+
+		bool bTargetValid = bInRange && bInCone;
+
+		if (!bTargetValid)
+		{
+			if (ScannerConfig.bRequireContinuousLock)
+			{
+				// Immediately cancel scan
+				OnScanCancelled.Broadcast(Target, CurrentScanProgress);
+				ScanTarget.Reset();
+				CurrentScanProgress = 0.0f;
+			}
+			else
+			{
+				// Track time since target lost
+				ScanLostTime += DeltaTime;
+				if (ScanLostTime >= ScannerConfig.ScanResetDelay)
+				{
+					OnScanCancelled.Broadcast(Target, CurrentScanProgress);
+					ScanTarget.Reset();
+					CurrentScanProgress = 0.0f;
+					ScanLostTime = 0.0f;
+				}
+			}
+			return;
+		}
+
+		// Reset lost time if target is valid
+		ScanLostTime = 0.0f;
+
+		// Progress the scan
+		float ProgressIncrement = DeltaTime / ScannerConfig.ScanDuration;
+		CurrentScanProgress = FMath::Min(CurrentScanProgress + ProgressIncrement, 1.0f);
+
+		float TimeRemaining = (1.0f - CurrentScanProgress) * ScannerConfig.ScanDuration;
+
+		// Broadcast scanning progress
+		OnScanning.Broadcast(Target, CurrentScanProgress, TimeRemaining);
+
+		// Debug visualization
+		if (bDrawDebug)
+		{
+			DrawDebugLine(GetWorld(), Origin, TargetLocation, FColor::Green, false, -1.0f, 1, 2.0f);
+			DrawDebugSphere(GetWorld(), TargetLocation, 30.0f * CurrentScanProgress + 10.0f, 12, FColor::Green, false, -1.0f);
+		}
+
+		// Check for scan complete
+		if (CurrentScanProgress >= 1.0f)
+		{
+			OnScanComplete.Broadcast(Target);
+			ScanTarget.Reset();
+			CurrentScanProgress = 0.0f;
+		}
+	}
+	else
+	{
+		// Look for a new scan target
+		AActor* NewTarget = FindScanTarget();
+		if (NewTarget)
+		{
+			ScanTarget = NewTarget;
+			CurrentScanProgress = 0.0f;
+			ScanLostTime = 0.0f;
+			OnScanStart.Broadcast(NewTarget);
+		}
+
+		// Debug: show scanner cone
+		if (bDrawDebug)
+		{
+			FVector TraceEnd = Origin + Direction * ScannerConfig.Range;
+			DrawDebugLine(GetWorld(), Origin, TraceEnd, FColor::Yellow, false, -1.0f, 1, 1.0f);
+
+			// Draw cone edges
+			float ConeRad = FMath::DegreesToRadians(ScannerConfig.ScanConeAngle);
+			FVector Right = FVector::CrossProduct(Direction, FVector::UpVector).GetSafeNormal();
+			FVector Up = FVector::CrossProduct(Right, Direction).GetSafeNormal();
+
+			for (int32 i = 0; i < 8; i++)
+			{
+				float AngleStep = (2.0f * PI * i) / 8.0f;
+				FVector ConeDir = Direction + (FMath::Sin(AngleStep) * Right + FMath::Cos(AngleStep) * Up) * FMath::Tan(ConeRad);
+				ConeDir.Normalize();
+				FVector ConeEnd = Origin + ConeDir * ScannerConfig.Range;
+				DrawDebugLine(GetWorld(), Origin, ConeEnd, FColor::Yellow, false, -1.0f, 1, 0.5f);
+			}
+		}
+	}
+}
+
+AActor* UFiringComponent::FindScanTarget()
+{
+	FHitResult HitResult;
+	if (PerformTrace(HitResult, ScannerConfig.Range, ScannerConfig.TraceChannel))
+	{
+		AActor* HitActor = HitResult.GetActor();
+		if (HitActor && CanScanActor(HitActor))
+		{
+			return HitActor;
+		}
+	}
+	return nullptr;
+}
+
+bool UFiringComponent::CanScanActor(AActor* Actor) const
+{
+	if (!Actor)
+	{
+		return false;
+	}
+
+	// Check tags if any are specified — actor must have at least one matching tag
+	// Checks both Actor Tags and Component Tags on the root component
+	if (ScannerConfig.ScannableTags.Num() > 0)
+	{
+		bool bHasMatchingTag = false;
+		for (const FName& Tag : ScannerConfig.ScannableTags)
+		{
+			if (Actor->ActorHasTag(Tag))
+			{
+				bHasMatchingTag = true;
+				break;
+			}
+			// Also check component tags on the root component
+			if (Actor->GetRootComponent() && Actor->GetRootComponent()->ComponentHasTag(Tag))
+			{
+				bHasMatchingTag = true;
+				break;
+			}
+		}
+		if (!bHasMatchingTag)
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool UFiringComponent::HasScanTarget() const
+{
+	return ScanTarget.IsValid();
+}
+
+AActor* UFiringComponent::GetScanTarget() const
+{
+	return ScanTarget.Get();
+}
+
+float UFiringComponent::GetScanProgress() const
+{
+	return CurrentScanProgress;
+}
+
+void UFiringComponent::CancelScan()
+{
+	if (ScanTarget.IsValid())
+	{
+		OnScanCancelled.Broadcast(ScanTarget.Get(), CurrentScanProgress);
+		ScanTarget.Reset();
+		CurrentScanProgress = 0.0f;
+		ScanLostTime = 0.0f;
+	}
+}
+
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
+bool UFiringComponent::PerformTrace(FHitResult& OutHit, float Range, ECollisionChannel Channel) const
+{
+	AActor* Owner = GetOwner();
+	if (!Owner)
+	{
+		return false;
+	}
+
+	FVector Origin = GetFiringOrigin();
+	FVector Direction = GetFiringDirection();
+	FVector TraceEnd = Origin + Direction * Range;
+
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(Owner);
+	QueryParams.bTraceComplex = false;
+
+	return GetWorld()->LineTraceSingleByChannel(
+		OutHit,
+		Origin,
+		TraceEnd,
+		Channel,
+		QueryParams
+	);
+}
+
+FVector UFiringComponent::GetFiringDirection() const
+{
+	return GetForwardVector();
+}
+
+FVector UFiringComponent::GetFiringOrigin() const
+{
+	return GetComponentLocation();
+}
+
+FVector UFiringComponent::ApplySpread(const FVector& Direction, float SpreadAngle) const
+{
+	if (SpreadAngle <= 0.0f)
+	{
+		return Direction;
+	}
+
+	// Generate random angles within the spread cone
+	float HalfAngleRad = FMath::DegreesToRadians(SpreadAngle * 0.5f);
+
+	// Random angle around the direction vector
+	float RandomAngle = FMath::FRandRange(0.0f, 2.0f * PI);
+	// Random deviation from center (weighted toward center for more natural spread)
+	float RandomRadius = FMath::FRandRange(0.0f, 1.0f);
+	RandomRadius = FMath::Sqrt(RandomRadius); // Uniform distribution in cone
+	float DeviationAngle = RandomRadius * HalfAngleRad;
+
+	// Create perpendicular vectors
+	FVector Right = FVector::CrossProduct(Direction, FVector::UpVector);
+	if (Right.IsNearlyZero())
+	{
+		Right = FVector::CrossProduct(Direction, FVector::RightVector);
+	}
+	Right.Normalize();
+	FVector Up = FVector::CrossProduct(Right, Direction);
+	Up.Normalize();
+
+	// Apply deviation
+	FVector SpreadOffset = (Right * FMath::Cos(RandomAngle) + Up * FMath::Sin(RandomAngle)) * FMath::Sin(DeviationAngle);
+	FVector SpreadDirection = Direction * FMath::Cos(DeviationAngle) + SpreadOffset;
+
+	return SpreadDirection.GetSafeNormal();
+}
+
+// ============================================================================
+// WEAPON IMU
+// ============================================================================
+
+void UFiringComponent::ApplyImuOrientation(const FQuat& RawImuQuat)
+{
+	// 1) Normalize the raw sensor quaternion.
+	FQuat Raw = RawImuQuat;
+	Raw.Normalize();
+
+	// 2) Handedness conversion (right-handed sensor -> left-handed Unreal).
+	//    Flipping the Y axis of the basis is equivalent to negating qy and qw on the quaternion.
+	//    This is what fixes the "yaw works fine but pitch cross-couples into roll" symptom
+	//    caused by feeding a right-handed quaternion straight into a left-handed engine.
+	const FQuat Remapped = bConvertImuHandedness
+		? FQuat(Raw.X, -Raw.Y, Raw.Z, -Raw.W)
+		: Raw;
+
+	// 3) Static mount offset: rotates the sensor's frame to match the gun barrel
+	//    (handles the case where the IMU chip's +X doesn't point down the barrel).
+	const FQuat Mounted = SensorMountOffset.Quaternion() * Remapped;
+
+	// Cache for RecalibrateWeapon().
+	LastRemappedImuQuat = Mounted;
+	bHasReceivedImu = true;
+
+	// 4) Runtime calibration (multiplicative, so it works correctly at any pose -
+	//    unlike additive Euler offsets, which only worked near identity).
+	const FQuat Calibrated = CalibrationOffset * Mounted;
+
+	// 5) Manual fine-tune offset (still a quaternion compose, not Euler addition).
+	const FQuat Final = ManualAimOffset.Quaternion() * Calibrated;
+
+	SetRelativeRotation(Final);
+}
+
+void UFiringComponent::RecalibrateWeapon()
+{
+	// Capture the inverse of the current sensor pose so that subsequent frames at this
+	// orientation map to identity. Works correctly even if the gun is pitched/rolled
+	// when calibration is triggered.
+	CalibrationOffset = LastRemappedImuQuat.Inverse();
+
+	const AActor* OwnerActor = GetOwner();
+	const FString OwnerName = OwnerActor ? OwnerActor->GetName() : TEXT("<no owner>");
+
+	if (!bHasReceivedImu)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FiringComponent[%s on %s]: RecalibrateWeapon called but ApplyImuOrientation has NEVER run on this component. ")
+			TEXT("Calibration will be a no-op. Check that ApplyImuOrientation is being called on THIS instance (auto-apply on ShipHardwareInputComponent, or your BP graph for OnWeaponImu)."),
+			*GetName(), *OwnerName);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("FiringComponent[%s on %s]: Recalibrated. LastRemapped=(X=%.3f Y=%.3f Z=%.3f W=%.3f) -> CalOffset=(X=%.3f Y=%.3f Z=%.3f W=%.3f)"),
+			*GetName(), *OwnerName,
+			LastRemappedImuQuat.X, LastRemappedImuQuat.Y, LastRemappedImuQuat.Z, LastRemappedImuQuat.W,
+			CalibrationOffset.X, CalibrationOffset.Y, CalibrationOffset.Z, CalibrationOffset.W);
+	}
+}
+
+void UFiringComponent::ResetCalibration()
+{
+	CalibrationOffset = FQuat::Identity;
+	UE_LOG(LogTemp, Log, TEXT("FiringComponent[%s]: Weapon calibration reset."), *GetName());
+}
+
+// ============================================================================
+// WEAPON MAG INTEGRATION
+// ============================================================================
+
+void UFiringComponent::ApplyWeaponMagConfig(
+	bool bActive,
+	uint8 FiringMode,
+	float Damage,
+	float RateOfFire,
+	float SpreadAngle,
+	int32 BulletsPerShot,
+	int32 MaxAmmo,
+	int32 CurrentAmmo,
+	float Range,
+	float ScanDuration
+)
+{
+	if (!bActive)
+	{
+		UE_LOG(LogTemp, Log, TEXT("FiringComponent: WeaponMag is not active, skipping config apply"));
+		return;
+	}
+
+	// Set the firing mode
+	EFiringModeType NewMode = static_cast<EFiringModeType>(FMath::Clamp(static_cast<int32>(FiringMode), 0, 3));
+	SetFiringMode(NewMode);
+
+	// Apply bullet mode config
+	BulletConfig.Damage = Damage;
+	BulletConfig.RateOfFire = FMath::Max(0.1f, RateOfFire);
+	BulletConfig.SpreadAngle = FMath::Clamp(SpreadAngle, 0.0f, 45.0f);
+	BulletConfig.BulletsPerShot = FMath::Max(1, BulletsPerShot);
+	BulletConfig.MaxAmmo = FMath::Max(1, MaxAmmo);
+	BulletConfig.CurrentAmmo = (CurrentAmmo >= 0) ? FMath::Clamp(CurrentAmmo, 0, BulletConfig.MaxAmmo) : BulletConfig.MaxAmmo;
+	BulletConfig.bUseAmmo = true;
+	BulletConfig.Range = FMath::Max(0.0f, Range);
+
+	// Apply tractor beam config
+	TractorBeamConfig.Range = FMath::Max(0.0f, Range);
+
+	// Apply scanner config
+	ScannerConfig.ScanDuration = FMath::Max(0.1f, ScanDuration);
+	ScannerConfig.Range = FMath::Max(0.0f, Range);
+
+	// Broadcast ammo changed event since we reloaded
+	OnAmmoChanged.Broadcast(BulletConfig.CurrentAmmo, BulletConfig.MaxAmmo);
+
+	UE_LOG(LogTemp, Log, TEXT("FiringComponent: Applied WeaponMag config - Mode: %d, Damage: %.1f, RoF: %.1f, Ammo: %d/%d"),
+		static_cast<int32>(NewMode), Damage, RateOfFire, BulletConfig.CurrentAmmo, MaxAmmo);
+}

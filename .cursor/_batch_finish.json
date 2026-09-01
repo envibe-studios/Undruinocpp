@@ -1,0 +1,8 @@
+[
+  { "label": "safe beam tick", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "write_graph_dsl",
+    "args": { "graph": { "refPath": "/Game/Blueprints/FX/BP_WeaponBeam.BP_WeaponBeam:EventGraph" },
+      "code": "(event EventTick (DeltaSeconds)\n  (bind fc (Variables|Default|GetFiringComp))\n  (if (and (Variables|Default|GetIsReady) fc)\n    (if (Firing|Control|IsFiring fc)\n      (switch Utilities|FlowControl|Switch|SwitchonEFiringModeType (Firing|Control|GetFiringMode fc)\n        (:Bullet (CallFunction|HideBeam))\n        (:TractorBeam (CallFunction|HideBeam))\n        (:Scanner (CallFunction|HideBeam))\n        (:Custom (CallFunction|HideBeam)))\n      (else (CallFunction|HideBeam)))))" } },
+  { "label": "visual comps", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "get_components",
+    "args": { "actor": { "refPath": "/Game/Blueprints/BP_Hovercraft.Default__BP_Hovercraft_C" },
+              "component_type": { "refPath": "/Script/Unduinocpp.WeaponFireVisualsComponent" } } }
+]

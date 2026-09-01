@@ -1,0 +1,132 @@
+[
+    {
+        "label":  "del K2Node_Event_0",
+        "args":  {
+                     "node":  {
+                                  "refPath":  "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest:EventGraph.K2Node_Event_0"
+                              }
+                 },
+        "tool":  "delete_node",
+        "toolset":  "editor_toolset.toolsets.blueprint.BlueprintTools"
+    },
+    {
+        "label":  "del K2Node_Event_1",
+        "args":  {
+                     "node":  {
+                                  "refPath":  "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest:EventGraph.K2Node_Event_1"
+                              }
+                 },
+        "tool":  "delete_node",
+        "toolset":  "editor_toolset.toolsets.blueprint.BlueprintTools"
+    },
+    {
+        "label":  "del K2Node_Event_2",
+        "args":  {
+                     "node":  {
+                                  "refPath":  "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest:EventGraph.K2Node_Event_2"
+                              }
+                 },
+        "tool":  "delete_node",
+        "toolset":  "editor_toolset.toolsets.blueprint.BlueprintTools"
+    },
+    {
+        "label":  "del K2Node_CallFunction_5",
+        "args":  {
+                     "node":  {
+                                  "refPath":  "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest:EventGraph.K2Node_CallFunction_5"
+                              }
+                 },
+        "tool":  "delete_node",
+        "toolset":  "editor_toolset.toolsets.blueprint.BlueprintTools"
+    },
+    {
+        "label":  "del K2Node_CallFunction_6",
+        "args":  {
+                     "node":  {
+                                  "refPath":  "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest:EventGraph.K2Node_CallFunction_6"
+                              }
+                 },
+        "tool":  "delete_node",
+        "toolset":  "editor_toolset.toolsets.blueprint.BlueprintTools"
+    },
+    {
+        "label":  "del K2Node_CallFunction_7",
+        "args":  {
+                     "node":  {
+                                  "refPath":  "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest:EventGraph.K2Node_CallFunction_7"
+                              }
+                 },
+        "tool":  "delete_node",
+        "toolset":  "editor_toolset.toolsets.blueprint.BlueprintTools"
+    },
+    {
+        "label":  "del K2Node_VariableGet_0",
+        "args":  {
+                     "node":  {
+                                  "refPath":  "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest:EventGraph.K2Node_VariableGet_0"
+                              }
+                 },
+        "tool":  "delete_node",
+        "toolset":  "editor_toolset.toolsets.blueprint.BlueprintTools"
+    },
+    {
+        "label":  "del K2Node_CastByteToEnum_1",
+        "args":  {
+                     "node":  {
+                                  "refPath":  "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest:EventGraph.K2Node_CastByteToEnum_1"
+                              }
+                 },
+        "tool":  "delete_node",
+        "toolset":  "editor_toolset.toolsets.blueprint.BlueprintTools"
+    },
+    {
+        "label":  "del K2Node_CallFunction_8",
+        "args":  {
+                     "node":  {
+                                  "refPath":  "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest:EventGraph.K2Node_CallFunction_8"
+                              }
+                 },
+        "tool":  "delete_node",
+        "toolset":  "editor_toolset.toolsets.blueprint.BlueprintTools"
+    },
+    {
+        "label":  "del K2Node_MacroInstance_0",
+        "args":  {
+                     "node":  {
+                                  "refPath":  "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest:EventGraph.K2Node_MacroInstance_0"
+                              }
+                 },
+        "tool":  "delete_node",
+        "toolset":  "editor_toolset.toolsets.blueprint.BlueprintTools"
+    },
+    {
+        "label":  "del K2Node_DynamicCast_1",
+        "args":  {
+                     "node":  {
+                                  "refPath":  "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest:EventGraph.K2Node_DynamicCast_1"
+                              }
+                 },
+        "tool":  "delete_node",
+        "toolset":  "editor_toolset.toolsets.blueprint.BlueprintTools"
+    },
+    {
+        "label":  "del K2Node_CallFunction_9",
+        "args":  {
+                     "node":  {
+                                  "refPath":  "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest:EventGraph.K2Node_CallFunction_9"
+                              }
+                 },
+        "tool":  "delete_node",
+        "toolset":  "editor_toolset.toolsets.blueprint.BlueprintTools"
+    },
+    {
+        "label":  "del K2Node_CallFunction_10",
+        "args":  {
+                     "node":  {
+                                  "refPath":  "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest:EventGraph.K2Node_CallFunction_10"
+                              }
+                 },
+        "tool":  "delete_node",
+        "toolset":  "editor_toolset.toolsets.blueprint.BlueprintTools"
+    }
+]

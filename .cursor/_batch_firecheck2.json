@@ -1,0 +1,15 @@
+[
+  { "label": "hover shi", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
+    "args": {
+      "instance": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:ShipHardwareInput_GEN_VARIABLE" },
+      "properties": ["bAutoApplyImuRotation", "bAutoApplyTriggerFiring", "bForwardAimToSendWeaponAim", "bForwardTriggerToSendFire", "bAutoApplyWeaponMag", "bServerOnly", "ShipId"]
+    } },
+  { "label": "pc comps", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "get_components",
+    "args": { "actor": { "refPath": "/Game/Blueprints/PC_Controller.Default__PC_Controller_C" } } },
+  { "label": "weaponfire and", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_node_infos",
+    "args": { "nodes": [
+      { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire.K2Node_CommutativeAssociativeBinaryOperator_0" },
+      { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire.K2Node_PromotableOperator_0" },
+      { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire.K2Node_CallFunction_1" }
+    ] } }
+]

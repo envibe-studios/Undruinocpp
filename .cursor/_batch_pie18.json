@@ -1,0 +1,32 @@
+[
+    {
+        "label":  "BP_WeaponTracer_C_709",
+        "args":  {
+                     "actor":  {
+                                   "refPath":  "/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_WeaponTracer_C_709"
+                               }
+                 },
+        "tool":  "get_actor_transform",
+        "toolset":  "editor_toolset.toolsets.actor.ActorTools"
+    },
+    {
+        "label":  "BP_WeaponTracer_C_710",
+        "args":  {
+                     "actor":  {
+                                   "refPath":  "/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_WeaponTracer_C_710"
+                               }
+                 },
+        "tool":  "get_actor_transform",
+        "toolset":  "editor_toolset.toolsets.actor.ActorTools"
+    },
+    {
+        "label":  "BP_WeaponTracer_C_711",
+        "args":  {
+                     "actor":  {
+                                   "refPath":  "/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_WeaponTracer_C_711"
+                               }
+                 },
+        "tool":  "get_actor_transform",
+        "toolset":  "editor_toolset.toolsets.actor.ActorTools"
+    }
+]

@@ -1,0 +1,13 @@
+﻿== break4 ==
+{"output_pins":[{"value":"","connected_pins":[{"direction":"EGPD_Input","index_id":0,"node":{"refPath":"/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_CallFunction_148"}}],"pin_id":{"direction":"EGPD_Output","index_id":0,"node":{"refPath":"/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_BreakStruct_4"}},"type_id":"Integer","name":"CurrentAmmo"}],"input_pins":[{"value":"","connected_pins":[{"direction":"EGPD_Output","index_id":1,"node":{"refPath":"/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_VariableSet_0"}}],"pin_id":{"direction":"EGPD_Input","index_id":0,"node":{"refPath":"/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_BreakStruct_4"}},"type_id":"Weapon Mag Structure (by ref)","name":"WeaponMag"}],"position":{"x":-544,"y":896},"node":{"refPath":"/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_BreakStruct_4"},"type_id":"Utilities|Struct|BreakWeaponMag"}
+
+== wf dsl ==
+"(fn WeaponFire (TriggerDown PortSide)\n  (bind _output_get (Variables|Default|SetCurrentMag (select PortSide (Variables|Default|GetMagLeft) (Variables|Default|GetMagRight))))\n  (Firing|Control|SetFiring (select PortSide (|GetFiring_Left) (|GetFiring_Right)) (and (Utilities|Struct|BreakWeaponMag _output_get) TriggerDown)))\n"
+
+== compile ==
+Blueprint <Object '/Game/Blueprints/BP_Hovercraft.BP_Hovercraft' (0x0000024E1AA99600) Class 'Blueprint'> failed to compile. Compile Errors: ["Cannot find appropriate promotion from 'Wildcard' to 'Integer' on ' integer > integer '\nCannot find appropriate promotion from 'Wildcard' to 'Integer' on ' integer > integer '\n' integer > integer ' could not successfuly expand pins!", "The type of  A  is undetermined.  Connect something to  Equal (Enum)  to imply a specific type.\nThe type of  A  is undetermined.  Connect something to  Equal (Enum)  to imply a specific type.\nThe type of  B  is undetermined.  Connect something to  Equal (Enum)  to imply a specific type.\nThe type of  B  is undetermined.  Connect something to  Equal (Enum)  to imply a specific type.\nThe current value of the ' A ' pin is invalid: Unsupported type Wildcard on pin A\nThe current value of the ' B ' pin is invalid: Unsupported type Wildcard on pin B"]
+(tool reported isError)
+
+== save ==
+true
+

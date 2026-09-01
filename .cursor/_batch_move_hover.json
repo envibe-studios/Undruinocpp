@@ -1,0 +1,11 @@
+[
+  {
+    "label": "move aside",
+    "toolset": "editor_toolset.toolsets.asset.AssetTools",
+    "tool": "move",
+    "args": {
+      "path": "/Game/Blueprints/BP_Hovercraft",
+      "new_path": "/Game/Blueprints/BP_Hovercraft_CONV_REVERT_BAK"
+    }
+  }
+]

@@ -1,0 +1,7 @@
+[
+  { "label": "beginplay subgraph", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_connected_subgraph",
+    "args": { "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_Event_0" } } },
+  { "label": "pie running", "toolset": "EditorToolset.EditorAppToolset", "tool": "IsPIERunning", "args": {} },
+  { "label": "search livecoding", "toolset": "EditorToolset.EditorAppToolset", "tool": "SearchCVars",
+    "args": { "name": "LiveCoding" } }
+]

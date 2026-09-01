@@ -1,13 +1,8 @@
 {
   "mcpServers": {
-    "unrealMCP": {
-      "command": "uv",
-      "args": [
-        "--directory",
-        "/home/developer/project/Plugins/UnrealMCP/Python",
-        "run",
-        "unreal_mcp_server_advanced.py"
-      ]
+    "unreal-mcp": {
+      "type": "http",
+      "url": "http://127.0.0.1:8000/mcp"
     }
   }
 }

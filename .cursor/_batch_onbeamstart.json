@@ -1,0 +1,8 @@
+[
+  { "label": "find onbeamstart hover", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "title": "OnBeamStart" } },
+  { "label": "find on beam start", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "title": "On Beam Start" } },
+  { "label": "iface onbeamstart", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
+    "args": { "graph": { "refPath": "/Game/Blueprints/Interfaces/BPI_Beamable.BPI_Beamable:OnBeamStart" } } }
+]

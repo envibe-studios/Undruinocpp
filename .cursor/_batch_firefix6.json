@@ -1,0 +1,11 @@
+[
+  { "label": "updatemags", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_node_infos",
+    "args": { "nodes": [
+      { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph.K2Node_Event_0" },
+      { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph.K2Node_CustomEvent_1" }
+    ] } },
+  { "label": "compile hover", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "compile_blueprint",
+    "args": { "blueprint": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft" } } },
+  { "label": "save hover", "toolset": "editor_toolset.toolsets.asset.AssetTools", "tool": "save_assets",
+    "args": { "asset_paths": ["/Game/Blueprints/BP_Hovercraft"] } }
+]

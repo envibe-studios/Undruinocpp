@@ -1,0 +1,5 @@
+[
+  { "label": "pie running", "toolset": "EditorToolset.EditorAppToolset", "tool": "IsPIERunning", "args": {} },
+  { "label": "compile hover retry", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "compile_blueprint",
+    "args": { "blueprint": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft" } } }
+]

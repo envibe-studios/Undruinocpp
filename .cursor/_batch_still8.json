@@ -1,0 +1,9 @@
+[
+  { "label": "by class", "toolset": "editor_toolset.toolsets.scene.SceneTools", "tool": "find_actors",
+    "args": {
+      "name": "*",
+      "tag": "",
+      "collision_channels": [],
+      "actor_type": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C" }
+    } }
+]

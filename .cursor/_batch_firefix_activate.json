@@ -1,0 +1,28 @@
+[
+  { "label": "activate left", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "set_properties",
+    "args": {
+      "instance": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:Firing_Left_GEN_VARIABLE" },
+      "values": "{ \"bAutoActivate\": true, \"bDrawDebug\": true }"
+    } },
+  { "label": "activate right", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "set_properties",
+    "args": {
+      "instance": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:Firing_Right_GEN_VARIABLE" },
+      "values": "{ \"bAutoActivate\": true, \"bDrawDebug\": true }"
+    } },
+  { "label": "rewrite weaponfire", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "write_graph_dsl",
+    "args": {
+      "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire" },
+      "code": "(fn WeaponFire (TriggerDown PortSide)\n  (Variables|Default|SetCurrentMag (select PortSide (Variables|Default|GetMagLeft) (Variables|Default|GetMagRight)))\n  (Firing|Control|SetFiring (select PortSide (|GetFiring_Left) (|GetFiring_Right)) TriggerDown))\n"
+    } },
+  { "label": "compile hover", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "compile_blueprint",
+    "args": { "blueprint": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft" } } },
+  { "label": "save hover", "toolset": "editor_toolset.toolsets.asset.AssetTools", "tool": "save_assets",
+    "args": { "asset_paths": ["/Game/Blueprints/BP_Hovercraft"] } },
+  { "label": "verify left", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
+    "args": {
+      "instance": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:Firing_Left_GEN_VARIABLE" },
+      "properties": ["bAutoActivate", "bDrawDebug"]
+    } },
+  { "label": "verify weaponfire", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire" } } }
+]

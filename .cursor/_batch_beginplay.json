@@ -1,0 +1,11 @@
+[
+  { "label": "beginplay", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_connected_subgraph",
+    "args": { "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_Event_0" } } },
+  { "label": "get14", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_node_infos",
+    "args": { "nodes": [
+      {"refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_VariableGet_14"},
+      {"refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_VariableGet_17"}
+    ] } },
+  { "label": "visuals L props", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "list_properties",
+    "args": { "instance": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:WeaponVisuals_Left_GEN_VARIABLE" } } }
+]

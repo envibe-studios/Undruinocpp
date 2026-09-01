@@ -1,0 +1,16 @@
+﻿== wf promote ==
+{"output_pins":[{"value":"","connected_pins":[{"direction":"EGPD_Input","index_id":2,"node":{"refPath":"/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire.K2Node_CommutativeAssociativeBinaryOperator_0"}}],"pin_id":{"direction":"EGPD_Output","index_id":0,"node":{"refPath":"/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire.K2Node_PromotableOperator_0"}},"type_id":"Boolean","name":"ReturnValue"}],"input_pins":[{"value":"","connected_pins":[],"pin_id":{"direction":"EGPD_Input","index_id":0,"node":{"refPath":"/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire.K2Node_PromotableOperator_0"}},"type_id":"Wildcard","name":"A"},{"value":"","connected_pins":[],"pin_id":{"direction":"EGPD_Input","index_id":1,"node":{"refPath":"/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire.K2Node_PromotableOperator_0"}},"type_id":"Wildcard","name":"B"}],"position":{"x":736,"y":192},"node":{"refPath":"/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire.K2Node_PromotableOperator_0"},"type_id":"Math|Integer|integer\u003einteger"}
+
+== find all promote wf ==
+{"refPath":"/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire.K2Node_PromotableOperator_0"}
+
+== find print wf ==
+
+== find branch wf ==
+
+== find gt eg2 ==
+
+== eg promote0 ==
+Parameter error: /Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_PromotableOperator_1 is not valid EdGraphNode for property 'TransientPythonProperty'.
+(tool reported isError)
+

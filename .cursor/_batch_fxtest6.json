@@ -1,0 +1,6 @@
+[
+  { "label": "folder ZZ", "toolset": "editor_toolset.toolsets.scene.SceneTools", "tool": "get_actors_in_folder", "args": { "folder_path": "ZZ_WeaponFXTest", "recursive": true } },
+  { "label": "folder ZZ2", "toolset": "editor_toolset.toolsets.scene.SceneTools", "tool": "get_actors_in_folder", "args": { "folder_path": "/ZZ_WeaponFXTest", "recursive": true } },
+  { "label": "find WeaponFXTest_C", "toolset": "editor_toolset.toolsets.scene.SceneTools", "tool": "find_actors", "args": { "name": "*FXTest_C*", "tag": "", "collision_channels": [] } },
+  { "label": "visible actors", "toolset": "EditorToolset.EditorAppToolset", "tool": "GetVisibleActors", "args": {} }
+]

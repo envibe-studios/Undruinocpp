@@ -1,0 +1,5 @@
+[
+  { "label": "switch to scanner", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "set_properties",
+    "args": { "instance": { "refPath": "/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_WeaponFXTest_C_0" },
+      "values": "{ \"TestMode\": 2 }" } }
+]

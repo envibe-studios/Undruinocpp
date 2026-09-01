@@ -1,0 +1,10 @@
+[
+  { "label": "noop init visuals", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "write_graph_dsl",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:InitWeaponVisuals" },
+      "code": "(fn InitWeaponVisuals ())" } },
+  { "label": "noop fire tracer", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "write_graph_dsl",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:FireTracerVisual" },
+      "code": "(fn FireTracerVisual (Port Direction))" } },
+  { "label": "compile hover", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "compile_blueprint",
+    "args": { "blueprint": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft" } } }
+]

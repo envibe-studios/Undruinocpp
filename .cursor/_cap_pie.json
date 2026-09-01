@@ -1,0 +1,16 @@
+{
+  "captureTransform": {
+    "location": { "x": -800.0, "y": -900.0, "z": 2600.0 },
+    "rotation": { "pitch": -90.0, "yaw": 0.0, "roll": 0.0 },
+    "scale": { "x": 1.0, "y": 1.0, "z": 1.0 }
+  },
+  "annotations": {
+    "gridSpacing": 0.0,
+    "gridExtent": 0.0,
+    "gridHeight": 100.0,
+    "maxLabelDistance": 0.0,
+    "classFilter": { "refPath": "" },
+    "maxLabels": 0
+  },
+  "bShowUI": false
+}

@@ -1,0 +1,6 @@
+[
+  { "label": "Multiply types", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_node_types",
+    "args": { "graph": { "refPath": "/Game/Blueprints/FX/BP_WeaponBeam.BP_WeaponBeam:EventGraph" }, "type_id_filter": "Math|Float|", "context_pins": [] } },
+  { "label": "Vector ops", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_node_types",
+    "args": { "graph": { "refPath": "/Game/Blueprints/FX/BP_WeaponBeam.BP_WeaponBeam:EventGraph" }, "type_id_filter": "Math|Vector|v", "context_pins": [] } }
+]

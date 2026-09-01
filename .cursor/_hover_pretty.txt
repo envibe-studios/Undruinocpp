@@ -1,0 +1,191 @@
+== hover graphs ==
+[{"refPath":"/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:UserConstructionScript"},{"refPath":"/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EnableThrusters"},{"refPath":"/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:ApplyHoverForce"},{"refPath":"/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:RepairThruster"},{"refPath":"/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:SetMagArrays"},{"refPath":"/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFireMode"},{"refPath":"/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:ThrusterInfo"},{"refPath":"/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire"},{"refPath":"/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:QuatToCalibratedRotator"},{"refPath":"/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:UpdateThrusterLights"},{"refPath":"/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:IMUQuatToUnreal"},{"refPath":"/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph"}]
+
+== hover events ==
+[{"name":"ReceiveUnpossessed","description":"Event called when the Pawn is no longer possessed by a Controller. Only called on the server (or in standalone)","bIsImplemented":false},{"name":"ReceiveRestarted","description":"Event called after a pawn has been restarted, usually by a possession change. This is called on the server for all pawns and the owning client for player pawns","bIsImplemented":false},{"name":"ReceivePossessed","description":"Event called when the Pawn is possessed by a Controller. Only called on the server (or in standalone)","bIsImplemented":false},{"name":"ReceiveControllerChanged","description":"Event called after a pawn\u0027s controller has changed, on the server and owning client. This will happen at the same time as the delegate on GameInstance","bIsImplemented":false},{"name":"ReceiveTick","description":"Event called every frame, if ticking is enabled","bIsImplemented":true},{"name":"ReceiveRadialDamage","description":"Event when this actor takes RADIAL damage","bIsImplemented":false},{"name":"ReceivePointDamage","description":"Event when this actor takes POINT damage","bIsImplemented":false},{"name":"ReceiveHit","description":"Event when this actor bumps into a blocking object, or blocks another actor that bumps into it.
+This could happen due to things like Character movement, using Set Location with \u0027sweep\u0027 enabled, or physics simulation.
+For events when objects overlap (e.g. walking into a trigger) see the \u0027Overlap\u0027 event.
+
+@note For collisions during physics simulation to generate hit events, \u0027Simulation Generates Hit Events\u0027 must be enabled.
+@note When receiving a hit from another object\u0027s movement (bSelfMoved is false), the directions of \u0027Hit.Normal\u0027 and \u0027Hit.ImpactNormal\u0027
+will be adjusted to indicate force from the other object against this object.
+@note NormalImpulse will be filled in for physics-simulating bodies, but will be zero for swept-component blocking collisions.","bIsImplemented":false},{"name":"ReceiveEndPlay","description":"Event to notify blueprints this actor is being deleted or removed from a level.","bIsImplemented":false},{"name":"ReceiveDestroyed","description":"Called when the actor has been explicitly destroyed.","bIsImplemented":false},{"name":"ReceiveBeginPlay","description":"Event when play begins for this actor.","bIsImplemented":true},{"name":"ReceiveAsyncPhysicsTick","description":"Event called every physics tick if bAsyncPhysicsTickEnabled is true","bIsImplemented":false},{"name":"ReceiveAnyDamage","description":"Event when this actor takes ANY damage","bIsImplemented":false},{"name":"ReceiveActorOnReleased","description":"Event when this actor is under the mouse when left mouse button is released while using the clickable interface.","bIsImplemented":false},{"name":"ReceiveActorOnInputTouchLeave","description":"Event when this actor has a finger moved off of it with the clickable interface.","bIsImplemented":false},{"name":"ReceiveActorOnInputTouchEnter","description":"Event when this actor has a finger moved over it with the clickable interface.","bIsImplemented":false},{"name":"ReceiveActorOnInputTouchEnd","description":"Event when this actor is under the finger when untouched when click events are enabled.","bIsImplemented":false},{"name":"ReceiveActorOnInputTouchBegin","description":"Event when this actor is touched when click events are enabled.","bIsImplemented":false},{"name":"ReceiveActorOnClicked","description":"Event when this actor is clicked by the mouse when using the clickable interface.","bIsImplemented":false},{"name":"ReceiveActorEndOverlap","description":"Event when an actor no longer overlaps another actor, and they have separated.
+@note Components on both this and the other Actor must have bGenerateOverlapEvents set to true to generate overlap events.","bIsImplemented":false},{"name":"ReceiveActorEndCursorOver","description":"Event when this actor has the mouse moved off of it with the clickable interface.","bIsImplemented":false},{"name":"ReceiveActorBeginOverlap","description":"Event when this actor overlaps another actor, for example a player walking into a trigger.
+For events when objects have a blocking collision, for example a player hitting a wall, see \u0027Hit\u0027 events.
+@note Components on both this and the other Actor must have bGenerateOverlapEvents set to true to generate overlap events.","bIsImplemented":false},{"name":"ReceiveActorBeginCursorOver","description":"Event when this actor has the mouse moved over it with the clickable interface.","bIsImplemented":false},{"name":"K2_OnReset","description":"Event called when this Actor is reset to its initial state - used when restarting level without reloading.","bIsImplemented":false},{"name":"K2_OnEndViewTarget","description":"Event called when this Actor is no longer the view target for the given PlayerController.","bIsImplemented":false},{"name":"K2_OnBecomeViewTarget","description":"Event called when this Actor becomes the view target for the given PlayerController.","bIsImplemented":false},{"name":"OnScanComplete","description":"On Scan Complete","bIsImplemented":false},{"name":"OnScanCancelled","description":"On Scan Cancelled","bIsImplemented":false},{"name":"WhileScanning","description":"While Scanning","bIsImplemented":false},{"name":"OnScanStart","description":"On Scan Start","bIsImplemented":false},{"name":"UpdateTxt","description":"Update Txt","bIsImplemented":false},{"name":"WhileBeaming","description":"While Beaming","bIsImplemented":false},{"name":"OnBeamCollected","description":"On Beam Collected","bIsImplemented":true},{"name":"OnBeamCancelled","description":"On Beam Cancelled","bIsImplemented":false},{"name":"OnBeamStart","description":"On Beam Start","bIsImplemented":false},{"name":"ThrusterHPUpdate","description":"Thruster HPUpdate","bIsImplemented":false},{"name":"ReceiveDamage","description":"Receive Damage","bIsImplemented":true},{"name":"SetBoost","description":"Set Boost","bIsImplemented":true},{"name":"SetNewMagsToShip","description":"Set New Mags to Ship","bIsImplemented":false},{"name":"UpdateMags","description":"Update Mags","bIsImplemented":false},{"name":"CalibrateWeapons","description":"Calibrate Weapons","bIsImplemented":true},{"name":"SendWeaponMode","description":"Send Weapon Mode","bIsImplemented":true},{"name":"SendWeaponAim","description":"Send Weapon Aim","bIsImplemented":true},{"name":"SendThrusterInfo","description":"Send Thruster Info","bIsImplemented":false},{"name":"SendFire","description":"Send Fire","bIsImplemented":true},{"name":"SendRepair","description":"Send Repair","bIsImplemented":true},{"name":"SetStrafe","description":"Set Strafe","bIsImplemented":true},{"name":"SetSteering","description":"Set Steering","bIsImplemented":true},{"name":"SetThrottle","description":"Set Throttle","bIsImplemented":true},{"name":"SendLine","description":"Send Line","bIsImplemented":false}]
+
+== hover eventgraph ==
+"(event EventBeginPlay
+  (CallFunction|EnableThrusters)
+  (for _ (Variables|Default|GetThrusterComps)
+    (CallFunction|ThrusterInfo (Utilities|Array|ForEachLoop (Variables|Default|GetThrusterComps)))
+    (if (Pawn|IsLocallyControlled)
+      (MinimapUDP|StartSending (Variables|Default|GetMinimapUDPSender))
+      (else
+        (Development|PrintString "ERROR: Not controlled")))))
+
+(event EventTick (DeltaSeconds)
+  (HoverThruster|Physics|ApplyHoverForce DeltaSeconds))
+
+(event EventSendFire (TriggerDown PortSide)
+  (CallFunction|WeaponFire TriggerDown PortSide))
+
+(event EventSetThrottle (AxisValue)
+  (HoverMovement|Input|SetThrottleInput (Variables|Default|GetHoverMovement) AxisValue))
+
+(event EventSendWeaponMode (WeaponMag Port)
+  (if Port
+    (bind _output_get (Variables|Default|SetMagLeft WeaponMag))
+    (Class|PCController|WeaponFireMode (|GetFiring_Left) _output_get)
+    (Development|PrintString (Utilities|String|Append "Mag Left inserted: " (Utilities|String|ToString(Integer64) (Utilities|Struct|BreakWeaponMag _output_get))))
+    (else
+      (bind _output_get (Variables|Default|SetMagRight WeaponMag))
+      (Class|PCController|WeaponFireMode (|GetFiring_Right) _output_get 1)
+      (Development|PrintString (Utilities|String|Append "Mag Right inserted: " (Utilities|String|ToString(Integer64) (Utilities|Struct|BreakWeaponMag _output_get)))))))
+
+(event EventSetBoost (bActive)
+  (HoverMovement|Input|SetBoostInput (Variables|Default|GetHoverMovement) bActive))
+
+(event EventSetSteering (AxisValue)
+  (HoverMovement|Input|SetSteeringInput (Variables|Default|GetHoverMovement) (* AxisValue (Math|Float|SelectFloat -1.0 1.0 (\u003c (HoverMovement|State|GetForwardSpeed (Variables|Default|GetHoverMovement)) 0)))))
+
+(event EventSetStrafe (AxisValue)
+  (HoverMovement|Input|SetStrafeInput (Variables|Default|GetHoverMovement) AxisValue))
+
+(event EventSendWeaponAim (Port Quat TriggerDown)
+  (bind _unreal_quat (CallFunction|IMUQuattoUnreal Quat))
+  (if Port
+    (|SetLastQuat_Left _unreal_quat)
+    (else
+      (|SetLastQuat_Right _unreal_quat)))
+  (bind _returnvalue (CallFunction|QuattoCalibratedRotator _unreal_quat Port))
+  (Transformation|SetRelativeRotation (select Port (|GetWeapon_Left) (|GetWeapon_Right)) (Math|Conversions|ToRotator(Quat) (Math|Quat|Quat*Quat (Math|Conversions|ToQuaternion(Rotator) (select Port (|GetWeaponOffset_Left) (|GetWeaponOffset_Right))) (Math|Conversions|ToQuaternion(Rotator) _returnvalue))))
+  (CallFunction|WeaponFire TriggerDown Port))
+
+(event OnBulletFired(Firing_Right) (Origin Direction Damage BulletIndex)
+  (bind _structout (Utilities|Struct|SetmembersinWeaponMag (Variables|Default|GetMagRight) (- (Utilities|Struct|BreakWeaponMag (Variables|Default|GetMagRight)) 1)))
+  (bind _output_get (Variables|Default|SetMagRight _structout))
+  (Class|PCController|SetMagArrays _output_get))
+
+(event EventCalibrateWeapons
+  (|SetZeroQuat_Left (Math|Quat|Normalized(Quat) (|GetLastQuat_Left)))
+  (|SetCalibrated_Left true)
+  (|SetZeroQuat_Right (Math|Quat|Normalized(Quat) (|GetLastQuat_Right)))
+  (|SetCalibrated_Right true)
+  (Development|PrintString "Calibrating Weapons"))
+
+(event OnBulletFired(Firing_Left) (Origin Direction Damage BulletIndex)
+  (bind _structout (Utilities|Struct|SetmembersinWeaponMag (Variables|Default|GetMagLeft) (- (Utilities|Struct|BreakWeaponMag (Variables|Default|GetMagLeft)) 1)))
+  (bind _output_get (Variables|Default|SetMagLeft _structout))
+  (Class|PCController|SetMagArrays _output_get))
+
+(event OnScanStart(Firing_Right) (TargetActor)
+  (Class|BPIScannable|OnScanStart TargetActor))
+
+(event OnTractorBeamStart(Firing_Left) (TargetActor)
+  (Class|BPIBeamable|OnBeamStart TargetActor))
+
+(event OnThrusterDamaged(Thruster_FL) (CurrentHitpoints DamageAmount)
+  (CallFunction|UpdateThrusterLights 0 (|GetThruster_FL)))
+
+(event EventSendRepair (RepairNodeIndex)
+  (bind _thruster_fl (|GetThruster_FL))
+  (bind _thruster_fr (|GetThruster_FR))
+  (bind _thruster_rl (|GetThruster_RL))
+  (bind _thruster_rr (|GetThruster_RR))
+  (switch Utilities|FlowControl|Switch|SwitchonInt RepairNodeIndex
+    (:0
+      (CallFunction|RepairThruster _thruster_fl 5.000000)
+      (CallFunction|UpdateThrusterLights 0 _thruster_fl))
+    (:1
+      (CallFunction|RepairThruster _thruster_fr 5.000000)
+      (CallFunction|UpdateThrusterLights 1 _thruster_fr))
+    (:2
+      (CallFunction|RepairThruster _thruster_rl 5.000000)
+      (CallFunction|UpdateThrusterLights 2 _thruster_rl))
+    (:3
+      (CallFunction|RepairThruster _thruster_rr 5.000000)
+      (CallFunction|UpdateThrusterLights 3 _thruster_rr))
+    (:4)))
+
+(event 1 (Key)
+  (bind _thruster_fl (|GetThruster_FL)))
+
+(event OnScanStart(Firing_Left) (TargetActor)
+  (Class|BPIScannable|OnScanStart TargetActor))
+
+(event OnTractorBeamStart(Firing_Right) (TargetActor)
+  (Class|BPIBeamable|OnBeamStart TargetActor))
+
+(event OnScanning(Firing_Left) (TargetActor Progress TimeRemaining)
+  (Class|BPIScannable|WhileScanning TargetActor Progress TimeRemaining))
+
+(event 2 (Key)
+  (bind _thruster_fr (|GetThruster_FR)))
+
+(event OnTractorBeamPulling(Firing_Left) (TargetActor DistanceRemaining)
+  (Class|BPIBeamable|WhileBeaming TargetActor DistanceRemaining (|GetFiring_Left) (|GetGunTip_Left)))
+
+(event OnThrusterDamaged(Thruster_FR) (CurrentHitpoints DamageAmount)
+  (CallFunction|UpdateThrusterLights 1 (|GetThruster_FR)))
+
+(event OnScanning(Firing_Right) (TargetActor Progress TimeRemaining)
+  (Class|BPIScannable|WhileScanning TargetActor Progress TimeRemaining))
+
+(event 3 (Key)
+  (bind _thruster_rl (|GetThruster_RL)))
+
+(event OnTractorBeamPulling(Firing_Right) (TargetActor DistanceRemaining)
+  (Class|BPIBeamable|WhileBeaming TargetActor DistanceRemaining (|GetFiring_Right) (|GetGunTip_Right)))
+
+(event OnThrusterDamaged(Thruster_RL) (CurrentHitpoints DamageAmount)
+  (CallFunction|UpdateThrusterLights 2 (|GetThruster_RL)))
+
+(event OnScanComplete(Firing_Left) (ScannedActor)
+  (Class|BPIScannable|OnScanComplete ScannedActor))
+
+(event 4 (Key)
+  (bind _thruster_rr (|GetThruster_RR)))
+
+(event OnScanComplete(Firing_Right) (ScannedActor)
+  (Class|BPIScannable|OnScanComplete ScannedActor))
+
+(event EventOnBeamCollected (BeamableActor))
+
+(event OnThrusterDamaged(Thruster_RR) (CurrentHitpoints DamageAmount)
+  (CallFunction|UpdateThrusterLights 3 (|GetThruster_RR)))
+
+(event OnTractorBeamLost(Firing_Left) (LostActor)
+  (Class|BPIBeamable|OnBeamCancelled LostActor))
+
+(event OnScanCancelled(Firing_Left) (TargetActor Progress)
+  (Class|BPIScannable|OnScanCancelled TargetActor))
+
+(event OnTractorBeamLost(Firing_Right) (LostActor)
+  (Class|BPIBeamable|OnBeamCancelled LostActor))
+
+(event OnScanCancelled(Firing_Right) (TargetActor Progress)
+  (Class|BPIScannable|OnScanCancelled TargetActor))
+
+(event OnBulletHit(Firing_Left) (HitActor HitLocation HitNormal DamageDealt HitComponent)
+  (CallFunction|ReceiveDamage HitActor (Utilities|Struct|MakeStrDamagePayload DamageDealt "(GameplayTags=((TagName=\\"Gameplay.Targets.Player\\")))" self HitLocation HitNormal) HitComponent)
+  (Development|PrintString (Utilities|String|Append "Left Gun Hit: " (Utilities|GetDisplayName HitActor))))
+
+(event OnBulletHit(Firing_Right) (HitActor HitLocation HitNormal DamageDealt HitComponent)
+  (CallFunction|ReceiveDamage HitActor (Utilities|Struct|MakeStrDamagePayload (AddEvent|OnBulletHit(Firing_Left)) "(GameplayTags=((TagName=\\"Gameplay.Targets.Player\\")))" self (AddEvent|OnBulletHit(Firing_Left)) (AddEvent|OnBulletHit(Firing_Left))) HitComponent)
+  (Development|PrintString (Utilities|String|Append "Right Gun Hit: " (Utilities|GetDisplayName HitActor))))
+
+(event EventReceiveDamage (DamagePayload HitComponent HitResult)
+  (bind _damageamt_2_731e19c540ca204a467d8cb8b723f6a7 (Utilities|Struct|BreakStrDamagePayload DamagePayload))
+  (if (GameplayTags|HasTag (Utilities|Struct|BreakStrDamagePayload DamagePayload) "(TagName=\\"Gameplay.Targets.Enemy\\")")
+    (if (Utilities|Equal(Object) HitComponent (|GetCollision_FL))
+      (HoverThruster|Health|ApplyDamage (|GetThruster_FL) _damageamt_2_731e19c540ca204a467d8cb8b723f6a7)
+      (elif (Utilities|Equal(Object) HitComponent (|GetCollision_FR))
+        (HoverThruster|Health|ApplyDamage (|GetThruster_FR) _damageamt_2_731e19c540ca204a467d8cb8b723f6a7)
+        (elif (Utilities|Equal(Object) HitComponent (|GetCollision_RL))
+          (HoverThruster|Health|ApplyDamage (|GetThruster_RL) _damageamt_2_731e19c540ca204a467d8cb8b723f6a7)
+          (elif (Utilities|Equal(Object) HitComponent (|GetCollision_RR))
+            (HoverThruster|Health|ApplyDamage (|GetThruster_RR) _damageamt_2_731e19c540ca204a467d8cb8b723f6a7)))))))
+"
+
+

@@ -1,0 +1,10 @@
+[
+  { "label": "CheckMagValidity", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
+    "args": { "graph": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:CheckMagValidity" } } },
+  { "label": "FncReloader", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
+    "args": { "graph": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:FncReloader" } } },
+  { "label": "FncMagChanged", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
+    "args": { "graph": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:FncMagChanged" } } },
+  { "label": "SetMagArrays", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
+    "args": { "graph": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:SetMagArrays" } } }
+]

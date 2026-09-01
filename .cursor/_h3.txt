@@ -1,0 +1,8 @@
+﻿== left props ==
+Function "list_properties", input param "instance" is required by the function input schema Json, but is missing from the incoming function input params Json.
+Function schema Json -
+{"type":"object","properties":{"instance":{"type":"object","title":"/Script/CoreUObject.Object","description":"Represents a reference to a UObject or UClass.","properties":{"refPath":{"type":"string","description":"The reference stored as a soft path string."}},"required":["refPath"]}},"required":["instance"]}
+Function input params Json -
+{"object":{"refPath":"/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_Hovercraft_C_0.Weapon_Left"}}
+(tool reported isError)
+

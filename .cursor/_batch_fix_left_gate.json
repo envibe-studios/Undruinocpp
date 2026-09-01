@@ -1,0 +1,12 @@
+[
+  { "label": "del eq L", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "delete_node",
+    "args": { "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_EnumEquality_0" } } },
+  { "label": "del and L", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "delete_node",
+    "args": { "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_CommutativeAssociativeBinaryOperator_7" } } },
+  { "label": "del cf148", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "delete_node",
+    "args": { "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_CallFunction_148" } } },
+  { "label": "create break L gate", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "create_node",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "type_id": "Utilities|Struct|BreakWeaponMag", "pos": { "x": -1300, "y": 780 } } },
+  { "label": "get magleft infos", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_node_infos",
+    "args": { "nodes": [{ "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_VariableGet_16" }] } }
+]

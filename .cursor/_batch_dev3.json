@@ -1,0 +1,12 @@
+[
+  { "label": "delay pins", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_node_type_pins",
+    "args": { "graph": { "refPath": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest:EventGraph" }, "type_id": "Utilities|FlowControl|Delay" } },
+  { "label": "getcomps pins", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_node_type_pins",
+    "args": { "graph": { "refPath": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest:EventGraph" }, "type_id": "Actor|GetComponentsByClass" } },
+  { "label": "setfiringmode pins", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_node_type_pins",
+    "args": { "graph": { "refPath": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest:EventGraph" }, "type_id": "Firing|Control|SetFiringMode" } },
+  { "label": "setfiring pins", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_node_type_pins",
+    "args": { "graph": { "refPath": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest:EventGraph" }, "type_id": "Firing|Control|SetFiring" } },
+  { "label": "getplayerpawn pins", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_node_type_pins",
+    "args": { "graph": { "refPath": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest:EventGraph" }, "type_id": "Game|GetPlayerPawn" } }
+]

@@ -1,0 +1,10 @@
+[
+  { "label": "pie", "toolset": "EditorToolset.EditorAppToolset", "tool": "IsPIERunning", "args": {} },
+  { "label": "weaponfire", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire" } } },
+  { "label": "left props", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
+    "args": {
+      "instance": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:Firing_Left_GEN_VARIABLE" },
+      "properties": ["bAutoActivate", "bDrawDebug", "CurrentFiringMode", "BulletConfig", "PrimaryComponentTick"]
+    } }
+]

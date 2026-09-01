@@ -1,0 +1,15 @@
+[
+  { "label": "beam mesh collision", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "set_properties",
+    "args": { "instance": { "refPath": "/Game/Blueprints/FX/BP_WeaponBeam.BP_WeaponBeam_C:BeamMesh_GEN_VARIABLE" },
+      "values": "{ \"BodyInstance\": { \"CollisionEnabled\": \"NoCollision\" }, \"bGenerateOverlapEvents\": false, \"CanCharacterStepUpOn\": \"ECB_No\" }" } },
+  { "label": "impact mesh collision", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "set_properties",
+    "args": { "instance": { "refPath": "/Game/Blueprints/FX/BP_WeaponBeam.BP_WeaponBeam_C:ImpactMesh_GEN_VARIABLE" },
+      "values": "{ \"BodyInstance\": { \"CollisionEnabled\": \"NoCollision\" }, \"bGenerateOverlapEvents\": false, \"CanCharacterStepUpOn\": \"ECB_No\" }" } },
+  { "label": "tracer mesh collision", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "set_properties",
+    "args": { "instance": { "refPath": "/Game/Blueprints/FX/BP_WeaponTracer.BP_WeaponTracer_C:TracerMesh_GEN_VARIABLE" },
+      "values": "{ \"BodyInstance\": { \"CollisionEnabled\": \"NoCollision\" }, \"bGenerateOverlapEvents\": false, \"CanCharacterStepUpOn\": \"ECB_No\" }" } },
+  { "label": "read beam collision", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
+    "args": { "instance": { "refPath": "/Game/Blueprints/FX/BP_WeaponBeam.BP_WeaponBeam_C:BeamMesh_GEN_VARIABLE" }, "properties": ["BodyInstance"] } },
+  { "label": "read tracer collision", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
+    "args": { "instance": { "refPath": "/Game/Blueprints/FX/BP_WeaponTracer.BP_WeaponTracer_C:TracerMesh_GEN_VARIABLE" }, "properties": ["BodyInstance"] } }
+]

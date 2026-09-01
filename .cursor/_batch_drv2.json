@@ -1,0 +1,18 @@
+[
+  { "label": "write Setup", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "write_graph_dsl",
+    "args": { "graph": { "refPath": "/Game/Blueprints/FX/BPC_WeaponFireVisuals.BPC_WeaponFireVisuals:Setup" },
+      "code": "(fn Setup (InFiringComp InMuzzle)\n  (Variables|Default|SetFiringComp InFiringComp)\n  (Variables|Default|SetMuzzle InMuzzle)\n  (bind spawned (Game|SpawnActorfromClass :Class \"/Game/Blueprints/FX/BP_WeaponBeam.BP_WeaponBeam_C\" :SpawnTransform (Math|Transform|MakeTransform :Location (Transformation|GetWorldLocation InMuzzle)) :CollisionHandlingOverride \"AlwaysSpawn\" :Owner (Components|GetOwner)))\n  (Variables|Default|SetBeam spawned)\n  (Class|BPWeaponBeam|Initialize spawned InFiringComp InMuzzle))" } },
+
+  { "label": "write FireTracer", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "write_graph_dsl",
+    "args": { "graph": { "refPath": "/Game/Blueprints/FX/BPC_WeaponFireVisuals.BPC_WeaponFireVisuals:FireTracer" },
+      "code": "(fn FireTracer (Direction)\n  (Game|SpawnActorfromClass :Class \"/Game/Blueprints/FX/BP_WeaponTracer.BP_WeaponTracer_C\" :SpawnTransform (Math|Transform|MakeTransform :Location (Transformation|GetWorldLocation (Variables|Default|GetMuzzle)) :Rotation (Math|Rotator|MakeRotfromX Direction)) :CollisionHandlingOverride \"AlwaysSpawn\" :Owner (Components|GetOwner)))" } },
+
+  { "label": "compile", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "compile_blueprint",
+    "args": { "blueprint": { "refPath": "/Game/Blueprints/FX/BPC_WeaponFireVisuals.BPC_WeaponFireVisuals" } } },
+  { "label": "read Setup", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
+    "args": { "graph": { "refPath": "/Game/Blueprints/FX/BPC_WeaponFireVisuals.BPC_WeaponFireVisuals:Setup" } } },
+  { "label": "read FireTracer", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
+    "args": { "graph": { "refPath": "/Game/Blueprints/FX/BPC_WeaponFireVisuals.BPC_WeaponFireVisuals:FireTracer" } } },
+  { "label": "entries", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
+    "args": { "graph": { "refPath": "/Game/Blueprints/FX/BPC_WeaponFireVisuals.BPC_WeaponFireVisuals:EventGraph" }, "title": "", "entry_points_only": true } }
+]

@@ -1,0 +1,23 @@
+(fn WeaponFireMode (WeaponSide WeaponMag Side)
+  (bind _firingmode (Utilities|Struct|BreakWeaponMag WeaponMag))
+  (bind _returnvalue (Utilities|Enum|BytetoEnumEFiringModeType _firingmode))
+  (bind _sideweapon (Variables|Default|GetSideWeapon))
+  (bind _weapon_right (|GetWeapon_Right))
+  (bind _weapon_left (|GetWeapon_Left))
+  (bind _returnvalue_1 (select _sideweapon _weapon_right _weapon_left))
+  (Variables|Default|SetSideWeapon Side)
+  (Firing|Control|SetFiringMode WeaponSide _returnvalue)
+  (if (Utilities|Struct|BreakWeaponMag WeaponMag)
+    (MiniCRT|SetFireMode (|GetBP_MiniCRTWeaponDisplayComponent) _returnvalue)
+    (switch Utilities|FlowControl|Switch|SwitchonEFiringModeType _returnvalue
+      (:Bullet
+        (Rendering|Material|SetMaterial _returnvalue_1 0 "/Game/Art/Mats/Mat_Greybox_Red.Mat_Greybox_Red"))
+      (:TractorBeam
+        (Rendering|Material|SetMaterial _returnvalue_1 0 "/Game/Art/Mats/Mat_Greybox_Blue.Mat_Greybox_Blue")
+        (Class|FiringComponent|SetTractorBeamConfig (Utilities|Struct|MakeTractorBeamModeConfig (Utilities|Array|MakeArray "Tractorable")) (select (Variables|Default|GetSideWeapon) (|GetFiring_Right) (|GetFiring_Left))))
+      (:Scanner
+        (Rendering|Material|SetMaterial _returnvalue_1 0 "/Game/Art/Mats/Mat_Greybox_Green.Mat_Greybox_Green")
+        (Class|FiringComponent|SetScannerConfig (Utilities|Struct|MakeScannerModeConfig 2.000000 (Utilities|Array|MakeArray "Scanable")) (select (Variables|Default|GetSideWeapon) (|GetFiring_Right) (|GetFiring_Left)))))
+    (else
+      (Rendering|Material|SetMaterial (select (Variables|Default|GetSideWeapon) (|GetWeapon_Right) (|GetWeapon_Left)) 0 "/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"))))
+

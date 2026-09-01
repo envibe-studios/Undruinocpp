@@ -1,0 +1,26 @@
+[
+  { "label": "find gt", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_node_types",
+    "args": {
+      "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" },
+      "type_id_filter": ">",
+      "context_pins": [
+        { "direction": "EGPD_Output", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_PromotableOperator_0" } }
+      ]
+    } },
+  { "label": "find select", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_node_types",
+    "args": {
+      "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" },
+      "type_id_filter": "Select",
+      "context_pins": [
+        { "direction": "EGPD_Input", "index_id": 2, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_SetFieldsInStruct_0" } }
+      ]
+    } },
+  { "label": "find clamp", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_node_types",
+    "args": {
+      "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" },
+      "type_id_filter": "Clamp",
+      "context_pins": [
+        { "direction": "EGPD_Input", "index_id": 2, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_SetFieldsInStruct_0" } }
+      ]
+    } }
+]

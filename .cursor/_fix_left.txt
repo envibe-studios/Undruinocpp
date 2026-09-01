@@ -1,0 +1,12 @@
+﻿== del eq L ==
+
+== del and L ==
+
+== del cf148 ==
+
+== create break L gate ==
+{"refPath":"/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_BreakStruct_12"}
+
+== get magleft infos ==
+{"output_pins":[{"value":"","connected_pins":[{"direction":"EGPD_Input","index_id":1,"node":{"refPath":"/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_SetFieldsInStruct_0"}},{"direction":"EGPD_Input","index_id":0,"node":{"refPath":"/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_BreakStruct_0"}}],"pin_id":{"direction":"EGPD_Output","index_id":0,"node":{"refPath":"/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_VariableGet_16"}},"type_id":"Weapon Mag Structure","name":"MagLeft"}],"input_pins":[],"position":{"x":-1152,"y":800},"node":{"refPath":"/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_VariableGet_16"},"type_id":"|GetMagLeft"}
+

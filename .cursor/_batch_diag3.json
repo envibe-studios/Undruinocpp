@@ -1,0 +1,18 @@
+[
+  { "label": "compile hover", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "compile_blueprint",
+    "args": { "blueprint": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft" } } },
+  { "label": "graphs", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "list_graphs",
+    "args": { "blueprint": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft" } } },
+  { "label": "find sendfire", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "title": "Send Fire" } },
+  { "label": "find sendaim", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "title": "Send Weapon Aim" } },
+  { "label": "find throttle", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "title": "Set Throttle" } },
+  { "label": "find weaponfire", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "title": "Weapon Fire" } },
+  { "label": "visual class scene", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "search_subclasses",
+    "args": { "base_class": { "refPath": "/Script/Engine.ActorComponent" }, "class_name": "WeaponFireVisuals" } },
+  { "label": "visual class actor", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "search_subclasses",
+    "args": { "base_class": { "refPath": "/Script/Engine.Actor" }, "class_name": "WeaponVisualTracer" } }
+]

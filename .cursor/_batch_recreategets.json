@@ -1,0 +1,12 @@
+[
+  { "label": "search livecoding", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "search_subclasses",
+    "args": { "base_class": { "refPath": "/Script/Engine.SceneComponent" }, "class_name": "LIVECODING" } },
+  { "label": "del left get", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "delete_node",
+    "args": { "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_VariableGet_13" } } },
+  { "label": "del right get", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "delete_node",
+    "args": { "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_VariableGet_18" } } },
+  { "label": "create left get", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "create_node",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "type_id": "|GetFiring_Left", "pos": { "x": -2048, "y": 1568 } } },
+  { "label": "create right get", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "create_node",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "type_id": "|GetFiring_Right", "pos": { "x": -2048, "y": 1776 } } }
+]

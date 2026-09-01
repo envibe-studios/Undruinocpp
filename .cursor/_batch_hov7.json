@@ -1,0 +1,9 @@
+[
+  { "label": "bullet fired left", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_node_infos",
+    "args": { "nodes": [
+      { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_ComponentBoundEvent_0" },
+      { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_ComponentBoundEvent_1" }
+    ] } },
+  { "label": "weaponfire nodes", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_graph",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire" } } }
+]

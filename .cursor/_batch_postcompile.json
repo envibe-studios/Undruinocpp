@@ -1,0 +1,15 @@
+[
+  { "label": "stop pie", "toolset": "EditorToolset.EditorAppToolset", "tool": "StopPIE", "args": {} },
+  { "label": "compile hover", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "compile_blueprint",
+    "args": { "blueprint": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft" } } },
+  { "label": "firing comps", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "get_components",
+    "args": { "actor": { "refPath": "/Game/Blueprints/BP_Hovercraft.Default__BP_Hovercraft_C" },
+              "component_type": { "refPath": "/Script/Unduinocpp.FiringComponent" } } },
+  { "label": "visual comps", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "get_components",
+    "args": { "actor": { "refPath": "/Game/Blueprints/BP_Hovercraft.Default__BP_Hovercraft_C" },
+              "component_type": { "refPath": "/Script/Unduinocpp.WeaponFireVisualsComponent" } } },
+  { "label": "all firing left children", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "get_components",
+    "args": { "actor": { "refPath": "/Game/Blueprints/BP_Hovercraft.Default__BP_Hovercraft_C" } } },
+  { "label": "firing left props", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "list_properties",
+    "args": { "instance": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:Firing_Left_GEN_VARIABLE" } } }
+]

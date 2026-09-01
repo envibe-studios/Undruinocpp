@@ -1,0 +1,5 @@
+[
+  { "label": "update mags chain", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_connected_subgraph", "args": { "node": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph.K2Node_VariableSet_12" } } },
+  { "label": "sync chain try", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes", "args": { "graph": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph" }, "title": "SyncWeaponMags", "entry_points_only": true } },
+  { "label": "custom events", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes", "args": { "graph": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph" }, "title": "*", "entry_points_only": true } }
+]

@@ -1,0 +1,15 @@
+[
+  { "label": "ping", "tool": "list_toolsets", "args": {} },
+  { "label": "hover comps", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "get_components",
+    "args": { "actor": { "refPath": "/Game/Blueprints/BP_Hovercraft.Default__BP_Hovercraft_C" } } },
+  { "label": "beam graphs", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "list_graphs",
+    "args": { "blueprint": { "refPath": "/Game/Blueprints/FX/BP_WeaponBeam.BP_WeaponBeam" } } },
+  { "label": "beam vars", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "list_variables",
+    "args": { "blueprint": { "refPath": "/Game/Blueprints/FX/BP_WeaponBeam.BP_WeaponBeam" } } },
+  { "label": "visuals graphs", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "list_graphs",
+    "args": { "blueprint": { "refPath": "/Game/Blueprints/FX/BPC_WeaponFireVisuals.BPC_WeaponFireVisuals" } } },
+  { "label": "tracer graphs", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "list_graphs",
+    "args": { "blueprint": { "refPath": "/Game/Blueprints/FX/BP_WeaponTracer.BP_WeaponTracer" } } },
+  { "label": "mat fx", "toolset": "editor_toolset.toolsets.asset.AssetTools", "tool": "get_asset_info",
+    "args": { "asset": { "refPath": "/Game/Art/Mats/M_WeaponFX.M_WeaponFX" } } }
+]

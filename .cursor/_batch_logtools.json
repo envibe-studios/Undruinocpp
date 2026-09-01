@@ -1,0 +1,4 @@
+[
+  { "label": "logs tools", "tool": "describe_toolset",
+    "args": { "toolset_name": "EditorToolset.LogsToolset" } }
+]

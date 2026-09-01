@@ -1,0 +1,6 @@
+[
+  { "label": "exists hover", "toolset": "editor_toolset.toolsets.asset.AssetTools", "tool": "exists", "args": { "path": "/Game/Blueprints/BP_Hovercraft" } },
+  { "label": "class hover", "toolset": "editor_toolset.toolsets.asset.AssetTools", "tool": "get_asset_class", "args": { "asset_path": "/Game/Blueprints/BP_Hovercraft" } },
+  { "label": "load hover", "toolset": "editor_toolset.toolsets.asset.AssetTools", "tool": "load_asset", "args": { "asset_path": "/Game/Blueprints/BP_Hovercraft" } },
+  { "label": "find hover", "toolset": "editor_toolset.toolsets.asset.AssetTools", "tool": "find_assets", "args": { "folder_path": "/Game/Blueprints", "name": "BP_Hovercraft", "recursive": false } }
+]
