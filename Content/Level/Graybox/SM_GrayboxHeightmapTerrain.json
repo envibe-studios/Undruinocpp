@@ -1,0 +1,15 @@
+﻿{
+    "sample_step":  2,
+    "x_min":  -100000,
+    "image_h":  1024,
+    "image_w":  1024,
+    "z_min":  0,
+    "obj":  "d:\\Unreals\\Undruinocpp\\Content\\Level\\Graybox\\SM_GrayboxHeightmapTerrain.obj",
+    "z_max":  4500,
+    "xs":  512,
+    "ys":  512,
+    "mean":  0.507842075123607,
+    "y_min":  -10000,
+    "y_max":  160000,
+    "x_max":  100000
+}

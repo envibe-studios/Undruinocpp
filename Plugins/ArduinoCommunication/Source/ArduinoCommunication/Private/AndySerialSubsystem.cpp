@@ -1,7 +1,10 @@
 // Arduino Communication Plugin - Andy Serial Subsystem Implementation
 
 #include "AndySerialSubsystem.h"
+#include "WeaponImuLog.h"
+#include "EspPacketBP.h"
 #include "ArduinoSerialPort.h"
+#include "HAL/PlatformTime.h"
 #include "ByteStreamPacketParser.h"
 #include "Engine/GameInstance.h"
 #include "Async/Async.h"
@@ -24,6 +27,7 @@ void UAndyPortEventHandler::BindToPort(UArduinoSerialPort* Port)
 	}
 
 	Port->OnByteReceived.AddDynamic(this, &UAndyPortEventHandler::OnBytesReceived);
+	Port->OnLineReceived.AddDynamic(this, &UAndyPortEventHandler::OnLineReceived);
 	Port->OnConnectionChanged.AddDynamic(this, &UAndyPortEventHandler::OnConnectionChanged);
 }
 
@@ -35,6 +39,7 @@ void UAndyPortEventHandler::UnbindFromPort(UArduinoSerialPort* Port)
 	}
 
 	Port->OnByteReceived.RemoveDynamic(this, &UAndyPortEventHandler::OnBytesReceived);
+	Port->OnLineReceived.RemoveDynamic(this, &UAndyPortEventHandler::OnLineReceived);
 	Port->OnConnectionChanged.RemoveDynamic(this, &UAndyPortEventHandler::OnConnectionChanged);
 }
 
@@ -43,6 +48,14 @@ void UAndyPortEventHandler::OnBytesReceived(const TArray<uint8>& Bytes)
 	if (OwnerSubsystem)
 	{
 		OwnerSubsystem->HandleBytesReceived(ShipId, Bytes);
+	}
+}
+
+void UAndyPortEventHandler::OnLineReceived(const FString& Line)
+{
+	if (OwnerSubsystem)
+	{
+		OwnerSubsystem->HandleLineReceived(ShipId, Line);
 	}
 }
 
@@ -264,6 +277,17 @@ void UAndySerialSubsystem::HandleBytesReceived(FName ShipId, const TArray<uint8>
 
 	int32 PacketCount = Connection->Parser->IngestAndParse(Bytes, Packets, BytesDropped, BadEndFrames, CrcMismatches);
 
+	if (BytesDropped > 0 || BadEndFrames > 0 || CrcMismatches > 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AndySerial[%s]: ingest parsed=%d dropped=%d badEnd=%d crcMismatch=%d bufferLeft=%d"),
+			*ShipId.ToString(),
+			PacketCount,
+			BytesDropped,
+			BadEndFrames,
+			CrcMismatches,
+			Connection->Parser->GetBufferedByteCount());
+	}
+
 	// Broadcast parsed packets
 	for (const FBenchPacket& Packet : Packets)
 	{
@@ -291,8 +315,74 @@ void UAndySerialSubsystem::HandleConnectionChanged(FName ShipId, bool bConnected
 	}
 }
 
+void UAndySerialSubsystem::HandleLineReceived(FName ShipId, const FString& Line)
+{
+	if (IsInGameThread())
+	{
+		OnLineReceived.Broadcast(ShipId, Line);
+	}
+	else
+	{
+		const FString LineCopy = Line;
+		AsyncTask(ENamedThreads::GameThread, [this, ShipId, LineCopy]()
+		{
+			if (this && IsValid(this))
+			{
+				OnLineReceived.Broadcast(ShipId, LineCopy);
+			}
+		});
+	}
+}
+
 void UAndySerialSubsystem::HandlePacketDecoded(FName ShipId, const FBenchPacket& Packet)
 {
+	if (Packet.Type == static_cast<uint8>(EEspMsgType::WeaponImu))
+	{
+		static int32 ImuSrc3 = 0;
+		static int32 ImuSrc6 = 0;
+		static int32 ImuSrcOther = 0;
+		static double LastSummarySeconds = 0.0;
+
+		if (Packet.Src == 3)
+		{
+			ImuSrc3++;
+		}
+		else if (Packet.Src == 6)
+		{
+			ImuSrc6++;
+			UE_LOG(LogWeaponImu, Warning, TEXT("AndySerial[%s]: STARBOARD WEAPON_IMU src=6 seq=%d payloadSide=%d"),
+				*ShipId.ToString(),
+				Packet.Seq,
+				Packet.Payload.Num() > 0 ? Packet.Payload[0] : 255);
+		}
+		else
+		{
+			ImuSrcOther++;
+			UE_LOG(LogWeaponImu, Warning, TEXT("AndySerial[%s]: WEAPON_IMU unexpected src=%d seq=%d"),
+				*ShipId.ToString(), Packet.Src, Packet.Seq);
+		}
+
+		const double Now = FPlatformTime::Seconds();
+		if (LastSummarySeconds <= 0.0)
+		{
+			LastSummarySeconds = Now;
+		}
+		else if ((Now - LastSummarySeconds) >= 5.0)
+		{
+			UE_LOG(LogWeaponImu, Warning, TEXT(
+				"AndySerial[%s] WEAPON_IMU on wire (5s): src3=%d src6=%d other=%d — Starboard needs src6>0"),
+				*ShipId.ToString(), ImuSrc3, ImuSrc6, ImuSrcOther);
+			if (ImuSrc3 > 0 && ImuSrc6 == 0)
+			{
+				UE_LOG(LogWeaponImu, Error, TEXT(
+					"AndySerial[%s]: ZERO Starboard IMU on USB serial. Andy is not forwarding device 6 — fix ESP-NOW receive/forward on Andy, not Unreal."),
+					*ShipId.ToString());
+			}
+			ImuSrc3 = ImuSrc6 = ImuSrcOther = 0;
+			LastSummarySeconds = Now;
+		}
+	}
+
 	// Broadcast on game thread
 	if (IsInGameThread())
 	{
@@ -320,9 +410,10 @@ UByteStreamPacketParser* UAndySerialSubsystem::CreateParserForConnection(FName S
 {
 	UByteStreamPacketParser* Parser = NewObject<UByteStreamPacketParser>(this);
 
-	// Configure parser defaults
-	Parser->MaxBufferBytes = 4096;
-	Parser->MaxPacketsPerCall = 200;
+	// Dual-weapon IMU at ~50-100 Hz each can exceed 4 KB/s; use headroom so Starboard
+	// frames are not trimmed when Port fills the parse buffer first.
+	Parser->MaxBufferBytes = 16384;
+	Parser->MaxPacketsPerCall = 512;
 	Parser->bBroadcastPackets = false; // We handle broadcasting ourselves
 
 	return Parser;

@@ -2,6 +2,8 @@
 
 #include "FiringComponent.h"
 #include "GameFramework/Actor.h"
+#include "GameFramework/Controller.h"
+#include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/World.h"
 
@@ -69,6 +71,11 @@ void UFiringComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 		{
 			DrawDebugPoint(GetWorld(), DebugHit.ImpactPoint, 10.0f, DebugColor, false, -1.0f);
 		}
+	}
+
+	if (bIsFiring && bShowShotVisuals && CurrentFiringMode == EFiringModeType::Bullet)
+	{
+		DrawAmmoDebugOverlay();
 	}
 
 	if (!bIsFiring)
@@ -267,10 +274,17 @@ void UFiringComponent::FireBullet()
 			QueryParams
 		);
 
+		const FVector EndPoint = bHit ? HitResult.ImpactPoint : TraceEnd;
+
+		if (bShowShotVisuals)
+		{
+			DrawBulletShotVisual(Origin, EndPoint, bHit);
+		}
+
 		if (bDrawDebug)
 		{
 			FColor TraceColor = bHit ? FColor::Red : FColor::Yellow;
-			DrawDebugLine(GetWorld(), Origin, bHit ? HitResult.ImpactPoint : TraceEnd, TraceColor, false, 0.1f, 0, 1.0f);
+			DrawDebugLine(GetWorld(), Origin, EndPoint, TraceColor, false, 0.1f, 0, 1.0f);
 
 			if (bHit)
 			{
@@ -280,6 +294,18 @@ void UFiringComponent::FireBullet()
 
 		if (bHit && HitResult.GetActor())
 		{
+			if (bApplyDamageOnHit && BulletConfig.Damage > 0.0f)
+			{
+				AActor* OwnerActor = GetOwner();
+				AController* InstigatorController = OwnerActor ? OwnerActor->GetInstigatorController() : nullptr;
+				UGameplayStatics::ApplyDamage(
+					HitResult.GetActor(),
+					BulletConfig.Damage,
+					InstigatorController,
+					OwnerActor,
+					nullptr);
+			}
+
 			OnBulletHit.Broadcast(
 				HitResult.GetActor(),
 				HitResult.ImpactPoint,
@@ -289,6 +315,73 @@ void UFiringComponent::FireBullet()
 			);
 		}
 	}
+}
+
+void UFiringComponent::DrawBulletShotVisual(const FVector& Origin, const FVector& EndPoint, bool bHit) const
+{
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	const float Lifetime = FMath::Max(0.01f, ShotVisualLifetime);
+	const float Thickness = FMath::Max(0.5f, ShotVisualThickness);
+	const FColor TracerColor = bHit ? ShotHitVisualColor : ShotVisualColor;
+
+	// Core laser bolt (depth priority so it reads through clutter while debugging)
+	DrawDebugLine(World, Origin, EndPoint, TracerColor, false, Lifetime, 1, Thickness);
+
+	// Soft outer glow (slightly thicker, dimmer)
+	const FColor GlowColor(
+		static_cast<uint8>(TracerColor.R / 2),
+		static_cast<uint8>(TracerColor.G / 2),
+		static_cast<uint8>(TracerColor.B / 2),
+		255);
+	DrawDebugLine(World, Origin, EndPoint, GlowColor, false, Lifetime, 0, Thickness * 2.0f);
+
+	// Muzzle flash
+	DrawDebugSphere(World, Origin, 8.0f, 6, TracerColor, false, Lifetime * 0.5f, 1);
+
+	if (bHit)
+	{
+		DrawDebugSphere(World, EndPoint, 12.0f, 8, ShotHitVisualColor, false, Lifetime, 1);
+		DrawDebugPoint(World, EndPoint, 16.0f, FColor::White, false, Lifetime, 1);
+	}
+}
+
+void UFiringComponent::DrawAmmoDebugOverlay() const
+{
+	if (!bShowAmmoDebugText)
+	{
+		return;
+	}
+
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	FString Overlay;
+	if (BulletConfig.bUseAmmo)
+	{
+		Overlay = FString::Printf(
+			TEXT("AMMO %d/%d  RoF %.1f/s"),
+			BulletConfig.CurrentAmmo,
+			BulletConfig.MaxAmmo,
+			BulletConfig.RateOfFire);
+	}
+	else
+	{
+		Overlay = FString::Printf(TEXT("AMMO ∞  RoF %.1f/s"), BulletConfig.RateOfFire);
+	}
+
+	const FVector TextLoc = GetFiringOrigin() + FVector(0.0f, 0.0f, 40.0f);
+	const FColor TextColor = (BulletConfig.bUseAmmo && BulletConfig.CurrentAmmo <= 0)
+		? FColor::Red
+		: FColor::White;
+	DrawDebugString(World, TextLoc, Overlay, nullptr, TextColor, 0.0f, true, 1.2f);
 }
 
 int32 UFiringComponent::AddAmmo(int32 Amount)
@@ -369,8 +462,8 @@ void UFiringComponent::ProcessTractorBeamMode(float DeltaTime)
 		// Broadcast pulling event with distance
 		OnTractorBeamPulling.Broadcast(Target, Distance);
 
-		// Debug visualization
-		if (bDrawDebug)
+		// Debug / session visualization
+		if (bDrawDebug || bShowShotVisuals)
 		{
 			DrawDebugLine(GetWorld(), Origin, TargetLocation, FColor::Cyan, false, -1.0f, 1, 3.0f);
 			DrawDebugSphere(GetWorld(), TargetLocation, 20.0f, 8, FColor::Cyan, false, -1.0f);
@@ -390,12 +483,12 @@ void UFiringComponent::ProcessTractorBeamMode(float DeltaTime)
 			}
 		}
 
-		// Debug: show tractor beam searching
-		if (bDrawDebug)
+		// Searching beam
+		if (bDrawDebug || bShowShotVisuals)
 		{
 			FVector Direction = GetFiringDirection();
 			FVector TraceEnd = Origin + Direction * TractorBeamConfig.Range;
-			DrawDebugLine(GetWorld(), Origin, TraceEnd, FColor::Blue, false, -1.0f, 1, 1.0f);
+			DrawDebugLine(GetWorld(), Origin, TraceEnd, FColor::Blue, false, -1.0f, 1, 1.5f);
 		}
 	}
 }
@@ -529,8 +622,8 @@ void UFiringComponent::ProcessScannerMode(float DeltaTime)
 		// Broadcast scanning progress
 		OnScanning.Broadcast(Target, CurrentScanProgress, TimeRemaining);
 
-		// Debug visualization
-		if (bDrawDebug)
+		// Debug / session visualization
+		if (bDrawDebug || bShowShotVisuals)
 		{
 			DrawDebugLine(GetWorld(), Origin, TargetLocation, FColor::Green, false, -1.0f, 1, 2.0f);
 			DrawDebugSphere(GetWorld(), TargetLocation, 30.0f * CurrentScanProgress + 10.0f, 12, FColor::Green, false, -1.0f);
@@ -556,13 +649,15 @@ void UFiringComponent::ProcessScannerMode(float DeltaTime)
 			OnScanStart.Broadcast(NewTarget);
 		}
 
-		// Debug: show scanner cone
-		if (bDrawDebug)
+		// Searching: center ray (+ cone edges only with full debug)
+		if (bDrawDebug || bShowShotVisuals)
 		{
 			FVector TraceEnd = Origin + Direction * ScannerConfig.Range;
-			DrawDebugLine(GetWorld(), Origin, TraceEnd, FColor::Yellow, false, -1.0f, 1, 1.0f);
+			DrawDebugLine(GetWorld(), Origin, TraceEnd, FColor::Yellow, false, -1.0f, 1, 1.5f);
+		}
 
-			// Draw cone edges
+		if (bDrawDebug)
+		{
 			float ConeRad = FMath::DegreesToRadians(ScannerConfig.ScanConeAngle);
 			FVector Right = FVector::CrossProduct(Direction, FVector::UpVector).GetSafeNormal();
 			FVector Up = FVector::CrossProduct(Right, Direction).GetSafeNormal();

@@ -174,6 +174,7 @@ bool UEspPacketBP::ParseReloadTagPayload(const TArray<uint8>& Payload, FReloadTa
 	// Expected Len = 5: [UID (4 bytes LE), Present (1 byte)]
 	if (Payload.Num() != 5)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("RELOAD_TAG (Type 5) dropped: unexpected LEN=%d, expected 5"), Payload.Num());
 		OutData = FReloadTagData();
 		return false;
 	}

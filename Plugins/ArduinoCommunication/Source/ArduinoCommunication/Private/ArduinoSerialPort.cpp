@@ -776,20 +776,36 @@ void UArduinoSerialPort::PollRead()
 		RawBytes.Append(ReadBuffer, bytesRead);
 		ReceivedBytesQueue.Enqueue(RawBytes);
 
-		// If bypass parser mode is enabled, skip all line parsing
+		// If bypass parser mode is enabled, skip all line parsing.
+		// Binary NetMsg frames (0xAA..0x55) share this UART with ASCII diag/!cmd lines.
+		// Do not UTF-8 decode chunks that contain frame start bytes — that creates fake
+		// "DIAG_NODE,..." lines from IMU payload noise when both weapons are streaming.
 		if (!bBypassParser)
 		{
-			ReadBuffer[bytesRead] = 0;
-			FUTF8ToTCHAR Converter(reinterpret_cast<const char*>(ReadBuffer), bytesRead);
-			FString ReceivedText(Converter.Length(), Converter.Get());
-			ReceiveBuffer += ReceivedText;
-
-			FString Line;
-			while (ReceiveBuffer.Split(LineEnding, &Line, &ReceiveBuffer))
+			bool bContainsBinaryFrame = false;
+			for (DWORD i = 0; i < bytesRead; ++i)
 			{
-				if (!Line.IsEmpty())
+				if (ReadBuffer[i] == 0xAA)
 				{
-					ReceivedDataQueue.Enqueue(Line);
+					bContainsBinaryFrame = true;
+					break;
+				}
+			}
+
+			if (!bContainsBinaryFrame)
+			{
+				ReadBuffer[bytesRead] = 0;
+				FUTF8ToTCHAR Converter(reinterpret_cast<const char*>(ReadBuffer), bytesRead);
+				FString ReceivedText(Converter.Length(), Converter.Get());
+				ReceiveBuffer += ReceivedText;
+
+				FString Line;
+				while (ReceiveBuffer.Split(LineEnding, &Line, &ReceiveBuffer))
+				{
+					if (!Line.IsEmpty())
+					{
+						ReceivedDataQueue.Enqueue(Line);
+					}
 				}
 			}
 		}
@@ -829,17 +845,30 @@ void UArduinoSerialPort::PollRead()
 
 		if (!bBypassParser)
 		{
-			ReadBuffer[bytesRead] = 0;
-			FUTF8ToTCHAR Converter(reinterpret_cast<const char*>(ReadBuffer), bytesRead);
-			FString ReceivedText(Converter.Length(), Converter.Get());
-			ReceiveBuffer += ReceivedText;
-
-			FString Line;
-			while (ReceiveBuffer.Split(LineEnding, &Line, &ReceiveBuffer))
+			bool bContainsBinaryFrame = false;
+			for (ssize_t i = 0; i < bytesRead; ++i)
 			{
-				if (!Line.IsEmpty())
+				if (ReadBuffer[i] == 0xAA)
 				{
-					ReceivedDataQueue.Enqueue(Line);
+					bContainsBinaryFrame = true;
+					break;
+				}
+			}
+
+			if (!bContainsBinaryFrame)
+			{
+				ReadBuffer[bytesRead] = 0;
+				FUTF8ToTCHAR Converter(reinterpret_cast<const char*>(ReadBuffer), bytesRead);
+				FString ReceivedText(Converter.Length(), Converter.Get());
+				ReceiveBuffer += ReceivedText;
+
+				FString Line;
+				while (ReceiveBuffer.Split(LineEnding, &Line, &ReceiveBuffer))
+				{
+					if (!Line.IsEmpty())
+					{
+						ReceivedDataQueue.Enqueue(Line);
+					}
 				}
 			}
 		}
@@ -947,23 +976,36 @@ uint32 FSerialReadRunnable::Run()
 			// If bypass parser mode is enabled, skip all line parsing
 			if (!Owner->bBypassParser)
 			{
-				// Null-terminate for string conversion (safe - buffer is 256, max read is 255)
-				ReadBuffer[bytesRead] = 0;
-
-				// Convert from UTF-8 to FString
-				FUTF8ToTCHAR Converter(reinterpret_cast<const char*>(ReadBuffer), bytesRead);
-				FString ReceivedText(Converter.Length(), Converter.Get());
-
-				// Add to buffer
-				Owner->ReceiveBuffer += ReceivedText;
-
-				// Process complete lines
-				FString Line;
-				while (Owner->ReceiveBuffer.Split(Owner->LineEnding, &Line, &Owner->ReceiveBuffer))
+				bool bContainsBinaryFrame = false;
+				for (DWORD i = 0; i < bytesRead; ++i)
 				{
-					if (!Line.IsEmpty())
+					if (ReadBuffer[i] == 0xAA)
 					{
-						Owner->ReceivedDataQueue.Enqueue(Line);
+						bContainsBinaryFrame = true;
+						break;
+					}
+				}
+
+				if (!bContainsBinaryFrame)
+				{
+					// Null-terminate for string conversion (safe - buffer is 256, max read is 255)
+					ReadBuffer[bytesRead] = 0;
+
+					// Convert from UTF-8 to FString
+					FUTF8ToTCHAR Converter(reinterpret_cast<const char*>(ReadBuffer), bytesRead);
+					FString ReceivedText(Converter.Length(), Converter.Get());
+
+					// Add to buffer
+					Owner->ReceiveBuffer += ReceivedText;
+
+					// Process complete lines
+					FString Line;
+					while (Owner->ReceiveBuffer.Split(Owner->LineEnding, &Line, &Owner->ReceiveBuffer))
+					{
+						if (!Line.IsEmpty())
+						{
+							Owner->ReceivedDataQueue.Enqueue(Line);
+						}
 					}
 				}
 			}
@@ -1017,23 +1059,36 @@ uint32 FSerialReadRunnable::Run()
 			// If bypass parser mode is enabled, skip all line parsing
 			if (!Owner->bBypassParser)
 			{
-				// Null-terminate for string conversion (safe - buffer is 256, max read is 255)
-				ReadBuffer[bytesRead] = 0;
-
-				// Convert from UTF-8 to FString
-				FUTF8ToTCHAR Converter(reinterpret_cast<const char*>(ReadBuffer), bytesRead);
-				FString ReceivedText(Converter.Length(), Converter.Get());
-
-				// Add to buffer
-				Owner->ReceiveBuffer += ReceivedText;
-
-				// Process complete lines
-				FString Line;
-				while (Owner->ReceiveBuffer.Split(Owner->LineEnding, &Line, &Owner->ReceiveBuffer))
+				bool bContainsBinaryFrame = false;
+				for (DWORD i = 0; i < bytesRead; ++i)
 				{
-					if (!Line.IsEmpty())
+					if (ReadBuffer[i] == 0xAA)
 					{
-						Owner->ReceivedDataQueue.Enqueue(Line);
+						bContainsBinaryFrame = true;
+						break;
+					}
+				}
+
+				if (!bContainsBinaryFrame)
+				{
+					// Null-terminate for string conversion (safe - buffer is 256, max read is 255)
+					ReadBuffer[bytesRead] = 0;
+
+					// Convert from UTF-8 to FString
+					FUTF8ToTCHAR Converter(reinterpret_cast<const char*>(ReadBuffer), bytesRead);
+					FString ReceivedText(Converter.Length(), Converter.Get());
+
+					// Add to buffer
+					Owner->ReceiveBuffer += ReceivedText;
+
+					// Process complete lines
+					FString Line;
+					while (Owner->ReceiveBuffer.Split(Owner->LineEnding, &Line, &Owner->ReceiveBuffer))
+					{
+						if (!Line.IsEmpty())
+						{
+							Owner->ReceivedDataQueue.Enqueue(Line);
+						}
 					}
 				}
 			}

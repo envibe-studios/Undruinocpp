@@ -3,8 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Containers/Queue.h"
 #include "HAL/Runnable.h"
 #include "HAL/RunnableThread.h"
+#include "HAL/ThreadSafeBool.h"
 #include "ArduinoSerialPort.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSerialDataReceived, const FString&, Data);

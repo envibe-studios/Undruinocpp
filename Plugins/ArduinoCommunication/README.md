@@ -241,8 +241,18 @@ Event On Weapon Tag (Src, TagId, bInserted)
 
 Event On Reload Tag (Src, TagId, bInserted)
     -> Branch on bInserted
-        -> True: Start Reload
+        -> True: Start Reload (reload bay only — do not equip weapon)
+        -> False: Cancel Reload / clear reload-bay occupancy
+
+EvtTagChanged (TagId, bInserted, ReaderIndex)
+    -> ReaderIndex 0/1 = Port/Starboard weapon bay
+    -> ReaderIndex 2 = Reload box (ammo top-off only)
 ```
+
+Reload-bay notes:
+- `ReloadTag` insert does **not** auto-apply `WeaponMag` to `FiringComponent` (weapon bay / Type 4 owns equip).
+- Firmware may report remove with UID=0; `UShipHardwareInputComponent` attributes that to the last occupied reload UID.
+- Disconnect clears reload-bay occupancy so stale "present" cannot keep a reload loop alive.
 
 ### C++ Usage
 

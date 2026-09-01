@@ -175,7 +175,7 @@ int32 UByteStreamPacketParser::ParsePackets(TArray<FBenchPacket>& OutPackets, in
 			// Shift remaining bytes to front
 			int32 RemainingBytes = Buffer.Num() - ReadIndex;
 			FMemory::Memmove(Buffer.GetData(), Buffer.GetData() + ReadIndex, RemainingBytes);
-			Buffer.SetNum(RemainingBytes, false);
+			Buffer.SetNum(RemainingBytes, EAllowShrinking::No);
 		}
 	}
 
@@ -289,7 +289,7 @@ int32 UByteStreamPacketParser::EnforceBufferLimits()
 		BytesToTrim = Buffer.Num() - TrimToBytes;
 		int32 RemainingBytes = TrimToBytes;
 		FMemory::Memmove(Buffer.GetData(), Buffer.GetData() + BytesToTrim, RemainingBytes);
-		Buffer.SetNum(RemainingBytes, false);
+		Buffer.SetNum(RemainingBytes, EAllowShrinking::No);
 	}
 	else
 	{

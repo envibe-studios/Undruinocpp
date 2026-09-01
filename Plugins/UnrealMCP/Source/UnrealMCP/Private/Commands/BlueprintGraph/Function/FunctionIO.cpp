@@ -106,9 +106,10 @@ TSharedPtr<FJsonObject> FFunctionIO::AddFunctionInput(const TSharedPtr<FJsonObje
 	TSharedPtr<FJsonObject> InputParams = MakeShareable(new FJsonObject);
 
 	// Copy all fields from original params
+	// UE 5.8: FJsonObject::Values keys are UE::FSharedString; *Key yields const TCHAR*
 	for (const auto& Field : Params->Values)
 	{
-		InputParams->SetField(Field.Key, Field.Value);
+		InputParams->SetField(*Field.Key, Field.Value);
 	}
 
 	// Set direction to input
@@ -124,9 +125,10 @@ TSharedPtr<FJsonObject> FFunctionIO::AddFunctionOutput(const TSharedPtr<FJsonObj
 	TSharedPtr<FJsonObject> OutputParams = MakeShareable(new FJsonObject);
 
 	// Copy all fields from original params
+	// UE 5.8: FJsonObject::Values keys are UE::FSharedString; *Key yields const TCHAR*
 	for (const auto& Field : Params->Values)
 	{
-		OutputParams->SetField(Field.Key, Field.Value);
+		OutputParams->SetField(*Field.Key, Field.Value);
 	}
 
 	// Set direction to output
