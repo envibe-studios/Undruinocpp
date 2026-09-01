@@ -1,0 +1,40 @@
+---
+description: Maintain project documentation whenever architectural knowledge changes.
+alwaysApply: true
+---
+
+# Documentation Maintenance
+
+Documentation is considered part of the project.
+
+Whenever making significant architectural, networking, hardware, gameplay framework, diagnostic, or subsystem changes:
+
+1. Determine whether existing documentation has become inaccurate.
+
+2. Update the appropriate documentation before considering the task complete.
+
+Examples include:
+
+- NORTH_STAR.md
+- PROJECT_ARCHITECTURE.md
+- ENGINEERING_PHILOSOPHY.md
+- ARCHITECTURAL_DECISIONS.md
+
+Do not rewrite documentation unnecessarily.
+
+Only modify sections affected by the change.
+
+Keep documentation factual.
+
+Clearly distinguish:
+- verified implementation
+- inferred rationale
+- recommended engineering guidelines
+
+If documentation should be updated but the user has explicitly requested otherwise, mention the discrepancy.
+
+NORTH_STAR.md represents the project's long-term vision.
+
+Do not modify it automatically.
+
+Only suggest changes when the user explicitly chooses to evolve the project's vision.

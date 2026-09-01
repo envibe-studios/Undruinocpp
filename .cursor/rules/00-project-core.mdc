@@ -1,0 +1,94 @@
+## Project Knowledge and Documentation
+
+Undruinocpp maintains authoritative project documentation covering architecture, engineering decisions, creative direction, worldbuilding, gameplay philosophy, and established workflows.
+
+Do not assume all project documentation has been automatically loaded into context.
+
+Before making significant decisions, identify and read the documentation relevant to the task.
+
+### Core Vision
+
+For decisions affecting the identity, direction, or intended player experience of Undruinocpp, consult:
+
+- `.cursor/docs/NORTH_STAR.md`
+- `.cursor/design/01_WORLD_PILLARS.md`
+
+These documents define the project's highest-level creative intent.
+
+### Engineering and Architecture
+
+For architectural changes, new systems, refactors, hardware integration, or decisions about established technical patterns, consult:
+
+- `.cursor/docs/PROJECT_ARCHITECTURE.md`
+- `.cursor/docs/ENGINEERING_PHILOSOPHY.md`
+- `.cursor/docs/ARCHITECTURAL_DECISIONS.md`
+- relevant documents in `.cursor/playbooks/`
+
+Existing architectural decisions should be understood before introducing an alternative.
+
+### Creative and Visual Direction
+
+For ships, environments, visual identity, art, or world appearance, consult the relevant documents in `.cursor/design/`, including:
+
+- `01_WORLD_PILLARS.md`
+- `02_ART_DIRECTION.md`
+- `03_VISUAL_LANGUAGE.md`
+- `04_SHIP_ARCHITECTURE.md`
+
+### Gameplay and Level Design
+
+For gameplay systems, missions, levels, encounters, exploration, or cooperative mechanics, consult the relevant documents in `.cursor/design/`, including:
+
+- `05_LEVEL_DESIGN.md`
+- `06_GAMEPLAY_PHILOSOPHY.md`
+- `07_CREW_EXPERIENCE.md`
+- `11_PLAYER_PSYCHOLOGY.md`
+
+### Worldbuilding and Narrative
+
+For factions, characters, lore, narrative, discoveries, civilizations, dialogue, or storytelling, consult:
+
+- `01_WORLD_PILLARS.md`
+- `08_FACTIONS.md`
+- `09_STORYTELLING.md`
+
+### Audio
+
+For music, environmental audio, Fleet Radio, broadcasts, commercials, or other audio experiences, consult:
+
+- `10_AUDIO_PHILOSOPHY.md`
+
+### Documentation Selection
+
+Do not read every document for every task.
+
+Read the smallest relevant set of documents needed to understand the project's established direction before making significant decisions.
+
+When a task crosses multiple disciplines, consult the relevant documents from each discipline.
+
+Project documentation takes precedence over generic assumptions or conventions unless the user explicitly directs otherwise.
+
+If project documentation does not answer a design question, do not invent a major new project convention without identifying it as a new decision.
+
+## Context and Token Efficiency
+
+Treat context as a limited resource.
+
+Do not read project documentation merely because it may be relevant.
+
+Before reading a document, ask whether information from that document is necessary to complete the current task correctly.
+
+Prefer the smallest sufficient context set.
+
+For most tasks:
+
+- Start with the directly relevant implementation and 1–3 relevant project documents.
+- Read additional documents only when the task actually requires them.
+- Do not reread information already available in the current conversation or context.
+- Do not read entire playbooks or design documents when a targeted section is sufficient.
+- Do not load creative documentation for routine implementation work unless the implementation requires a creative decision.
+- Do not load engineering documentation for pure creative discussion unless technical feasibility is part of the request.
+
+When uncertain, begin with less context and retrieve additional documentation only as needed.
+
+Correctness takes priority over token savings, but exhaustive context loading should not be the default.
