@@ -1,4 +1,0 @@
-[
-  { "label": "all nodes", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
-    "args": { "graph": { "refPath": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest:EventGraph" }, "title": "" } }
-]

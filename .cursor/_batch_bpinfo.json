@@ -1,5 +1,0 @@
-﻿[
-  { "label": "help bp", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "list_tools" },
-  { "label": "bp infos", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_blueprint_info",
-    "args": { "blueprint": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft" } } }
-]

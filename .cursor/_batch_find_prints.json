@@ -1,9 +1,0 @@
-[
-  { "label": "prints eg", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes", "args": { "graph": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph" }, "title": "*Print*" } },
-  { "label": "prints reloader", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes", "args": { "graph": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:FncReloader" }, "title": "*Print*" } },
-  { "label": "prints mag", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes", "args": { "graph": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:FncMagChanged" }, "title": "*Print*" } },
-  { "label": "prints firemode", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes", "args": { "graph": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:WeaponFireMode" }, "title": "*Print*" } },
-  { "label": "prints checkmag", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes", "args": { "graph": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:CheckMagValidity" }, "title": "*Print*" } },
-  { "label": "hover prints eg", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes", "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "title": "*Print*" } },
-  { "label": "hover prints fire", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes", "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire" }, "title": "*Print*" } }
-]

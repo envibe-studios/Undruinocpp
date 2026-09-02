@@ -164,7 +164,33 @@ Examples:
 - mission logic
 - hardware callbacks
 
-## 13. Update Documentation Only When Needed
+## 13. Graph DSL: Read Syntax Is Not Write Syntax
+
+`read_graph_dsl` output cannot always be fed straight back into `write_graph_dsl`.
+The reader renders resolved nodes; the writer must resolve them again from text.
+
+Verified differences:
+
+- **Operators.** The reader prints `Math|Vector|vector*vector`, but the writer only
+  accepts the generic `*` and `+` operators and resolves the concrete node itself.
+- **Calls to Blueprint functions.** Positional arguments bind to the node's `self`
+  pin first, which fails with "Could not connect pin X to self". Use keyword
+  arguments (`:PinName value`) and omit `self`.
+- **Break struct outputs.** Passing a break node inline picks its *first* output pin,
+  not the one matching the target type. Destructure instead:
+  `(bind (PinA PinB PinC) (Utilities|Struct|BreakMyStruct value))`, listing every pin
+  in declaration order (child struct properties come before inherited ones).
+- **Component getters.** The reader prints `(|GetMyComponent)`; the writer requires
+  `(Variables|Default|GetMyComponent)`.
+
+Use `find_node_types` with a `type_id_filter` to discover the exact type ID the
+writer expects before guessing.
+
+`write_graph_dsl` replaces the whole graph and compiles the Blueprint. For a small
+edit inside a large graph (for example, adding one call to `EventGraph`), prefer
+`create_node` plus `connect_pins`, and `delete_node` for targeted removals.
+
+## 14. Update Documentation Only When Needed
 
 Update project documentation if the Blueprint change introduces:
 
@@ -175,7 +201,7 @@ Update project documentation if the Blueprint change introduces:
 
 Do not document routine graph edits.
 
-## 14. Completion Report
+## 15. Completion Report
 
 When finished, summarize:
 

@@ -1,5 +1,0 @@
-[
-  { "label": "delete fxtest asset", "toolset": "editor_toolset.toolsets.asset.AssetTools", "tool": "delete", "args": { "path": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest" } },
-  { "label": "exists?", "toolset": "editor_toolset.toolsets.asset.AssetTools", "tool": "exists", "args": { "path": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest" } },
-  { "label": "save level", "toolset": "editor_toolset.toolsets.asset.AssetTools", "tool": "save_assets", "args": { "asset_paths": ["/Game/Level/HoverHandlingCourse"] } }
-]

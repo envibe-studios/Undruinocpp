@@ -1,8 +1,0 @@
-[
-  { "label": "read back", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
-    "args": { "graph": { "refPath": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest:EventGraph" } } },
-  { "label": "compile strict", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "compile_blueprint",
-    "args": { "blueprint": { "refPath": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest" }, "warnings_as_errors": true } },
-  { "label": "save", "toolset": "editor_toolset.toolsets.asset.AssetTools", "tool": "save_assets",
-    "args": { "asset_paths": ["/Game/Blueprints/FX/Dev/BP_WeaponFXTest"] } }
-]

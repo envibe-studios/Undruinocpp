@@ -1,7 +1,0 @@
-[
-  { "label": "tracers", "toolset": "editor_toolset.toolsets.scene.SceneTools", "tool": "find_actors",
-    "args": { "name": "WeaponTracer", "tag": "", "collision_channels": [] } },
-  { "label": "firing L cfg", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
-    "args": { "instance": { "refPath": "/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_Hovercraft_C_0.Firing_Left" },
-      "properties": ["CurrentFiringMode", "BulletConfig"] } }
-]

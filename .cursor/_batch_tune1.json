@@ -1,6 +1,0 @@
-[
-  { "label": "stop pie", "toolset": "EditorToolset.EditorAppToolset", "tool": "StopPIE", "args": {} },
-  { "label": "beam cdo", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
-    "args": { "instance": { "refPath": "/Game/Blueprints/FX/BP_WeaponBeam.Default__BP_WeaponBeam_C" },
-      "properties": ["BeamRange", "TractorThickness", "ScanThickness", "TractorImpactSize", "ScanImpactSize"] } }
-]

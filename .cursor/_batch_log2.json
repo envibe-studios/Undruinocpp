@@ -1,8 +1,0 @@
-[
-  { "label": "categories", "toolset": "EditorToolset.LogsToolset", "tool": "GetLogCategories",
-    "args": { "filter": "Live" } },
-  { "label": "log entries", "toolset": "EditorToolset.LogsToolset", "tool": "GetLogEntries",
-    "args": { "pattern": "Live Coding", "maxEntries": 20 } },
-  { "label": "compile entries", "toolset": "EditorToolset.LogsToolset", "tool": "GetLogEntries",
-    "args": { "pattern": "error C", "maxEntries": 20 } }
-]

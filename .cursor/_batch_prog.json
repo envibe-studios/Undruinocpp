@@ -1,4 +1,0 @@
-[
-  { "label": "prog env", "toolset": "editor_toolset.toolsets.programmatic.ProgrammaticToolset", "tool": "get_execution_environment", "args": {} },
-  { "label": "actor tools", "tool": "describe_toolset", "args": { "toolset_name": "editor_toolset.toolsets.actor.ActorTools" } }
-]

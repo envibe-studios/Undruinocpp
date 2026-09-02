@@ -1,5 +1,0 @@
-[
-  { "label": "delete bak", "toolset": "editor_toolset.toolsets.asset.AssetTools", "tool": "delete", "args": { "path": "/Game/Blueprints/BP_Hovercraft_CONV_REVERT_BAK" } },
-  { "label": "delete redirector or hover", "toolset": "editor_toolset.toolsets.asset.AssetTools", "tool": "delete", "args": { "path": "/Game/Blueprints/BP_Hovercraft" } },
-  { "label": "delete restored temp", "toolset": "editor_toolset.toolsets.asset.AssetTools", "tool": "delete", "args": { "path": "/Game/Blueprints/BP_Hovercraft_RESTORED" } }
-]

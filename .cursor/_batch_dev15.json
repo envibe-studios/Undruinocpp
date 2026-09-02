@@ -1,9 +1,0 @@
-[
-  { "label": "write test graph", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "write_graph_dsl",
-    "args": { "graph": { "refPath": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest:EventGraph" },
-      "code": "(event EventBeginPlay (Utilities|FlowControl|Delay :Duration 2.0) (bind comps (Actor|GetComponentsByClass :self (Game|GetPlayerPawn :PlayerIndex 0) :ComponentClass \"/Script/Unduinocpp.FiringComponent\")) (Development|PrintString :InString (Utilities|String|Append \"FXTEST firing comps found: \" (Utilities|String|ToString(Integer) (Utilities|Array|Length comps))) :Duration 30.0) (Variables|Default|SetArmed true))\n\n(event EventTick (DeltaSeconds) (if (Variables|Default|GetArmed) (bind mode (Utilities|Enum|BytetoEnumEFiringModeType :Byte (Variables|Default|GetTestMode))) (for c (Actor|GetComponentsByClass :self (Game|GetPlayerPawn :PlayerIndex 0) :ComponentClass \"/Script/Unduinocpp.FiringComponent\") (bind fc (Utilities|Casting|CastToFiringComponent :Object c)) (Firing|Control|SetFiringMode :self fc :NewMode mode) (Firing|Control|SetFiring :self fc :bShouldFire true))))" } },
-  { "label": "compile", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "compile_blueprint",
-    "args": { "blueprint": { "refPath": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest" }, "warnings_as_errors": true } },
-  { "label": "read back", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
-    "args": { "graph": { "refPath": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest:EventGraph" } } }
-]

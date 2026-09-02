@@ -1,8 +1,0 @@
-[
-  { "label": "editor Firing_Left default", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
-    "args": { "instance": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:Firing_Left_GEN_VARIABLE" },
-      "properties": ["CurrentFiringMode"] } },
-  { "label": "editor Firing_Right default", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
-    "args": { "instance": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:Firing_Right_GEN_VARIABLE" },
-      "properties": ["CurrentFiringMode"] } }
-]

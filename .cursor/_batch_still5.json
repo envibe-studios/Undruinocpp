@@ -1,4 +1,0 @@
-[
-  { "label": "start pie", "toolset": "EditorToolset.EditorAppToolset", "tool": "StartPIE",
-    "args": { "options": { "bSimulate": false, "playMode": "PlayMode_InViewPort", "warmupSeconds": 5.0 } } }
-]

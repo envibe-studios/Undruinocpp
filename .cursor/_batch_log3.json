@@ -1,4 +1,0 @@
-[
-  { "label": "live log", "toolset": "EditorToolset.LogsToolset", "tool": "GetLogEntries",
-    "args": { "category": "LogLiveCoding", "pattern": ".", "maxEntries": 30 } }
-]

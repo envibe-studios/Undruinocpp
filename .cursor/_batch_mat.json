@@ -1,6 +1,0 @@
-[
-  { "label": "pc graphs", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "list_graphs",
-    "args": { "blueprint": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller" } } },
-  { "label": "pc defaults", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_default_object",
-    "args": { "blueprint": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller" } } }
-]

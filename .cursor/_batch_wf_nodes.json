@@ -1,6 +1,0 @@
-[
-  { "label": "wf nodes entry", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
-    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire" }, "title": "*", "entry_points_only": true } },
-  { "label": "wf get graph", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_graph",
-    "args": { "blueprint": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft" }, "graph_name": "WeaponFire" } }
-]

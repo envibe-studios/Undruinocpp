@@ -1,8 +1,0 @@
-[
-  { "label": "find clamp", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_node_types",
-    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "type_id_filter": "Clamp" } },
-  { "label": "find max", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_node_types",
-    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "type_id_filter": "Max" } },
-  { "label": "find getammo", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_node_types",
-    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "type_id_filter": "GetCurrentAmmo" } }
-]

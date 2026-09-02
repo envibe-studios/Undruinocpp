@@ -1,8 +1,0 @@
-[
-  { "label": "firing left", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
-    "args": {
-      "instance": { "refPath": "/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_Hovercraft_C_0.Firing_Left" },
-      "properties": ["CurrentFiringMode", "BulletConfig", "bDrawDebug", "bAutoActivate"]
-    } },
-  { "label": "stop pie", "toolset": "EditorToolset.EditorAppToolset", "tool": "StopPIE", "args": {} }
-]

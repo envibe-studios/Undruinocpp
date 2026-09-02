@@ -1,4 +1,0 @@
-[
-  { "label": "gamemode cdo", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_default_object",
-    "args": { "blueprint": { "refPath": "/Game/Blueprints/GameMode_ShipPorts.GameMode_ShipPorts" } } }
-]

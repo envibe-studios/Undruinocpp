@@ -1,4 +1,0 @@
-[
-  { "label": "init node pins", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_node_infos",
-    "args": { "nodes": [ { "refPath": "/Game/Blueprints/FX/BPC_WeaponFireVisuals.BPC_WeaponFireVisuals:Setup.K2Node_CallFunction_3" } ] } }
-]

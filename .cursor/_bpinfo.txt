@@ -1,8 +1,0 @@
-﻿== help bp ==
-Unknown tool list_tools
-(tool reported isError)
-
-== bp infos ==
-Unknown tool get_blueprint_info
-(tool reported isError)
-

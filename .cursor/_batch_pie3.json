@@ -1,8 +1,0 @@
-[
-  { "label": "hovercraft xform", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "get_actor_transform",
-    "args": { "actor": { "refPath": "/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_Hovercraft_C_0" } } },
-  { "label": "hovercraft bounds", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "get_actor_bounds",
-    "args": { "actor": { "refPath": "/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_Hovercraft_C_0" } } },
-  { "label": "pie comps", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "get_components",
-    "args": { "actor": { "refPath": "/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_Hovercraft_C_0" } } }
-]

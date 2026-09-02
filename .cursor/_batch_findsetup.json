@@ -1,8 +1,0 @@
-[
-  { "label": "read init", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
-    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:InitWeaponVisuals" } } },
-  { "label": "find setup hover", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
-    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:InitWeaponVisuals" }, "title": "Setup" } },
-  { "label": "find setup event", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
-    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "title": "Setup" } }
-]

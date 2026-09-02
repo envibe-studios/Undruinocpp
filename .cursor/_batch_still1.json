@@ -1,7 +1,0 @@
-[
-  { "label": "pie", "toolset": "EditorToolset.EditorAppToolset", "tool": "IsPIERunning", "args": {} },
-  { "label": "fire logs", "toolset": "EditorToolset.LogsToolset", "tool": "GetLogEntries",
-    "args": { "maxEntries": 40, "pattern": "FireBullet|SetFiring|Port ammo|Firing_Left shot|Firing_Right shot|WEAPON_IMU: SetFiring|Mag Left|Found Mag" } },
-  { "label": "livecoding", "toolset": "EditorToolset.LogsToolset", "tool": "GetLogEntries",
-    "args": { "category": "LogLiveCoding", "maxEntries": 10, "pattern": "." } }
-]

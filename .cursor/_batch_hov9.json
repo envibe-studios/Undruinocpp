@@ -1,7 +1,0 @@
-[
-  { "label": "left after wait", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
-    "args": { "instance": { "refPath": "/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_Hovercraft_C_0.Weapon_Left" }, "properties": ["RelativeRotation"] } },
-  { "label": "right now", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
-    "args": { "instance": { "refPath": "/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_Hovercraft_C_0.Weapon_Right" }, "properties": ["RelativeRotation"] } },
-  { "label": "editor image", "toolset": "EditorToolset.EditorAppToolset", "tool": "CaptureEditorImage", "args": {} }
-]

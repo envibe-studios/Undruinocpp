@@ -1,4 +1,0 @@
-[
-  { "label": "tracers", "toolset": "editor_toolset.toolsets.scene.SceneTools", "tool": "find_actors",
-    "args": { "name": "WeaponTracer", "tag": "", "collision_channels": [] } }
-]

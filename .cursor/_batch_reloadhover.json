@@ -1,6 +1,0 @@
-[
-  { "label": "load hover", "toolset": "editor_toolset.toolsets.asset.AssetTools", "tool": "load_asset",
-    "args": { "asset_path": "/Game/Blueprints/BP_Hovercraft" } },
-  { "label": "hover dirty", "toolset": "editor_toolset.toolsets.asset.AssetTools", "tool": "is_dirty",
-    "args": { "asset_path": "/Game/Blueprints/BP_Hovercraft" } }
-]

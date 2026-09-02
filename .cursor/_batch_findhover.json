@@ -1,4 +1,0 @@
-[
-  { "label": "find hovercraft", "toolset": "editor_toolset.toolsets.scene.SceneTools", "tool": "find_actors",
-    "args": { "name": "*Hover*" } }
-]

@@ -1,6 +1,0 @@
-[
-  { "label": "sync print chain", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_connected_subgraph",
-    "args": { "node": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph.K2Node_CallFunction_41" } } },
-  { "label": "hover prints via dsl snippet", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
-    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" } } }
-]

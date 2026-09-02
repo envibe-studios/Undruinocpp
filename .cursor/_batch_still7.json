@@ -1,6 +1,0 @@
-[
-  { "label": "hovers", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "get_actors",
-    "args": { "class_filter": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C" } } },
-  { "label": "hovers scene", "toolset": "editor_toolset.toolsets.scene.SceneTools", "tool": "find_actors",
-    "args": { "name": "*Hovercraft*", "tag": "", "collision_channels": [] } }
-]

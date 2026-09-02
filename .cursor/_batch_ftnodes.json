@@ -1,6 +1,0 @@
-[
-  { "label": "find FireTracer", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
-    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:FireTracerVisual" }, "title": "FireTracer" } },
-  { "label": "graph nodes", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_graph",
-    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:FireTracerVisual" } } }
-]

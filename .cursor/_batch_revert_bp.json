@@ -1,6 +1,0 @@
-[
-  { "label": "env", "toolset": "editor_toolset.toolsets.programmatic.ProgrammaticToolset", "tool": "get_execution_environment", "args": {} },
-  { "label": "stop pie", "toolset": "EditorToolset.EditorAppToolset", "tool": "StopPIE", "args": {} },
-  { "label": "open assets", "toolset": "EditorToolset.EditorAppToolset", "tool": "GetOpenAssets", "args": {} },
-  { "label": "dirty?", "toolset": "editor_toolset.toolsets.asset.AssetTools", "tool": "is_dirty", "args": { "asset_path": "/Game/Blueprints/BP_Hovercraft" } }
-]

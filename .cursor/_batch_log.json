@@ -1,4 +1,0 @@
-[
-  { "label": "compile log", "toolset": "EditorToolset.LogsToolset", "tool": "GetLogEntries",
-    "args": { "pattern": "Live Coding|LiveCoding|Compile|error C|error LNK|WeaponFire|WeaponVisual", "maxEntries": 40 } }
-]

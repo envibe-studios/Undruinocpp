@@ -1,4 +1,0 @@
-[
-  { "label": "wf nodes", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_connected_subgraph",
-    "args": { "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire.K2Node_FunctionEntry_0" } } }
-]

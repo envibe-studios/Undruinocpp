@@ -1,4 +1,0 @@
-[
-  { "label": "entries", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
-    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "title": "*", "entry_points_only": true } }
-]

@@ -1,8 +1,0 @@
-[
-  { "label": "save test bp", "toolset": "editor_toolset.toolsets.asset.AssetTools", "tool": "save_assets",
-    "args": { "asset_paths": ["/Game/Blueprints/FX/Dev/BP_WeaponFXTest"] } },
-  { "label": "start pie", "toolset": "EditorToolset.EditorAppToolset", "tool": "StartPIE",
-    "args": { "options": { "bSimulate": false, "playMode": "PlayMode_InViewPort", "warmupSeconds": 7.0 } } },
-  { "label": "beams", "toolset": "editor_toolset.toolsets.scene.SceneTools", "tool": "find_actors",
-    "args": { "name": "WeaponBeam", "tag": "", "collision_channels": [] } }
-]

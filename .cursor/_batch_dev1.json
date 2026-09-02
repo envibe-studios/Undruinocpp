@@ -1,7 +1,0 @@
-[
-  { "label": "create test bp", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "create",
-    "args": { "folder_path": "/Game/Blueprints/FX/Dev", "asset_name": "BP_WeaponFXTest",
-              "asset_type": { "refPath": "/Script/Engine.Actor" } } },
-  { "label": "graphs", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "list_graphs",
-    "args": { "blueprint": { "refPath": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest" } } }
-]

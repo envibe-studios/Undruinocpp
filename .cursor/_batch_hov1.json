@@ -1,9 +1,0 @@
-[
-  { "label": "firing left props", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
-    "args": {
-      "instance": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:Firing_Left" },
-      "properties": ["bIsFiring", "CurrentFiringMode", "PrimaryComponentTick", "BulletConfig", "bDrawDebug", "ComponentTickEnabled"]
-    } },
-  { "label": "firing left list tick", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "list_properties",
-    "args": { "instance": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:Firing_Left" } } }
-]

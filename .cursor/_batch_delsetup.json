@@ -1,8 +1,0 @@
-[
-  { "label": "del setup 0", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "delete_node",
-    "args": { "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:InitWeaponVisuals.K2Node_CallFunction_0" } } },
-  { "label": "del setup 1", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "delete_node",
-    "args": { "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:InitWeaponVisuals.K2Node_CallFunction_1" } } },
-  { "label": "compile hover", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "compile_blueprint",
-    "args": { "blueprint": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft" } } }
-]

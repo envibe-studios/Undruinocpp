@@ -1,4 +1,0 @@
-[
-  { "label": "hover fns", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "list_functions",
-    "args": { "blueprint": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft" } } }
-]

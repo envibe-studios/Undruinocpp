@@ -1,0 +1,4 @@
+# Scratch produced by agents driving the Unreal editor over the MCP bridge:
+# request/response payloads, graph dumps, PIE screenshots, and the session cache.
+# These are per-run artifacts with no lasting value; the tooling recreates them.
+_*

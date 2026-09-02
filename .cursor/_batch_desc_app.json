@@ -1,3 +1,0 @@
-[
-  { "label": "describe app", "tool": "describe_toolset", "args": { "toolset_name": "EditorToolset.EditorAppToolset" } }
-]

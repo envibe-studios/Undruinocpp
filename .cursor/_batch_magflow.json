@@ -1,8 +1,0 @@
-[
-  { "label": "fnc mag", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
-    "args": { "graph": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:FncMagChanged" } } },
-  { "label": "check mag", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
-    "args": { "graph": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:CheckMagValidity" } } },
-  { "label": "hover firemode", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
-    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFireMode" } } }
-]

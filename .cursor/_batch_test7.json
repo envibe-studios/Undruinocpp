@@ -1,8 +1,0 @@
-[
-  { "label": "impact scale", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "set_properties",
-    "args": { "instance": { "refPath": "/Game/Level/HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_WeaponBeam_C_0.ImpactMesh" },
-      "values": "{ \"RelativeScale3D\": \"(X=0.8,Y=0.8,Z=0.8)\", \"RelativeLocation\": \"(X=2000,Y=0,Z=0)\" }" } },
-  { "label": "read impact", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
-    "args": { "instance": { "refPath": "/Game/Level/HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_WeaponBeam_C_0.ImpactMesh" },
-      "properties": ["RelativeScale3D", "RelativeLocation"] } }
-]

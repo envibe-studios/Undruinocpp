@@ -1,5 +1,0 @@
-﻿== wf nodes entry ==
-
-== wf get graph ==
-{"refPath":"/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire"}
-

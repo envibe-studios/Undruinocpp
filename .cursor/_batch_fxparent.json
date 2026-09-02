@@ -1,9 +1,0 @@
-[
-  { "label": "fx0 parent", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "get_parent_component",
-    "args": { "component": { "refPath": "/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_Hovercraft_C_0.FireVisuals_0" } } },
-  { "label": "fx1 parent", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "get_parent_component",
-    "args": { "component": { "refPath": "/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_Hovercraft_C_0.FireVisuals_1" } } },
-  { "label": "fx0 firing", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
-    "args": { "instance": { "refPath": "/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_Hovercraft_C_0.FireVisuals_0" },
-              "properties": ["FiringComp", "BulletMaterial", "TractorMaterial", "ScanMaterial"] } }
-]

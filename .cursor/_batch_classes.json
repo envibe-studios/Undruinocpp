@@ -1,8 +1,0 @@
-[
-  { "label": "firing class", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_class",
-    "args": { "instance": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:Firing_Left_GEN_VARIABLE" } } },
-  { "label": "subclasses", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "search_subclasses",
-    "args": { "base_class": { "refPath": "/Script/Unduinocpp.FiringComponent" }, "class_name": "Firing" } },
-  { "label": "get 18", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_node_infos",
-    "args": { "nodes": [ { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_VariableGet_18" } ] } }
-]

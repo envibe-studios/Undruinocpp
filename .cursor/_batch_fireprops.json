@@ -1,9 +1,0 @@
-[
-  { "label": "left fire props", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
-    "args": {
-      "instance": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:Firing_Left_GEN_VARIABLE" },
-      "properties": ["BulletConfig", "bAutoActivate", "CurrentFiringMode"]
-    } },
-  { "label": "list mag left default", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "list_variables",
-    "args": { "blueprint": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft" } } }
-]

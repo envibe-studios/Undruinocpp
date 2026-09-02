@@ -1,8 +1,0 @@
-[
-  { "label": "search live", "toolset": "EditorToolset.EditorAppToolset", "tool": "SearchCVars",
-    "args": { "name": "LiveCoding" } },
-  { "label": "left fire subgraph", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_connected_subgraph",
-    "args": { "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_ComponentBoundEvent_1" }, "as_dsl": true } },
-  { "label": "right fire subgraph", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_connected_subgraph",
-    "args": { "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_ComponentBoundEvent_0" }, "as_dsl": true } }
-]

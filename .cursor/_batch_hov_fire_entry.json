@@ -1,8 +1,0 @@
-[
-  { "label": "left bullet fired", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
-    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "title": "OnBulletFired (Firing_Left)", "entry_points_only": true } },
-  { "label": "right bullet fired", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
-    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "title": "OnBulletFired (Firing_Right)", "entry_points_only": true } },
-  { "label": "all entry", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
-    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "title": "*Firing*", "entry_points_only": true } }
-]

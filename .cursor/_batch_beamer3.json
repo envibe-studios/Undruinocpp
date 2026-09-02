@@ -1,6 +1,0 @@
-[
-  { "label": "whilebeaming iface", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
-    "args": { "graph": { "refPath": "/Game/Blueprints/Interfaces/BPI_Beamable.BPI_Beamable:WhileBeaming" } } },
-  { "label": "beamable eventgraph", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
-    "args": { "graph": { "refPath": "/Game/Blueprints/LevelLogic/BP_Beamable.BP_Beamable:EventGraph" } } }
-]
