@@ -324,16 +324,6 @@ float UHoverThrusterComponent::GetForceEffectiveness() const
 	return Effectiveness;
 }
 
-float UHoverThrusterComponent::GetEffectiveHoverHeight() const
-{
-	return FMath::Max(0.0f, HoverHeight + HoverHeightOffset);
-}
-
-void UHoverThrusterComponent::SetHoverHeightOffset(float NewOffset)
-{
-	HoverHeightOffset = NewOffset;
-}
-
 float UHoverThrusterComponent::GetHealthForceMultiplier() const
 {
 	// Full force at 100% health
@@ -378,7 +368,7 @@ bool UHoverThrusterComponent::PerformGroundTrace(FHitResult& OutHit) const
 	}
 
 	FVector TraceStart = GetComponentLocation();
-	FVector TraceEnd = TraceStart - FVector::UpVector * GetEffectiveHoverHeight() * TraceDistanceMultiplier;
+	FVector TraceEnd = TraceStart - FVector::UpVector * HoverHeight * TraceDistanceMultiplier;
 
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(Owner);
@@ -431,9 +421,7 @@ FVector UHoverThrusterComponent::CalculateHoverForce(float DeltaTime)
 	}
 
 	// Calculate compression (how much we're below target hover height)
-	// HoverHeightOffset lets movement bias corners for turn-bank without fighting spring leveling
-	const float EffectiveHoverHeight = GetEffectiveHoverHeight();
-	float Compression = EffectiveHoverHeight - LastDistanceToGround;
+	float Compression = HoverHeight - LastDistanceToGround;
 
 	// Spring force (Hooke's law: F = -kx)
 	float SpringForce = Compression * HoverStiffness;

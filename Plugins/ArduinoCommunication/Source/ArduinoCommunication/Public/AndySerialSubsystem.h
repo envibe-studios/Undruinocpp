@@ -43,17 +43,6 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
 );
 
 /**
- * Delegate fired when a complete text line is received from any port.
- * Non-diagnostic traffic (binary frames, log lines) also arrives here;
- * consumers should filter (e.g. only process lines starting with DIAG_).
- */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
-	FOnAndyLineReceived,
-	FName, ShipId,
-	const FString&, Line
-);
-
-/**
  * Helper object that binds to a single serial port's events
  * and forwards them to the subsystem with the correct ShipId
  */
@@ -78,9 +67,6 @@ public:
 protected:
 	UFUNCTION()
 	void OnBytesReceived(const TArray<uint8>& Bytes);
-
-	UFUNCTION()
-	void OnLineReceived(const FString& Line);
 
 	UFUNCTION()
 	void OnConnectionChanged(bool bConnected);
@@ -243,10 +229,6 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Andy|Serial|Events")
 	FOnAndyConnectionChanged OnConnectionChanged;
 
-	/** Event fired when a complete text line is received from any port */
-	UPROPERTY(BlueprintAssignable, Category = "Andy|Serial|Events")
-	FOnAndyLineReceived OnLineReceived;
-
 	// === Internal Event Handlers (called by UAndyPortEventHandler) ===
 
 	/**
@@ -260,12 +242,6 @@ public:
 	 * Broadcasts to OnConnectionChanged delegate
 	 */
 	void HandleConnectionChanged(FName ShipId, bool bConnected);
-
-	/**
-	 * Internal handler for text lines received from a port
-	 * Broadcasts to OnLineReceived delegate
-	 */
-	void HandleLineReceived(FName ShipId, const FString& Line);
 
 protected:
 	/** Map of ShipId to connection objects */

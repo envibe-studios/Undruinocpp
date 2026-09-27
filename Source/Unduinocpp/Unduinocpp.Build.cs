@@ -7,30 +7,10 @@ public class Unduinocpp : ModuleRules
 	public Unduinocpp(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-
-		// Allow #include "AI/..." and nested BT headers from Source/Unduinocpp
-		PublicIncludePaths.Add(ModuleDirectory);
 	
-		PublicDependencyModuleNames.AddRange(new string[] {
-			"Core",
-			"CoreUObject",
-			"Engine",
-			"InputCore",
-			"EnhancedInput",
-			"NetCore",
-			"AIModule",
-			"GameplayTasks",
-			"NavigationSystem",
-			"GameplayTags"
-		});
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "NetCore" });
 
 		PrivateDependencyModuleNames.AddRange(new string[] { "Sockets", "Networking" });
-
-		// DualJoystickTankInputComponent polls DirectInput joysticks via winmm (Joy0/Joy1).
-		if (Target.Platform == UnrealTargetPlatform.Win64)
-		{
-			PublicSystemLibraries.Add("Winmm.lib");
-		}
 
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
