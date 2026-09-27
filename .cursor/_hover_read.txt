@@ -1,0 +1,4 @@
+﻿{
+	"status": "error",
+	"error": "Missing 'blueprint_path' parameter"
+}

@@ -1,0 +1,616 @@
+﻿{
+	"status": "success",
+	"result":
+	{
+		"actors": [
+			{
+				"name": "WorldSettings",
+				"class": "WorldSettings",
+				"location": [
+					0,
+					0,
+					0
+				],
+				"rotation": [
+					0,
+					0,
+					0
+				],
+				"scale": [
+					1,
+					1,
+					1
+				]
+			},
+			{
+				"name": "Brush_0",
+				"class": "Brush",
+				"location": [
+					-200,
+					0,
+					300
+				],
+				"rotation": [
+					0,
+					0,
+					0
+				],
+				"scale": [
+					1,
+					1,
+					1
+				]
+			},
+			{
+				"name": "StaticMeshActor_1",
+				"class": "StaticMeshActor",
+				"location": [
+					0,
+					0,
+					0
+				],
+				"rotation": [
+					0,
+					0,
+					0
+				],
+				"scale": [
+					10,
+					10,
+					1
+				]
+			},
+			{
+				"name": "DirectionalLight_0",
+				"class": "DirectionalLight",
+				"location": [
+					0,
+					0,
+					0
+				],
+				"rotation": [
+					-16.285558999999971,
+					43.731943999999984,
+					112.36067199999995
+				],
+				"scale": [
+					1,
+					1,
+					1
+				]
+			},
+			{
+				"name": "ExponentialHeightFog_0",
+				"class": "ExponentialHeightFog",
+				"location": [
+					-5600,
+					-50,
+					-6850
+				],
+				"rotation": [
+					0,
+					0,
+					0
+				],
+				"scale": [
+					1,
+					1,
+					1
+				]
+			},
+			{
+				"name": "SkyAtmosphere_0",
+				"class": "SkyAtmosphere",
+				"location": [
+					0,
+					0,
+					0
+				],
+				"rotation": [
+					0,
+					0,
+					0
+				],
+				"scale": [
+					1,
+					1,
+					1
+				]
+			},
+			{
+				"name": "SkyLight_0",
+				"class": "SkyLight",
+				"location": [
+					0,
+					0,
+					0
+				],
+				"rotation": [
+					0,
+					0,
+					0
+				],
+				"scale": [
+					1,
+					1,
+					1
+				]
+			},
+			{
+				"name": "StaticMeshActor_0",
+				"class": "StaticMeshActor",
+				"location": [
+					0,
+					0,
+					0
+				],
+				"rotation": [
+					0,
+					0,
+					0
+				],
+				"scale": [
+					400,
+					400,
+					400
+				]
+			},
+			{
+				"name": "VolumetricCloud_0",
+				"class": "VolumetricCloud",
+				"location": [
+					0,
+					0,
+					0
+				],
+				"rotation": [
+					0,
+					0,
+					0
+				],
+				"scale": [
+					1,
+					1,
+					1
+				]
+			},
+			{
+				"name": "PlayerStart_1",
+				"class": "PlayerStart",
+				"location": [
+					0,
+					0,
+					270
+				],
+				"rotation": [
+					0,
+					0,
+					0
+				],
+				"scale": [
+					1,
+					1,
+					1
+				]
+			},
+			{
+				"name": "StaticMeshActor_4",
+				"class": "StaticMeshActor",
+				"location": [
+					0,
+					-1000,
+					0
+				],
+				"rotation": [
+					0,
+					0,
+					0
+				],
+				"scale": [
+					10,
+					10,
+					1
+				]
+			},
+			{
+				"name": "StaticMeshActor_5",
+				"class": "StaticMeshActor",
+				"location": [
+					0,
+					1000,
+					0
+				],
+				"rotation": [
+					0,
+					0,
+					0
+				],
+				"scale": [
+					10,
+					10,
+					1
+				]
+			},
+			{
+				"name": "StaticMeshActor_6",
+				"class": "StaticMeshActor",
+				"location": [
+					-1000,
+					0,
+					0
+				],
+				"rotation": [
+					0,
+					0,
+					0
+				],
+				"scale": [
+					10,
+					10,
+					1
+				]
+			},
+			{
+				"name": "StaticMeshActor_7",
+				"class": "StaticMeshActor",
+				"location": [
+					-1000,
+					1000,
+					0
+				],
+				"rotation": [
+					0,
+					0,
+					0
+				],
+				"scale": [
+					10,
+					10,
+					1
+				]
+			},
+			{
+				"name": "StaticMeshActor_8",
+				"class": "StaticMeshActor",
+				"location": [
+					-1000,
+					-1000,
+					0
+				],
+				"rotation": [
+					0,
+					0,
+					0
+				],
+				"scale": [
+					10,
+					10,
+					1
+				]
+			},
+			{
+				"name": "StaticMeshActor_9",
+				"class": "StaticMeshActor",
+				"location": [
+					1000,
+					1000,
+					0
+				],
+				"rotation": [
+					0,
+					0,
+					0
+				],
+				"scale": [
+					10,
+					10,
+					1
+				]
+			},
+			{
+				"name": "StaticMeshActor_10",
+				"class": "StaticMeshActor",
+				"location": [
+					1000,
+					0,
+					0
+				],
+				"rotation": [
+					0,
+					0,
+					0
+				],
+				"scale": [
+					10,
+					10,
+					1
+				]
+			},
+			{
+				"name": "StaticMeshActor_11",
+				"class": "StaticMeshActor",
+				"location": [
+					1000,
+					-1000,
+					0
+				],
+				"rotation": [
+					0,
+					0,
+					0
+				],
+				"scale": [
+					10,
+					10,
+					1
+				]
+			},
+			{
+				"name": "BP_Turret_C_1",
+				"class": "BP_Turret_C",
+				"location": [
+					1450,
+					60,
+					510
+				],
+				"rotation": [
+					0,
+					0,
+					0
+				],
+				"scale": [
+					1,
+					1,
+					1
+				]
+			},
+			{
+				"name": "BP_ResourceNode_C_1",
+				"class": "BP_ResourceNode_C",
+				"location": [
+					-201.76806396403751,
+					-479.74729402770549,
+					105.91999755905449
+				],
+				"rotation": [
+					0,
+					0,
+					0
+				],
+				"scale": [
+					1,
+					1,
+					1
+				]
+			},
+			{
+				"name": "BP_TestShooter_C_1",
+				"class": "BP_TestShooter_C",
+				"location": [
+					-230,
+					-350,
+					400
+				],
+				"rotation": [
+					0,
+					0,
+					0
+				],
+				"scale": [
+					1,
+					1,
+					1
+				]
+			},
+			{
+				"name": "BP_Waypoint_C_0",
+				"class": "BP_Waypoint_C",
+				"location": [
+					760,
+					20,
+					50
+				],
+				"rotation": [
+					0,
+					0,
+					0
+				],
+				"scale": [
+					0.46260631899349391,
+					0.46260631899349391,
+					0.46260631899349391
+				]
+			},
+			{
+				"name": "BP_Waypoint_C_1",
+				"class": "BP_Waypoint_C",
+				"location": [
+					1140,
+					40,
+					50
+				],
+				"rotation": [
+					0,
+					0,
+					0
+				],
+				"scale": [
+					1,
+					1,
+					1
+				]
+			},
+			{
+				"name": "BP_Destroyable_C_1",
+				"class": "BP_Destroyable_C",
+				"location": [
+					-70,
+					-490,
+					100
+				],
+				"rotation": [
+					0,
+					0,
+					0
+				],
+				"scale": [
+					1,
+					1,
+					1
+				]
+			},
+			{
+				"name": "BP_Destroyable_C_3",
+				"class": "BP_Destroyable_C",
+				"location": [
+					40,
+					-490,
+					100
+				],
+				"rotation": [
+					0,
+					0,
+					0
+				],
+				"scale": [
+					1,
+					1,
+					1
+				]
+			},
+			{
+				"name": "BP_Destroyable_C_4",
+				"class": "BP_Destroyable_C",
+				"location": [
+					40,
+					-490,
+					210
+				],
+				"rotation": [
+					0,
+					0,
+					0
+				],
+				"scale": [
+					1,
+					1,
+					1
+				]
+			},
+			{
+				"name": "BP_Destroyable_C_5",
+				"class": "BP_Destroyable_C",
+				"location": [
+					-70,
+					-490,
+					210
+				],
+				"rotation": [
+					0,
+					0,
+					0
+				],
+				"scale": [
+					1,
+					1,
+					1
+				]
+			},
+			{
+				"name": "HoverTrack_C_0",
+				"class": "HoverTrack_C",
+				"location": [
+					0,
+					0,
+					0
+				],
+				"rotation": [
+					0,
+					0,
+					0
+				],
+				"scale": [
+					1,
+					1,
+					1
+				]
+			},
+			{
+				"name": "DefaultPhysicsVolume_0",
+				"class": "DefaultPhysicsVolume",
+				"location": [
+					0,
+					0,
+					0
+				],
+				"rotation": [
+					0,
+					0,
+					0
+				],
+				"scale": [
+					1,
+					1,
+					1
+				]
+			},
+			{
+				"name": "GameplayDebuggerPlayerManager_0",
+				"class": "GameplayDebuggerPlayerManager",
+				"location": [
+					0,
+					0,
+					0
+				],
+				"rotation": [
+					0,
+					0,
+					0
+				],
+				"scale": [
+					1,
+					1,
+					1
+				]
+			},
+			{
+				"name": "ChaosDebugDrawActor",
+				"class": "Actor",
+				"location": [
+					0,
+					0,
+					0
+				],
+				"rotation": [
+					0,
+					0,
+					0
+				],
+				"scale": [
+					1,
+					1,
+					1
+				]
+			},
+			{
+				"name": "AbstractNavData-Default",
+				"class": "AbstractNavData",
+				"location": [
+					0,
+					0,
+					0
+				],
+				"rotation": [
+					0,
+					0,
+					0
+				],
+				"scale": [
+					1,
+					1,
+					1
+				]
+			}
+		]
+	}
+}

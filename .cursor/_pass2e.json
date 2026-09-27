@@ -1,0 +1,49 @@
+[
+  {
+    "label": "create_isvalidindex",
+    "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools",
+    "tool": "create_node",
+    "args": {
+      "graph": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph" },
+      "type_id": "Utilities|Array|IsValidIndex",
+      "pos": { "x": -4160, "y": -400 }
+    }
+  },
+  {
+    "label": "graybox_graphs",
+    "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools",
+    "tool": "list_graphs",
+    "args": { "blueprint": "/Game/Blueprints/GameMode_GrayboxExpedition.GameMode_GrayboxExpedition" }
+  },
+  {
+    "label": "graybox_sendline",
+    "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools",
+    "tool": "find_nodes",
+    "args": {
+      "graph": "/Game/Blueprints/GameMode_GrayboxExpedition.GameMode_GrayboxExpedition:EventGraph",
+      "title": "SendLine"
+    }
+  },
+  {
+    "label": "graybox_alloff",
+    "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools",
+    "tool": "find_nodes",
+    "args": {
+      "graph": "/Game/Blueprints/GameMode_GrayboxExpedition.GameMode_GrayboxExpedition:EventGraph",
+      "title": "all_off"
+    }
+  },
+  {
+    "label": "pc_sendline_infos",
+    "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools",
+    "tool": "get_node_infos",
+    "args": {
+      "nodes": [
+        "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph.K2Node_CallFunction_61",
+        "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph.K2Node_CallFunction_59",
+        "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph.K2Node_CallFunction_66",
+        "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph.K2Node_CallFunction_60"
+      ]
+    }
+  }
+]

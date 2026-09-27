@@ -1,0 +1,142 @@
+﻿{
+	"status": "success",
+	"result":
+	{
+		"blueprint_path": "/Game/Blueprints/BP_Hovercraft",
+		"blueprint_name": "BP_Hovercraft",
+		"parent_class": "Pawn",
+		"components": [
+			{
+				"name": "ShipHardwareInput",
+				"class": "ShipHardwareInputComponent",
+				"is_root": false
+			},
+			{
+				"name": "HoverMovement",
+				"class": "HoverMovementComponent",
+				"is_root": false
+			},
+			{
+				"name": "Arrow1",
+				"class": "ArrowComponent",
+				"is_root": false
+			},
+			{
+				"name": "Arrow2",
+				"class": "ArrowComponent",
+				"is_root": false
+			},
+			{
+				"name": "Firing_Left",
+				"class": "FiringComponent",
+				"is_root": false
+			},
+			{
+				"name": "Firing_Right",
+				"class": "FiringComponent",
+				"is_root": false
+			},
+			{
+				"name": "Weapon_Left",
+				"class": "StaticMeshComponent",
+				"is_root": false
+			},
+			{
+				"name": "Weapon_Right",
+				"class": "StaticMeshComponent",
+				"is_root": false
+			},
+			{
+				"name": "Arrow",
+				"class": "ArrowComponent",
+				"is_root": false
+			},
+			{
+				"name": "Thruster_FR",
+				"class": "HoverThrusterComponent",
+				"is_root": false
+			},
+			{
+				"name": "Thruster_RL",
+				"class": "HoverThrusterComponent",
+				"is_root": false
+			},
+			{
+				"name": "Thruster_RR",
+				"class": "HoverThrusterComponent",
+				"is_root": false
+			},
+			{
+				"name": "Thruster_FL",
+				"class": "HoverThrusterComponent",
+				"is_root": false
+			},
+			{
+				"name": "Body",
+				"class": "StaticMeshComponent",
+				"is_root": false
+			},
+			{
+				"name": "SceneCaptureComponent2D_Front",
+				"class": "SceneCaptureComponent2D",
+				"is_root": false
+			},
+			{
+				"name": "SceneCaptureComponent2D_Left",
+				"class": "SceneCaptureComponent2D",
+				"is_root": false
+			},
+			{
+				"name": "SceneCaptureComponent2D_Right",
+				"class": "SceneCaptureComponent2D",
+				"is_root": false
+			},
+			{
+				"name": "GunTip_Right",
+				"class": "StaticMeshComponent",
+				"is_root": false
+			},
+			{
+				"name": "GunTip_Left",
+				"class": "StaticMeshComponent",
+				"is_root": false
+			},
+			{
+				"name": "Collision_FL",
+				"class": "BoxComponent",
+				"is_root": false
+			},
+			{
+				"name": "Collision_FR",
+				"class": "BoxComponent",
+				"is_root": false
+			},
+			{
+				"name": "Collision_RL",
+				"class": "BoxComponent",
+				"is_root": false
+			},
+			{
+				"name": "Collision_RR",
+				"class": "BoxComponent",
+				"is_root": false
+			},
+			{
+				"name": "MinimapUDPSender",
+				"class": "MinimapUDPSenderComponent",
+				"is_root": false
+			},
+			{
+				"name": "GunTip_TopL",
+				"class": "StaticMeshComponent",
+				"is_root": false
+			},
+			{
+				"name": "GunTip_TopR",
+				"class": "StaticMeshComponent",
+				"is_root": false
+			}
+		],
+		"success": true
+	}
+}

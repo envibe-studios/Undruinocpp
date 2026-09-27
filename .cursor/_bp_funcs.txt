@@ -1,0 +1,1062 @@
+﻿{
+	"status": "success",
+	"result":
+	{
+		"blueprint_path": "/Game/Blueprints/BP_Hovercraft",
+		"functions": [
+			{
+				"name": "UserConstructionScript",
+				"graph_type": "Function",
+				"input_parameters": [],
+				"output_parameters": [],
+				"node_count": 1,
+				"graph_nodes": [
+					{
+						"name": "K2Node_FunctionEntry_0",
+						"class": "K2Node_FunctionEntry",
+						"title": "Construction Script"
+					}
+				]
+			},
+			{
+				"name": "EnableThrusters",
+				"graph_type": "Function",
+				"input_parameters": [],
+				"output_parameters": [],
+				"node_count": 18,
+				"graph_nodes": [
+					{
+						"name": "K2Node_FunctionEntry_0",
+						"class": "K2Node_FunctionEntry",
+						"title": "EnableThrusters"
+					},
+					{
+						"name": "K2Node_VariableGet_2",
+						"class": "K2Node_VariableGet",
+						"title": "Get Thruster_FL"
+					},
+					{
+						"name": "K2Node_CallFunction_2",
+						"class": "K2Node_CallFunction",
+						"title": "Set Thruster Enabled\nTarget is Hover Thruster Component"
+					},
+					{
+						"name": "K2Node_CallFunction_3",
+						"class": "K2Node_CallFunction",
+						"title": "Set Thruster Enabled\nTarget is Hover Thruster Component"
+					},
+					{
+						"name": "K2Node_CallFunction_0",
+						"class": "K2Node_CallFunction",
+						"title": "Set Thruster Enabled\nTarget is Hover Thruster Component"
+					},
+					{
+						"name": "K2Node_CallFunction_1",
+						"class": "K2Node_CallFunction",
+						"title": "Set Thruster Enabled\nTarget is Hover Thruster Component"
+					},
+					{
+						"name": "K2Node_VariableGet_4",
+						"class": "K2Node_VariableGet",
+						"title": "Get Thruster_FR"
+					},
+					{
+						"name": "K2Node_VariableGet_5",
+						"class": "K2Node_VariableGet",
+						"title": "Get Thruster_RL"
+					},
+					{
+						"name": "K2Node_VariableGet_6",
+						"class": "K2Node_VariableGet",
+						"title": "Get Thruster_RR"
+					},
+					{
+						"name": "K2Node_VariableGet_18",
+						"class": "K2Node_VariableGet",
+						"title": "Get ThrusterComps"
+					},
+					{
+						"name": "K2Node_CallArrayFunction_1",
+						"class": "K2Node_CallArrayFunction",
+						"title": "Add"
+					},
+					{
+						"name": "K2Node_VariableGet_12",
+						"class": "K2Node_VariableGet",
+						"title": "Get Thruster_FL"
+					},
+					{
+						"name": "K2Node_CallArrayFunction_2",
+						"class": "K2Node_CallArrayFunction",
+						"title": "Add"
+					},
+					{
+						"name": "K2Node_VariableGet_13",
+						"class": "K2Node_VariableGet",
+						"title": "Get Thruster_FR"
+					},
+					{
+						"name": "K2Node_CallArrayFunction_3",
+						"class": "K2Node_CallArrayFunction",
+						"title": "Add"
+					},
+					{
+						"name": "K2Node_VariableGet_14",
+						"class": "K2Node_VariableGet",
+						"title": "Get Thruster_RL"
+					},
+					{
+						"name": "K2Node_CallArrayFunction_0",
+						"class": "K2Node_CallArrayFunction",
+						"title": "Add"
+					},
+					{
+						"name": "K2Node_VariableGet_17",
+						"class": "K2Node_VariableGet",
+						"title": "Get Thruster_RR"
+					}
+				]
+			},
+			{
+				"name": "ApplyHoverForce",
+				"graph_type": "Function",
+				"input_parameters": [
+					{
+						"name": "DeltaTime",
+						"type": "real"
+					}
+				],
+				"output_parameters": [],
+				"node_count": 13,
+				"graph_nodes": [
+					{
+						"name": "K2Node_FunctionEntry_0",
+						"class": "K2Node_FunctionEntry",
+						"title": "ApplyHoverForce"
+					},
+					{
+						"name": "K2Node_VariableGet_1",
+						"class": "K2Node_VariableGet",
+						"title": "Get Thruster_FL"
+					},
+					{
+						"name": "K2Node_CallFunction_1",
+						"class": "K2Node_CallFunction",
+						"title": "Apply Hover Force\nTarget is Hover Thruster Component"
+					},
+					{
+						"name": "K2Node_CallFunction_2",
+						"class": "K2Node_CallFunction",
+						"title": "Apply Hover Force\nTarget is Hover Thruster Component"
+					},
+					{
+						"name": "K2Node_CallFunction_0",
+						"class": "K2Node_CallFunction",
+						"title": "Apply Hover Force\nTarget is Hover Thruster Component"
+					},
+					{
+						"name": "K2Node_CallFunction_3",
+						"class": "K2Node_CallFunction",
+						"title": "Apply Hover Force\nTarget is Hover Thruster Component"
+					},
+					{
+						"name": "K2Node_VariableGet_4",
+						"class": "K2Node_VariableGet",
+						"title": "Get Thruster_FR"
+					},
+					{
+						"name": "K2Node_VariableGet_5",
+						"class": "K2Node_VariableGet",
+						"title": "Get Thruster_RL"
+					},
+					{
+						"name": "K2Node_VariableGet_6",
+						"class": "K2Node_VariableGet",
+						"title": "Get Thruster_RR"
+					},
+					{
+						"name": "K2Node_Knot_0",
+						"class": "K2Node_Knot",
+						"title": "Reroute Node"
+					},
+					{
+						"name": "K2Node_Knot_1",
+						"class": "K2Node_Knot",
+						"title": "Reroute Node"
+					},
+					{
+						"name": "K2Node_Knot_2",
+						"class": "K2Node_Knot",
+						"title": "Reroute Node"
+					},
+					{
+						"name": "K2Node_Knot_3",
+						"class": "K2Node_Knot",
+						"title": "Reroute Node"
+					}
+				]
+			},
+			{
+				"name": "RepairThruster",
+				"graph_type": "Function",
+				"input_parameters": [
+					{
+						"name": "Target",
+						"type": "object"
+					},
+					{
+						"name": "HealAmount",
+						"type": "real"
+					}
+				],
+				"output_parameters": [],
+				"node_count": 2,
+				"graph_nodes": [
+					{
+						"name": "K2Node_FunctionEntry_0",
+						"class": "K2Node_FunctionEntry",
+						"title": "RepairThruster"
+					},
+					{
+						"name": "K2Node_CallFunction_1",
+						"class": "K2Node_CallFunction",
+						"title": "Heal\nTarget is Hover Thruster Component"
+					}
+				]
+			},
+			{
+				"name": "SetMagArrays",
+				"graph_type": "Function",
+				"input_parameters": [
+					{
+						"name": "CurrentMag",
+						"type": "struct"
+					}
+				],
+				"output_parameters": [],
+				"node_count": 16,
+				"graph_nodes": [
+					{
+						"name": "K2Node_FunctionEntry_0",
+						"class": "K2Node_FunctionEntry",
+						"title": "SetMagArrays"
+					},
+					{
+						"name": "K2Node_VariableGet_0",
+						"class": "K2Node_VariableGet",
+						"title": "Get WeaponMags"
+					},
+					{
+						"name": "K2Node_MacroInstance_0",
+						"class": "K2Node_MacroInstance",
+						"title": "For Each Loop"
+					},
+					{
+						"name": "K2Node_BreakStruct_1",
+						"class": "K2Node_BreakStruct",
+						"title": "Break Weapon Mag"
+					},
+					{
+						"name": "K2Node_BreakStruct_0",
+						"class": "K2Node_BreakStruct",
+						"title": "Break Weapon Mag"
+					},
+					{
+						"name": "K2Node_PromotableOperator_0",
+						"class": "K2Node_PromotableOperator",
+						"title": "Equal (Integer64)"
+					},
+					{
+						"name": "K2Node_IfThenElse_0",
+						"class": "K2Node_IfThenElse",
+						"title": "Branch"
+					},
+					{
+						"name": "K2Node_VariableSet_0",
+						"class": "K2Node_VariableSet",
+						"title": "Set FoundIndex"
+					},
+					{
+						"name": "K2Node_VariableGet_1",
+						"class": "K2Node_VariableGet",
+						"title": "Get WeaponMags"
+					},
+					{
+						"name": "K2Node_VariableGet_2",
+						"class": "K2Node_VariableGet",
+						"title": "Get FoundIndex"
+					},
+					{
+						"name": "K2Node_CallArrayFunction_0",
+						"class": "K2Node_CallArrayFunction",
+						"title": "Set Array Elem"
+					},
+					{
+						"name": "K2Node_Message_0",
+						"class": "K2Node_Message",
+						"title": "Update Mags\nTarget is BPI ESPComm"
+					},
+					{
+						"name": "K2Node_CallFunction_0",
+						"class": "K2Node_CallFunction",
+						"title": "Get Controller\nTarget is Pawn"
+					},
+					{
+						"name": "K2Node_VariableSet_2",
+						"class": "K2Node_VariableSet",
+						"title": "Set NewMag"
+					},
+					{
+						"name": "K2Node_VariableGet_5",
+						"class": "K2Node_VariableGet",
+						"title": "Get NewMag"
+					},
+					{
+						"name": "K2Node_VariableGet_4",
+						"class": "K2Node_VariableGet",
+						"title": "Get NewMag"
+					}
+				]
+			},
+			{
+				"name": "WeaponFireMode",
+				"graph_type": "Function",
+				"input_parameters": [
+					{
+						"name": "WeaponSide",
+						"type": "object"
+					},
+					{
+						"name": "WeaponMag",
+						"type": "struct"
+					},
+					{
+						"name": "Side",
+						"type": "int"
+					}
+				],
+				"output_parameters": [],
+				"node_count": 33,
+				"graph_nodes": [
+					{
+						"name": "K2Node_FunctionEntry_0",
+						"class": "K2Node_FunctionEntry",
+						"title": "WeaponFireMode"
+					},
+					{
+						"name": "K2Node_CallFunction_6",
+						"class": "K2Node_CallFunction",
+						"title": "Set Firing Mode\nTarget is Firing Component"
+					},
+					{
+						"name": "K2Node_BreakStruct_2",
+						"class": "K2Node_BreakStruct",
+						"title": "Break Weapon Mag"
+					},
+					{
+						"name": "K2Node_CastByteToEnum_0",
+						"class": "K2Node_CastByteToEnum",
+						"title": "Byte to Enum EFiringModeType"
+					},
+					{
+						"name": "K2Node_SwitchEnum_0",
+						"class": "K2Node_SwitchEnum",
+						"title": "Switch on EFiringModeType"
+					},
+					{
+						"name": "K2Node_VariableGet_4",
+						"class": "K2Node_VariableGet",
+						"title": "Get Weapon_Left"
+					},
+					{
+						"name": "K2Node_VariableSet_0",
+						"class": "K2Node_VariableSet",
+						"title": "Set SideWeapon"
+					},
+					{
+						"name": "K2Node_VariableGet_5",
+						"class": "K2Node_VariableGet",
+						"title": "Get Weapon_Right"
+					},
+					{
+						"name": "K2Node_Select_3",
+						"class": "K2Node_Select",
+						"title": "Select"
+					},
+					{
+						"name": "K2Node_VariableGet_6",
+						"class": "K2Node_VariableGet",
+						"title": "Get SideWeapon"
+					},
+					{
+						"name": "K2Node_CallFunction_1",
+						"class": "K2Node_CallFunction",
+						"title": "Set Material\nTarget is Primitive Component"
+					},
+					{
+						"name": "K2Node_CallFunction_2",
+						"class": "K2Node_CallFunction",
+						"title": "Set Material\nTarget is Primitive Component"
+					},
+					{
+						"name": "K2Node_CallFunction_3",
+						"class": "K2Node_CallFunction",
+						"title": "Set Material\nTarget is Primitive Component"
+					},
+					{
+						"name": "K2Node_IfThenElse_0",
+						"class": "K2Node_IfThenElse",
+						"title": "Branch"
+					},
+					{
+						"name": "K2Node_VariableGet_0",
+						"class": "K2Node_VariableGet",
+						"title": "Get Weapon_Left"
+					},
+					{
+						"name": "K2Node_VariableGet_1",
+						"class": "K2Node_VariableGet",
+						"title": "Get Weapon_Right"
+					},
+					{
+						"name": "K2Node_Select_2",
+						"class": "K2Node_Select",
+						"title": "Select"
+					},
+					{
+						"name": "K2Node_VariableGet_2",
+						"class": "K2Node_VariableGet",
+						"title": "Get SideWeapon"
+					},
+					{
+						"name": "K2Node_CallFunction_0",
+						"class": "K2Node_CallFunction",
+						"title": "Set Material\nTarget is Primitive Component"
+					},
+					{
+						"name": "K2Node_VariableGet_10",
+						"class": "K2Node_VariableGet",
+						"title": "Get Firing_Left"
+					},
+					{
+						"name": "K2Node_VariableSet_2",
+						"class": "K2Node_VariableSet",
+						"title": "Set ScannerConfig"
+					},
+					{
+						"name": "K2Node_MakeStruct_0",
+						"class": "K2Node_MakeStruct",
+						"title": "Make Scanner Mode Config"
+					},
+					{
+						"name": "K2Node_Select_5",
+						"class": "K2Node_Select",
+						"title": "Select"
+					},
+					{
+						"name": "K2Node_VariableGet_11",
+						"class": "K2Node_VariableGet",
+						"title": "Get SideWeapon"
+					},
+					{
+						"name": "K2Node_VariableGet_12",
+						"class": "K2Node_VariableGet",
+						"title": "Get Firing_Right"
+					},
+					{
+						"name": "K2Node_VariableGet_7",
+						"class": "K2Node_VariableGet",
+						"title": "Get Firing_Left"
+					},
+					{
+						"name": "K2Node_Select_4",
+						"class": "K2Node_Select",
+						"title": "Select"
+					},
+					{
+						"name": "K2Node_VariableGet_8",
+						"class": "K2Node_VariableGet",
+						"title": "Get SideWeapon"
+					},
+					{
+						"name": "K2Node_VariableGet_9",
+						"class": "K2Node_VariableGet",
+						"title": "Get Firing_Right"
+					},
+					{
+						"name": "K2Node_VariableSet_3",
+						"class": "K2Node_VariableSet",
+						"title": "Set TractorBeamConfig"
+					},
+					{
+						"name": "K2Node_MakeStruct_1",
+						"class": "K2Node_MakeStruct",
+						"title": "Make Tractor Beam Mode Config"
+					},
+					{
+						"name": "K2Node_MakeArray_1",
+						"class": "K2Node_MakeArray",
+						"title": "Make Array"
+					},
+					{
+						"name": "K2Node_MakeArray_0",
+						"class": "K2Node_MakeArray",
+						"title": "Make Array"
+					}
+				]
+			},
+			{
+				"name": "ThrusterInfo",
+				"graph_type": "Function",
+				"input_parameters": [
+					{
+						"name": "ThrusterIndex",
+						"type": "int"
+					}
+				],
+				"output_parameters": [],
+				"node_count": 15,
+				"graph_nodes": [
+					{
+						"name": "K2Node_FunctionEntry_0",
+						"class": "K2Node_FunctionEntry",
+						"title": "ThrusterInfo"
+					},
+					{
+						"name": "K2Node_Message_1",
+						"class": "K2Node_Message",
+						"title": "Send Thruster Info\nTarget is BPI ESPComm"
+					},
+					{
+						"name": "K2Node_SwitchInteger_0",
+						"class": "K2Node_SwitchInteger",
+						"title": "Switch on Int"
+					},
+					{
+						"name": "K2Node_VariableGet_0",
+						"class": "K2Node_VariableGet",
+						"title": "Get Thruster_FL"
+					},
+					{
+						"name": "K2Node_VariableGet_2",
+						"class": "K2Node_VariableGet",
+						"title": "Get CurrentHitpoints"
+					},
+					{
+						"name": "K2Node_Message_2",
+						"class": "K2Node_Message",
+						"title": "Send Thruster Info\nTarget is BPI ESPComm"
+					},
+					{
+						"name": "K2Node_VariableGet_3",
+						"class": "K2Node_VariableGet",
+						"title": "Get CurrentHitpoints"
+					},
+					{
+						"name": "K2Node_Message_3",
+						"class": "K2Node_Message",
+						"title": "Send Thruster Info\nTarget is BPI ESPComm"
+					},
+					{
+						"name": "K2Node_VariableGet_4",
+						"class": "K2Node_VariableGet",
+						"title": "Get CurrentHitpoints"
+					},
+					{
+						"name": "K2Node_Message_0",
+						"class": "K2Node_Message",
+						"title": "Send Thruster Info\nTarget is BPI ESPComm"
+					},
+					{
+						"name": "K2Node_VariableGet_1",
+						"class": "K2Node_VariableGet",
+						"title": "Get CurrentHitpoints"
+					},
+					{
+						"name": "K2Node_VariableGet_5",
+						"class": "K2Node_VariableGet",
+						"title": "Get Thruster_FR"
+					},
+					{
+						"name": "K2Node_VariableGet_6",
+						"class": "K2Node_VariableGet",
+						"title": "Get Thruster_RL"
+					},
+					{
+						"name": "K2Node_VariableGet_7",
+						"class": "K2Node_VariableGet",
+						"title": "Get Thruster_RR"
+					},
+					{
+						"name": "K2Node_CallFunction_0",
+						"class": "K2Node_CallFunction",
+						"title": "Get Player Controller"
+					}
+				]
+			},
+			{
+				"name": "WeaponFire",
+				"graph_type": "Function",
+				"input_parameters": [
+					{
+						"name": "TriggerDown",
+						"type": "bool"
+					},
+					{
+						"name": "PortSide",
+						"type": "bool"
+					}
+				],
+				"output_parameters": [],
+				"node_count": 16,
+				"graph_nodes": [
+					{
+						"name": "K2Node_FunctionEntry_0",
+						"class": "K2Node_FunctionEntry",
+						"title": "WeaponFire"
+					},
+					{
+						"name": "K2Node_BreakStruct_1",
+						"class": "K2Node_BreakStruct",
+						"title": "Break Weapon Mag"
+					},
+					{
+						"name": "K2Node_VariableGet_1",
+						"class": "K2Node_VariableGet",
+						"title": "Get MagLeft"
+					},
+					{
+						"name": "K2Node_VariableGet_2",
+						"class": "K2Node_VariableGet",
+						"title": "Get MagRight"
+					},
+					{
+						"name": "K2Node_Select_0",
+						"class": "K2Node_Select",
+						"title": "Select"
+					},
+					{
+						"name": "K2Node_VariableSet_0",
+						"class": "K2Node_VariableSet",
+						"title": "Set CurrentMag"
+					},
+					{
+						"name": "K2Node_VariableGet_3",
+						"class": "K2Node_VariableGet",
+						"title": "Get Firing_Right"
+					},
+					{
+						"name": "K2Node_CallFunction_1",
+						"class": "K2Node_CallFunction",
+						"title": "Set Firing\nTarget is Firing Component"
+					},
+					{
+						"name": "K2Node_Select_1",
+						"class": "K2Node_Select",
+						"title": "Select"
+					},
+					{
+						"name": "K2Node_VariableGet_4",
+						"class": "K2Node_VariableGet",
+						"title": "Get Firing_Left"
+					},
+					{
+						"name": "K2Node_Knot_1",
+						"class": "K2Node_Knot",
+						"title": "Reroute Node"
+					},
+					{
+						"name": "K2Node_CommutativeAssociativeBinaryOperator_0",
+						"class": "K2Node_CommutativeAssociativeBinaryOperator",
+						"title": "AND Boolean"
+					},
+					{
+						"name": "K2Node_Knot_0",
+						"class": "K2Node_Knot",
+						"title": "Reroute Node"
+					},
+					{
+						"name": "K2Node_Knot_2",
+						"class": "K2Node_Knot",
+						"title": "Reroute Node"
+					},
+					{
+						"name": "K2Node_PromotableOperator_0",
+						"class": "K2Node_PromotableOperator",
+						"title": "integer > integer"
+					},
+					{
+						"name": "K2Node_Knot_3",
+						"class": "K2Node_Knot",
+						"title": "Reroute Node"
+					}
+				]
+			},
+			{
+				"name": "QuatToCalibratedRotator",
+				"graph_type": "Function",
+				"input_parameters": [
+					{
+						"name": "CurrentQuat",
+						"type": "struct"
+					},
+					{
+						"name": "Port",
+						"type": "bool"
+					}
+				],
+				"output_parameters": [
+					{
+						"name": "execute",
+						"type": "exec"
+					},
+					{
+						"name": "ReturnValue",
+						"type": "struct"
+					}
+				],
+				"node_count": 24,
+				"graph_nodes": [
+					{
+						"name": "K2Node_FunctionEntry_0",
+						"class": "K2Node_FunctionEntry",
+						"title": "QuatToCalibratedRotator"
+					},
+					{
+						"name": "K2Node_FunctionResult_0",
+						"class": "K2Node_FunctionResult",
+						"title": "Return Node"
+					},
+					{
+						"name": "K2Node_CallFunction_0",
+						"class": "K2Node_CallFunction",
+						"title": "Normalized (Quat)"
+					},
+					{
+						"name": "K2Node_VariableSet_0",
+						"class": "K2Node_VariableSet",
+						"title": "Set Qrel"
+					},
+					{
+						"name": "K2Node_CallFunction_1",
+						"class": "K2Node_CallFunction",
+						"title": "Inversed (Quat)"
+					},
+					{
+						"name": "K2Node_PromotableOperator_0",
+						"class": "K2Node_PromotableOperator",
+						"title": "Quat * Quat"
+					},
+					{
+						"name": "K2Node_Select_0",
+						"class": "K2Node_Select",
+						"title": "Select"
+					},
+					{
+						"name": "K2Node_VariableGet_0",
+						"class": "K2Node_VariableGet",
+						"title": "Get ZeroQuat_Left"
+					},
+					{
+						"name": "K2Node_VariableGet_5",
+						"class": "K2Node_VariableGet",
+						"title": "Get ZeroQuat_Right"
+					},
+					{
+						"name": "K2Node_VariableSet_1",
+						"class": "K2Node_VariableSet",
+						"title": "Set Q"
+					},
+					{
+						"name": "K2Node_VariableGet_6",
+						"class": "K2Node_VariableGet",
+						"title": "Get Calibrated_Left"
+					},
+					{
+						"name": "K2Node_VariableGet_7",
+						"class": "K2Node_VariableGet",
+						"title": "Get Calibrated_Right"
+					},
+					{
+						"name": "K2Node_Select_2",
+						"class": "K2Node_Select",
+						"title": "Select"
+					},
+					{
+						"name": "K2Node_IfThenElse_0",
+						"class": "K2Node_IfThenElse",
+						"title": "Branch"
+					},
+					{
+						"name": "K2Node_VariableSet_3",
+						"class": "K2Node_VariableSet",
+						"title": "Set bPort"
+					},
+					{
+						"name": "K2Node_VariableGet_10",
+						"class": "K2Node_VariableGet",
+						"title": "Get bPort"
+					},
+					{
+						"name": "K2Node_VariableGet_11",
+						"class": "K2Node_VariableGet",
+						"title": "Get bPort"
+					},
+					{
+						"name": "K2Node_VariableGet_13",
+						"class": "K2Node_VariableGet",
+						"title": "Get Qrel"
+					},
+					{
+						"name": "K2Node_VariableGet_17",
+						"class": "K2Node_VariableGet",
+						"title": "Get Q"
+					},
+					{
+						"name": "K2Node_CallFunction_3",
+						"class": "K2Node_CallFunction",
+						"title": "ToRotator (Quat)"
+					},
+					{
+						"name": "K2Node_VariableSet_5",
+						"class": "K2Node_VariableSet",
+						"title": "Set Qout"
+					},
+					{
+						"name": "K2Node_VariableSet_4",
+						"class": "K2Node_VariableSet",
+						"title": "Set Qout"
+					},
+					{
+						"name": "K2Node_VariableGet_16",
+						"class": "K2Node_VariableGet",
+						"title": "Get Qout"
+					},
+					{
+						"name": "K2Node_VariableGet_15",
+						"class": "K2Node_VariableGet",
+						"title": "Get Q"
+					}
+				]
+			},
+			{
+				"name": "UpdateThrusterLights",
+				"graph_type": "Function",
+				"input_parameters": [
+					{
+						"name": "Index",
+						"type": "int"
+					},
+					{
+						"name": "Target",
+						"type": "object"
+					}
+				],
+				"output_parameters": [],
+				"node_count": 29,
+				"graph_nodes": [
+					{
+						"name": "K2Node_FunctionEntry_0",
+						"class": "K2Node_FunctionEntry",
+						"title": "UpdateThrusterLights"
+					},
+					{
+						"name": "K2Node_CallFunction_1",
+						"class": "K2Node_CallFunction",
+						"title": "Get Health Percent\nTarget is Hover Thruster Component"
+					},
+					{
+						"name": "K2Node_PromotableOperator_1",
+						"class": "K2Node_PromotableOperator",
+						"title": "float >= float"
+					},
+					{
+						"name": "K2Node_IfThenElse_1",
+						"class": "K2Node_IfThenElse",
+						"title": "Branch"
+					},
+					{
+						"name": "K2Node_PromotableOperator_0",
+						"class": "K2Node_PromotableOperator",
+						"title": "float >= float"
+					},
+					{
+						"name": "K2Node_IfThenElse_2",
+						"class": "K2Node_IfThenElse",
+						"title": "Branch"
+					},
+					{
+						"name": "K2Node_PromotableOperator_3",
+						"class": "K2Node_PromotableOperator",
+						"title": "float < float"
+					},
+					{
+						"name": "K2Node_CommutativeAssociativeBinaryOperator_0",
+						"class": "K2Node_CommutativeAssociativeBinaryOperator",
+						"title": "AND Boolean"
+					},
+					{
+						"name": "K2Node_IfThenElse_0",
+						"class": "K2Node_IfThenElse",
+						"title": "Branch"
+					},
+					{
+						"name": "K2Node_PromotableOperator_2",
+						"class": "K2Node_PromotableOperator",
+						"title": "float < float"
+					},
+					{
+						"name": "K2Node_CommutativeAssociativeBinaryOperator_2",
+						"class": "K2Node_CommutativeAssociativeBinaryOperator",
+						"title": "Append"
+					},
+					{
+						"name": "K2Node_CallFunction_7",
+						"class": "K2Node_CallFunction",
+						"title": "To String (Integer)"
+					},
+					{
+						"name": "K2Node_CommutativeAssociativeBinaryOperator_3",
+						"class": "K2Node_CommutativeAssociativeBinaryOperator",
+						"title": "Append"
+					},
+					{
+						"name": "K2Node_CallFunction_8",
+						"class": "K2Node_CallFunction",
+						"title": "To String (Integer)"
+					},
+					{
+						"name": "K2Node_CommutativeAssociativeBinaryOperator_1",
+						"class": "K2Node_CommutativeAssociativeBinaryOperator",
+						"title": "Append"
+					},
+					{
+						"name": "K2Node_CallFunction_6",
+						"class": "K2Node_CallFunction",
+						"title": "To String (Integer)"
+					},
+					{
+						"name": "K2Node_VariableGet_7",
+						"class": "K2Node_VariableGet",
+						"title": "Get ShipID"
+					},
+					{
+						"name": "K2Node_VariableGet_9",
+						"class": "K2Node_VariableGet",
+						"title": "Get ShipID"
+					},
+					{
+						"name": "K2Node_Message_1",
+						"class": "K2Node_Message",
+						"title": "Send Line\nTarget is BPI ESPComm"
+					},
+					{
+						"name": "K2Node_VariableGet_4",
+						"class": "K2Node_VariableGet",
+						"title": "Get ShipID"
+					},
+					{
+						"name": "K2Node_Message_2",
+						"class": "K2Node_Message",
+						"title": "Send Line\nTarget is BPI ESPComm"
+					},
+					{
+						"name": "K2Node_Message_0",
+						"class": "K2Node_Message",
+						"title": "Send Line\nTarget is BPI ESPComm"
+					},
+					{
+						"name": "K2Node_VariableSet_1",
+						"class": "K2Node_VariableSet",
+						"title": "Set ThrusterIndex"
+					},
+					{
+						"name": "K2Node_VariableGet_11",
+						"class": "K2Node_VariableGet",
+						"title": "Get ThrusterIndex"
+					},
+					{
+						"name": "K2Node_VariableGet_12",
+						"class": "K2Node_VariableGet",
+						"title": "Get ThrusterIndex"
+					},
+					{
+						"name": "K2Node_VariableGet_5",
+						"class": "K2Node_VariableGet",
+						"title": "Get ThrusterIndex"
+					},
+					{
+						"name": "K2Node_CallFunction_2",
+						"class": "K2Node_CallFunction",
+						"title": "Get Controller\nTarget is Pawn"
+					},
+					{
+						"name": "K2Node_CallFunction_9",
+						"class": "K2Node_CallFunction",
+						"title": "Get Controller\nTarget is Pawn"
+					},
+					{
+						"name": "K2Node_CallFunction_0",
+						"class": "K2Node_CallFunction",
+						"title": "Get Controller\nTarget is Pawn"
+					}
+				]
+			},
+			{
+				"name": "IMUQuatToUnreal",
+				"graph_type": "Function",
+				"input_parameters": [
+					{
+						"name": "Quat",
+						"type": "struct"
+					}
+				],
+				"output_parameters": [
+					{
+						"name": "execute",
+						"type": "exec"
+					},
+					{
+						"name": "Unreal Quat",
+						"type": "struct"
+					}
+				],
+				"node_count": 6,
+				"graph_nodes": [
+					{
+						"name": "K2Node_FunctionEntry_0",
+						"class": "K2Node_FunctionEntry",
+						"title": "IMUQuatToUnreal"
+					},
+					{
+						"name": "K2Node_FunctionResult_0",
+						"class": "K2Node_FunctionResult",
+						"title": "Return Node"
+					},
+					{
+						"name": "K2Node_CallFunction_0",
+						"class": "K2Node_CallFunction",
+						"title": "Break Quat"
+					},
+					{
+						"name": "K2Node_CallFunction_1",
+						"class": "K2Node_CallFunction",
+						"title": "Make Quat"
+					},
+					{
+						"name": "K2Node_PromotableOperator_1",
+						"class": "K2Node_PromotableOperator",
+						"title": "float * float"
+					},
+					{
+						"name": "K2Node_PromotableOperator_0",
+						"class": "K2Node_PromotableOperator",
+						"title": "float * float"
+					}
+				]
+			}
+		],
+		"function_count": 11,
+		"success": true
+	}
+}

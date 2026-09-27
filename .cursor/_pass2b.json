@@ -1,0 +1,42 @@
+[
+  {
+    "label": "gm_sendline_info",
+    "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools",
+    "tool": "get_node_infos",
+    "args": {
+      "nodes": [
+        "/Game/Blueprints/GameMode_ShipPorts.GameMode_ShipPorts:EventGraph.K2Node_CallFunction_13"
+      ]
+    }
+  },
+  {
+    "label": "gm_sendline_pin",
+    "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools",
+    "tool": "get_pin_value",
+    "args": {
+      "pin": {
+        "direction": "EGPD_Input",
+        "index_id": 2,
+        "node": { "refPath": "/Game/Blueprints/GameMode_ShipPorts.GameMode_ShipPorts:EventGraph.K2Node_CallFunction_13" }
+      }
+    }
+  },
+  {
+    "label": "gm_find_alloff",
+    "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools",
+    "tool": "find_nodes",
+    "args": {
+      "graph": "/Game/Blueprints/GameMode_ShipPorts.GameMode_ShipPorts:EventGraph",
+      "title": "SendLine"
+    }
+  },
+  {
+    "label": "gm_find_alloff2",
+    "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools",
+    "tool": "find_nodes",
+    "args": {
+      "graph": "/Game/Blueprints/GameMode_ShipPorts.GameMode_ShipPorts:EventGraph",
+      "title": "all_off"
+    }
+  }
+]

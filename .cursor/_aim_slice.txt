@@ -1,0 +1,375 @@
+﻿y Index",
+							"type": "int",
+							"direction": "Output",
+							"connections": 1
+						},
+						{
+							"name": "Completed",
+							"type": "exec",
+							"direction": "Output",
+							"connections": 0
+						}
+					]
+				},
+				{
+					"name": "K2Node_VariableGet_11",
+					"class": "K2Node_VariableGet",
+					"title": "Get ThrusterComps",
+					"pos_x": -912,
+					"pos_y": -608,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "ThrusterComps",
+							"type": "object",
+							"direction": "Output",
+							"connections": 1
+						},
+						{
+							"name": "self",
+							"type": "object",
+							"direction": "Input",
+							"connections": 0
+						}
+					]
+				},
+				{
+					"name": "K2Node_Knot_0",
+					"class": "K2Node_Knot",
+					"title": "Reroute Node",
+					"pos_x": 2048,
+					"pos_y": 2176,
+					"can_rename": true,
+					"pins": [
+						{
+							"name": "InputPin",
+							"type": "exec",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "OutputPin",
+							"type": "exec",
+							"direction": "Output",
+							"connections": 0
+						}
+					]
+				},
+				{
+					"name": "K2Node_Event_9",
+					"class": "K2Node_Event",
+					"title": "Event SendFire\nFrom BPI ESPComm",
+					"pos_x": 368,
+					"pos_y": -560,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "OutputDelegate",
+							"type": "delegate",
+							"direction": "Output",
+							"connections": 0
+						},
+						{
+							"name": "then",
+							"type": "exec",
+							"direction": "Output",
+							"connections": 1
+						},
+						{
+							"name": "TriggerDown",
+							"type": "bool",
+							"direction": "Output",
+							"connections": 1
+						},
+						{
+							"name": "PortSide",
+							"type": "bool",
+							"direction": "Output",
+							"connections": 1
+						}
+					]
+				},
+				{
+					"name": "K2Node_Event_3",
+					"class": "K2Node_Event",
+					"title": "Event SendWeaponAim\nFrom BPI ESPComm",
+					"pos_x": 352,
+					"pos_y": 144,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "OutputDelegate",
+							"type": "delegate",
+							"direction": "Output",
+							"connections": 0
+						},
+						{
+							"name": "then",
+							"type": "exec",
+							"direction": "Output",
+							"connections": 1
+						},
+						{
+							"name": "Port",
+							"type": "bool",
+							"direction": "Output",
+							"connections": 2
+						},
+						{
+							"name": "Quat",
+							"type": "struct",
+							"direction": "Output",
+							"connections": 1
+						}
+					]
+				},
+				{
+					"name": "K2Node_VariableSet_2",
+					"class": "K2Node_VariableSet",
+					"title": "Set ZeroQuat_Left",
+					"pos_x": 608,
+					"pos_y": 720,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "execute",
+							"type": "exec",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "then",
+							"type": "exec",
+							"direction": "Output",
+							"connections": 1
+						},
+						{
+							"name": "ZeroQuat_Left",
+							"type": "struct",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "Output_Get",
+							"type": "struct",
+							"direction": "Output",
+							"connections": 0
+						},
+						{
+							"name": "self",
+							"type": "object",
+							"direction": "Input",
+							"connections": 0
+						}
+					]
+				},
+				{
+					"name": "K2Node_VariableSet_3",
+					"class": "K2Node_VariableSet",
+					"title": "Set ZeroQuat_Right",
+					"pos_x": 1088,
+					"pos_y": 720,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "execute",
+							"type": "exec",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "then",
+							"type": "exec",
+							"direction": "Output",
+							"connections": 1
+						},
+						{
+							"name": "ZeroQuat_Right",
+							"type": "struct",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "Output_Get",
+							"type": "struct",
+							"direction": "Output",
+							"connections": 0
+						},
+						{
+							"name": "self",
+							"type": "object",
+							"direction": "Input",
+							"connections": 0
+						}
+					]
+				},
+				{
+					"name": "K2Node_VariableSet_4",
+					"class": "K2Node_VariableSet",
+					"title": "Set Calibrated_Left",
+					"pos_x": 832,
+					"pos_y": 720,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "execute",
+							"type": "exec",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "then",
+							"type": "exec",
+							"direction": "Output",
+							"connections": 1
+						},
+						{
+							"name": "Calibrated_Left",
+							"type": "bool",
+							"direction": "Input",
+							"connections": 0
+						},
+						{
+							"name": "Output_Get",
+							"type": "bool",
+							"direction": "Output",
+							"connections": 0
+						},
+						{
+							"name": "self",
+							"type": "object",
+							"direction": "Input",
+							"connections": 0
+						}
+					]
+				},
+				{
+					"name": "K2Node_VariableSet_5",
+					"class": "K2Node_VariableSet",
+					"title": "Set Calibrated_Right",
+					"pos_x": 1344,
+					"pos_y": 720,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "execute",
+							"type": "exec",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "then",
+							"type": "exec",
+							"direction": "Output",
+							"connections": 1
+						},
+						{
+							"name": "Calibrated_Right",
+							"type": "bool",
+							"direction": "Input",
+							"connections": 0
+						},
+						{
+							"name": "Output_Get",
+							"type": "bool",
+							"direction": "Output",
+							"connections": 0
+						},
+						{
+							"name": "self",
+							"type": "object",
+							"direction": "Input",
+							"connections": 0
+						}
+					]
+				},
+				{
+					"name": "K2Node_CallFunction_29",
+					"class": "K2Node_CallFunction",
+					"title": "Normalized (Quat)",
+					"pos_x": 1088,
+					"pos_y": 896,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "self",
+							"type": "object",
+							"direction": "Input",
+							"connections": 0
+						},
+						{
+							"name": "Q",
+							"type": "struct",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "Tolerance",
+							"type": "real",
+							"direction": "Input",
+							"connections": 0
+						},
+						{
+							"name": "ReturnValue",
+							"type": "struct",
+							"direction": "Output",
+							"connections": 1
+						}
+					]
+				},
+				{
+					"name": "K2Node_CallFunction_15",
+					"class": "K2Node_CallFunction",
+					"title": "Quat to Calibrated Rotator\nTarget is BP Hovercraft",
+					"pos_x": 1088,
+					"pos_y": 144,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "execute",
+							"type": "exec",
+							"direction": "Input",
+							"connections": 2
+						},
+						{
+							"name": "then",
+							"type": "exec",
+							"direction": "Output",
+							"connections": 1
+						},
+						{
+							"name": "self",
+							"type": "object",
+							"direction": "Input",
+							"connections": 0
+						},
+						{
+							"name": "CurrentQuat",
+							"type": "struct",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "Port",
+							"type": "bool",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "ReturnValue",
+							"type": "struct",
+							"direction": "Output",
+							"connections": 1
+						}
+					]
+				},
+				{
+					"name": "K2Node_Knot_13",
+					"class": "K2Node_Knot",
+					"title": "Reroute Node",
+					"pos_x": 1040,
+					"pos_y": 352,
+					"can_rename": true,
+					"pins": [
+						{
+							"name": "In

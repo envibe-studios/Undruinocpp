@@ -1,0 +1,3 @@
+[
+  {"label":"pc hw","toolset":"editor_toolset.toolsets.object.ObjectTools","tool":"get_properties","args":{"instance":{"refPath":"/Game/Blueprints/PC_Controller.PC_Controller_C:ShipHardwareInput_GEN_VARIABLE"},"properties":["bForwardAimToSendWeaponAim","bAutoApplyImuRotation","bForwardTriggerToSendFire","bAutoApplyTriggerFiring","ShipId"]}}
+]

@@ -1,0 +1,953 @@
+﻿{
+	"status": "success",
+	"result":
+	{
+		"blueprint_path": "/Game/Blueprints/BP_Hovercraft",
+		"graph_data":
+		{
+			"graph_name": "QuatToCalibratedRotator",
+			"graph_type": "EdGraph",
+			"nodes": [
+				{
+					"name": "K2Node_FunctionEntry_0",
+					"class": "K2Node_FunctionEntry",
+					"title": "QuatToCalibratedRotator",
+					"pos_x": 0,
+					"pos_y": 0,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "then",
+							"type": "exec",
+							"direction": "Output",
+							"connections": 1
+						},
+						{
+							"name": "CurrentQuat",
+							"type": "struct",
+							"direction": "Output",
+							"connections": 1
+						},
+						{
+							"name": "Port",
+							"type": "bool",
+							"direction": "Output",
+							"connections": 1
+						}
+					]
+				},
+				{
+					"name": "K2Node_FunctionResult_0",
+					"class": "K2Node_FunctionResult",
+					"title": "Return Node",
+					"pos_x": 1744,
+					"pos_y": 0,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "execute",
+							"type": "exec",
+							"direction": "Input",
+							"connections": 2
+						},
+						{
+							"name": "ReturnValue",
+							"type": "struct",
+							"direction": "Input",
+							"connections": 1
+						}
+					]
+				},
+				{
+					"name": "K2Node_CallFunction_0",
+					"class": "K2Node_CallFunction",
+					"title": "Normalized (Quat)",
+					"pos_x": 464,
+					"pos_y": 96,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "self",
+							"type": "object",
+							"direction": "Input",
+							"connections": 0
+						},
+						{
+							"name": "Q",
+							"type": "struct",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "Tolerance",
+							"type": "real",
+							"direction": "Input",
+							"connections": 0
+						},
+						{
+							"name": "ReturnValue",
+							"type": "struct",
+							"direction": "Output",
+							"connections": 1
+						}
+					]
+				},
+				{
+					"name": "K2Node_VariableSet_0",
+					"class": "K2Node_VariableSet",
+					"title": "Set Qrel",
+					"pos_x": 1232,
+					"pos_y": 16,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "execute",
+							"type": "exec",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "then",
+							"type": "exec",
+							"direction": "Output",
+							"connections": 1
+						},
+						{
+							"name": "Qrel",
+							"type": "struct",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "Output_Get",
+							"type": "struct",
+							"direction": "Output",
+							"connections": 0
+						}
+					]
+				},
+				{
+					"name": "K2Node_CallFunction_1",
+					"class": "K2Node_CallFunction",
+					"title": "Inversed (Quat)",
+					"pos_x": 1232,
+					"pos_y": 160,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "self",
+							"type": "object",
+							"direction": "Input",
+							"connections": 0
+						},
+						{
+							"name": "Q",
+							"type": "struct",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "ReturnValue",
+							"type": "struct",
+							"direction": "Output",
+							"connections": 1
+						}
+					]
+				},
+				{
+					"name": "K2Node_PromotableOperator_0",
+					"class": "K2Node_PromotableOperator",
+					"title": "Quat * Quat",
+					"pos_x": 1232,
+					"pos_y": 96,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "A",
+							"type": "struct",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "B",
+							"type": "struct",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "ReturnValue",
+							"type": "struct",
+							"direction": "Output",
+							"connections": 1
+						}
+					]
+				},
+				{
+					"name": "K2Node_Select_0",
+					"class": "K2Node_Select",
+					"title": "Select",
+					"pos_x": 1232,
+					"pos_y": 240,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "Option 0",
+							"type": "struct",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "Option 1",
+							"type": "struct",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "Index",
+							"type": "bool",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "ReturnValue",
+							"type": "struct",
+							"direction": "Output",
+							"connections": 1
+						}
+					]
+				},
+				{
+					"name": "K2Node_VariableGet_0",
+					"class": "K2Node_VariableGet",
+					"title": "Get ZeroQuat_Left",
+					"pos_x": 1232,
+					"pos_y": 400,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "ZeroQuat_Left",
+							"type": "struct",
+							"direction": "Output",
+							"connections": 1
+						},
+						{
+							"name": "self",
+							"type": "object",
+							"direction": "Input",
+							"connections": 0
+						}
+					]
+				},
+				{
+					"name": "K2Node_VariableGet_5",
+					"class": "K2Node_VariableGet",
+					"title": "Get ZeroQuat_Right",
+					"pos_x": 1232,
+					"pos_y": 368,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "ZeroQuat_Right",
+							"type": "struct",
+							"direction": "Output",
+							"connections": 1
+						},
+						{
+							"name": "self",
+							"type": "object",
+							"direction": "Input",
+							"connections": 0
+						}
+					]
+				},
+				{
+					"name": "K2Node_VariableSet_1",
+					"class": "K2Node_VariableSet",
+					"title": "Set Q",
+					"pos_x": 464,
+					"pos_y": 16,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "execute",
+							"type": "exec",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "then",
+							"type": "exec",
+							"direction": "Output",
+							"connections": 1
+						},
+						{
+							"name": "Q",
+							"type": "struct",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "Output_Get",
+							"type": "struct",
+							"direction": "Output",
+							"connections": 0
+						}
+					]
+				},
+				{
+					"name": "K2Node_VariableGet_6",
+					"class": "K2Node_VariableGet",
+					"title": "Get Calibrated_Left",
+					"pos_x": 816,
+					"pos_y": 224,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "Calibrated_Left",
+							"type": "bool",
+							"direction": "Output",
+							"connections": 1
+						},
+						{
+							"name": "self",
+							"type": "object",
+							"direction": "Input",
+							"connections": 0
+						}
+					]
+				},
+				{
+					"name": "K2Node_VariableGet_7",
+					"class": "K2Node_VariableGet",
+					"title": "Get Calibrated_Right",
+					"pos_x": 816,
+					"pos_y": 256,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "Calibrated_Right",
+							"type": "bool",
+							"direction": "Output",
+							"connections": 1
+						},
+						{
+							"name": "self",
+							"type": "object",
+							"direction": "Input",
+							"connections": 0
+						}
+					]
+				},
+				{
+					"name": "K2Node_Select_2",
+					"class": "K2Node_Select",
+					"title": "Select",
+					"pos_x": 816,
+					"pos_y": 96,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "Option 0",
+							"type": "bool",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "Option 1",
+							"type": "bool",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "Index",
+							"type": "bool",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "ReturnValue",
+							"type": "bool",
+							"direction": "Output",
+							"connections": 1
+						}
+					]
+				},
+				{
+					"name": "K2Node_IfThenElse_0",
+					"class": "K2Node_IfThenElse",
+					"title": "Branch",
+					"pos_x": 816,
+					"pos_y": 0,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "execute",
+							"type": "exec",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "Condition",
+							"type": "bool",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "then",
+							"type": "exec",
+							"direction": "Output",
+							"connections": 1
+						},
+						{
+							"name": "else",
+							"type": "exec",
+							"direction": "Output",
+							"connections": 1
+						}
+					]
+				},
+				{
+					"name": "K2Node_VariableSet_3",
+					"class": "K2Node_VariableSet",
+					"title": "Set bPort",
+					"pos_x": 272,
+					"pos_y": 16,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "execute",
+							"type": "exec",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "then",
+							"type": "exec",
+							"direction": "Output",
+							"connections": 1
+						},
+						{
+							"name": "bPort",
+							"type": "bool",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "Output_Get",
+							"type": "bool",
+							"direction": "Output",
+							"connections": 0
+						}
+					]
+				},
+				{
+					"name": "K2Node_VariableGet_10",
+					"class": "K2Node_VariableGet",
+					"title": "Get bPort",
+					"pos_x": 816,
+					"pos_y": 320,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "bPort",
+							"type": "bool",
+							"direction": "Output",
+							"connections": 1
+						}
+					]
+				},
+				{
+					"name": "K2Node_VariableGet_11",
+					"class": "K2Node_VariableGet",
+					"title": "Get bPort",
+					"pos_x": 1072,
+					"pos_y": 352,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "bPort",
+							"type": "bool",
+							"direction": "Output",
+							"connections": 1
+						}
+					]
+				},
+				{
+					"name": "K2Node_VariableGet_13",
+					"class": "K2Node_VariableGet",
+					"title": "Get Qrel",
+					"pos_x": 1520,
+					"pos_y": 96,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "Qrel",
+							"type": "struct",
+							"direction": "Output",
+							"connections": 1
+						}
+					]
+				},
+				{
+					"name": "K2Node_VariableGet_17",
+					"class": "K2Node_VariableGet",
+					"title": "Get Q",
+					"pos_x": 1520,
+					"pos_y": 240,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "Q",
+							"type": "struct",
+							"direction": "Output",
+							"connections": 1
+						}
+					]
+				},
+				{
+					"name": "K2Node_CallFunction_3",
+					"class": "K2Node_CallFunction",
+					"title": "ToRotator (Quat)",
+					"pos_x": 1744,
+					"pos_y": 96,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "self",
+							"type": "object",
+							"direction": "Input",
+							"connections": 0
+						},
+						{
+							"name": "Q",
+							"type": "struct",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "ReturnValue",
+							"type": "struct",
+							"direction": "Output",
+							"connections": 1
+						}
+					]
+				},
+				{
+					"name": "K2Node_VariableSet_5",
+					"class": "K2Node_VariableSet",
+					"title": "Set Qout",
+					"pos_x": 1520,
+					"pos_y": 16,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "execute",
+							"type": "exec",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "then",
+							"type": "exec",
+							"direction": "Output",
+							"connections": 1
+						},
+						{
+							"name": "Qout",
+							"type": "struct",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "Output_Get",
+							"type": "struct",
+							"direction": "Output",
+							"connections": 0
+						}
+					]
+				},
+				{
+					"name": "K2Node_VariableSet_4",
+					"class": "K2Node_VariableSet",
+					"title": "Set Qout",
+					"pos_x": 1520,
+					"pos_y": 160,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "execute",
+							"type": "exec",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "then",
+							"type": "exec",
+							"direction": "Output",
+							"connections": 1
+						},
+						{
+							"name": "Qout",
+							"type": "struct",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "Output_Get",
+							"type": "struct",
+							"direction": "Output",
+							"connections": 0
+						}
+					]
+				},
+				{
+					"name": "K2Node_VariableGet_16",
+					"class": "K2Node_VariableGet",
+					"title": "Get Qout",
+					"pos_x": 1744,
+					"pos_y": 144,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "Qout",
+							"type": "struct",
+							"direction": "Output",
+							"connections": 1
+						}
+					]
+				},
+				{
+					"name": "K2Node_VariableGet_15",
+					"class": "K2Node_VariableGet",
+					"title": "Get Q",
+					"pos_x": 1072,
+					"pos_y": 128,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "Q",
+							"type": "struct",
+							"direction": "Output",
+							"connections": 1
+						}
+					]
+				}
+			],
+			"connections": [
+				{
+					"from_node": "K2Node_FunctionEntry_0",
+					"from_pin": "then",
+					"to_node": "K2Node_VariableSet_3",
+					"to_pin": "execute"
+				},
+				{
+					"from_node": "K2Node_FunctionEntry_0",
+					"from_pin": "CurrentQuat",
+					"to_node": "K2Node_CallFunction_0",
+					"to_pin": "Q"
+				},
+				{
+					"from_node": "K2Node_FunctionEntry_0",
+					"from_pin": "Port",
+					"to_node": "K2Node_VariableSet_3",
+					"to_pin": "bPort"
+				},
+				{
+					"from_node": "K2Node_FunctionResult_0",
+					"from_pin": "execute",
+					"to_node": "K2Node_VariableSet_5",
+					"to_pin": "then"
+				},
+				{
+					"from_node": "K2Node_FunctionResult_0",
+					"from_pin": "execute",
+					"to_node": "K2Node_VariableSet_4",
+					"to_pin": "then"
+				},
+				{
+					"from_node": "K2Node_FunctionResult_0",
+					"from_pin": "ReturnValue",
+					"to_node": "K2Node_CallFunction_3",
+					"to_pin": "ReturnValue"
+				},
+				{
+					"from_node": "K2Node_CallFunction_0",
+					"from_pin": "Q",
+					"to_node": "K2Node_FunctionEntry_0",
+					"to_pin": "CurrentQuat"
+				},
+				{
+					"from_node": "K2Node_CallFunction_0",
+					"from_pin": "ReturnValue",
+					"to_node": "K2Node_VariableSet_1",
+					"to_pin": "Q"
+				},
+				{
+					"from_node": "K2Node_VariableSet_0",
+					"from_pin": "execute",
+					"to_node": "K2Node_IfThenElse_0",
+					"to_pin": "then"
+				},
+				{
+					"from_node": "K2Node_VariableSet_0",
+					"from_pin": "then",
+					"to_node": "K2Node_VariableSet_5",
+					"to_pin": "execute"
+				},
+				{
+					"from_node": "K2Node_VariableSet_0",
+					"from_pin": "Qrel",
+					"to_node": "K2Node_PromotableOperator_0",
+					"to_pin": "ReturnValue"
+				},
+				{
+					"from_node": "K2Node_CallFunction_1",
+					"from_pin": "Q",
+					"to_node": "K2Node_Select_0",
+					"to_pin": "ReturnValue"
+				},
+				{
+					"from_node": "K2Node_CallFunction_1",
+					"from_pin": "ReturnValue",
+					"to_node": "K2Node_PromotableOperator_0",
+					"to_pin": "A"
+				},
+				{
+					"from_node": "K2Node_PromotableOperator_0",
+					"from_pin": "A",
+					"to_node": "K2Node_CallFunction_1",
+					"to_pin": "ReturnValue"
+				},
+				{
+					"from_node": "K2Node_PromotableOperator_0",
+					"from_pin": "B",
+					"to_node": "K2Node_VariableGet_15",
+					"to_pin": "Q"
+				},
+				{
+					"from_node": "K2Node_PromotableOperator_0",
+					"from_pin": "ReturnValue",
+					"to_node": "K2Node_VariableSet_0",
+					"to_pin": "Qrel"
+				},
+				{
+					"from_node": "K2Node_Select_0",
+					"from_pin": "Option 0",
+					"to_node": "K2Node_VariableGet_5",
+					"to_pin": "ZeroQuat_Right"
+				},
+				{
+					"from_node": "K2Node_Select_0",
+					"from_pin": "Option 1",
+					"to_node": "K2Node_VariableGet_0",
+					"to_pin": "ZeroQuat_Left"
+				},
+				{
+					"from_node": "K2Node_Select_0",
+					"from_pin": "Index",
+					"to_node": "K2Node_VariableGet_11",
+					"to_pin": "bPort"
+				},
+				{
+					"from_node": "K2Node_Select_0",
+					"from_pin": "ReturnValue",
+					"to_node": "K2Node_CallFunction_1",
+					"to_pin": "Q"
+				},
+				{
+					"from_node": "K2Node_VariableGet_0",
+					"from_pin": "ZeroQuat_Left",
+					"to_node": "K2Node_Select_0",
+					"to_pin": "Option 1"
+				},
+				{
+					"from_node": "K2Node_VariableGet_5",
+					"from_pin": "ZeroQuat_Right",
+					"to_node": "K2Node_Select_0",
+					"to_pin": "Option 0"
+				},
+				{
+					"from_node": "K2Node_VariableSet_1",
+					"from_pin": "execute",
+					"to_node": "K2Node_VariableSet_3",
+					"to_pin": "then"
+				},
+				{
+					"from_node": "K2Node_VariableSet_1",
+					"from_pin": "then",
+					"to_node": "K2Node_IfThenElse_0",
+					"to_pin": "execute"
+				},
+				{
+					"from_node": "K2Node_VariableSet_1",
+					"from_pin": "Q",
+					"to_node": "K2Node_CallFunction_0",
+					"to_pin": "ReturnValue"
+				},
+				{
+					"from_node": "K2Node_VariableGet_6",
+					"from_pin": "Calibrated_Left",
+					"to_node": "K2Node_Select_2",
+					"to_pin": "Option 1"
+				},
+				{
+					"from_node": "K2Node_VariableGet_7",
+					"from_pin": "Calibrated_Right",
+					"to_node": "K2Node_Select_2",
+					"to_pin": "Option 0"
+				},
+				{
+					"from_node": "K2Node_Select_2",
+					"from_pin": "Option 0",
+					"to_node": "K2Node_VariableGet_7",
+					"to_pin": "Calibrated_Right"
+				},
+				{
+					"from_node": "K2Node_Select_2",
+					"from_pin": "Option 1",
+					"to_node": "K2Node_VariableGet_6",
+					"to_pin": "Calibrated_Left"
+				},
+				{
+					"from_node": "K2Node_Select_2",
+					"from_pin": "Index",
+					"to_node": "K2Node_VariableGet_10",
+					"to_pin": "bPort"
+				},
+				{
+					"from_node": "K2Node_Select_2",
+					"from_pin": "ReturnValue",
+					"to_node": "K2Node_IfThenElse_0",
+					"to_pin": "Condition"
+				},
+				{
+					"from_node": "K2Node_IfThenElse_0",
+					"from_pin": "execute",
+					"to_node": "K2Node_VariableSet_1",
+					"to_pin": "then"
+				},
+				{
+					"from_node": "K2Node_IfThenElse_0",
+					"from_pin": "Condition",
+					"to_node": "K2Node_Select_2",
+					"to_pin": "ReturnValue"
+				},
+				{
+					"from_node": "K2Node_IfThenElse_0",
+					"from_pin": "then",
+					"to_node": "K2Node_VariableSet_0",
+					"to_pin": "execute"
+				},
+				{
+					"from_node": "K2Node_IfThenElse_0",
+					"from_pin": "else",
+					"to_node": "K2Node_VariableSet_4",
+					"to_pin": "execute"
+				},
+				{
+					"from_node": "K2Node_VariableSet_3",
+					"from_pin": "execute",
+					"to_node": "K2Node_FunctionEntry_0",
+					"to_pin": "then"
+				},
+				{
+					"from_node": "K2Node_VariableSet_3",
+					"from_pin": "then",
+					"to_node": "K2Node_VariableSet_1",
+					"to_pin": "execute"
+				},
+				{
+					"from_node": "K2Node_VariableSet_3",
+					"from_pin": "bPort",
+					"to_node": "K2Node_FunctionEntry_0",
+					"to_pin": "Port"
+				},
+				{
+					"from_node": "K2Node_VariableGet_10",
+					"from_pin": "bPort",
+					"to_node": "K2Node_Select_2",
+					"to_pin": "Index"
+				},
+				{
+					"from_node": "K2Node_VariableGet_11",
+					"from_pin": "bPort",
+					"to_node": "K2Node_Select_0",
+					"to_pin": "Index"
+				},
+				{
+					"from_node": "K2Node_VariableGet_13",
+					"from_pin": "Qrel",
+					"to_node": "K2Node_VariableSet_5",
+					"to_pin": "Qout"
+				},
+				{
+					"from_node": "K2Node_VariableGet_17",
+					"from_pin": "Q",
+					"to_node": "K2Node_VariableSet_4",
+					"to_pin": "Qout"
+				},
+				{
+					"from_node": "K2Node_CallFunction_3",
+					"from_pin": "Q",
+					"to_node": "K2Node_VariableGet_16",
+					"to_pin": "Qout"
+				},
+				{
+					"from_node": "K2Node_CallFunction_3",
+					"from_pin": "ReturnValue",
+					"to_node": "K2Node_FunctionResult_0",
+					"to_pin": "ReturnValue"
+				},
+				{
+					"from_node": "K2Node_VariableSet_5",
+					"from_pin": "execute",
+					"to_node": "K2Node_VariableSet_0",
+					"to_pin": "then"
+				},
+				{
+					"from_node": "K2Node_VariableSet_5",
+					"from_pin": "then",
+					"to_node": "K2Node_FunctionResult_0",
+					"to_pin": "execute"
+				},
+				{
+					"from_node": "K2Node_VariableSet_5",
+					"from_pin": "Qout",
+					"to_node": "K2Node_VariableGet_13",
+					"to_pin": "Qrel"
+				},
+				{
+					"from_node": "K2Node_VariableSet_4",
+					"from_pin": "execute",
+					"to_node": "K2Node_IfThenElse_0",
+					"to_pin": "else"
+				},
+				{
+					"from_node": "K2Node_VariableSet_4",
+					"from_pin": "then",
+					"to_node": "K2Node_FunctionResult_0",
+					"to_pin": "execute"
+				},
+				{
+					"from_node": "K2Node_VariableSet_4",
+					"from_pin": "Qout",
+					"to_node": "K2Node_VariableGet_17",
+					"to_pin": "Q"
+				},
+				{
+					"from_node": "K2Node_VariableGet_16",
+					"from_pin": "Qout",
+					"to_node": "K2Node_CallFunction_3",
+					"to_pin": "Q"
+				},
+				{
+					"from_node": "K2Node_VariableGet_15",
+					"from_pin": "Q",
+					"to_node": "K2Node_PromotableOperator_0",
+					"to_pin": "B"
+				}
+			]
+		},
+		"success": true
+	}
+}

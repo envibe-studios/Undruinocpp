@@ -1,0 +1,53 @@
+[
+  {
+    "label": "pc_compile",
+    "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools",
+    "tool": "compile_blueprint",
+    "args": {
+      "blueprint": "/Game/Blueprints/PC_Controller.PC_Controller",
+      "warnings_as_errors": false
+    }
+  },
+  {
+    "label": "init_test_sub",
+    "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools",
+    "tool": "get_connected_subgraph",
+    "args": { "node": "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph.K2Node_CustomEvent_19" }
+  },
+  {
+    "label": "find_getall",
+    "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools",
+    "tool": "find_nodes",
+    "args": {
+      "graph": "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph",
+      "title": "Get All Actors"
+    }
+  },
+  {
+    "label": "find_greater",
+    "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools",
+    "tool": "find_nodes",
+    "args": {
+      "graph": "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph",
+      "title": ">"
+    }
+  },
+  {
+    "label": "find_length",
+    "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools",
+    "tool": "find_nodes",
+    "args": {
+      "graph": "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph",
+      "title": "Length"
+    }
+  },
+  {
+    "label": "find_tobool",
+    "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools",
+    "tool": "find_nodes",
+    "args": {
+      "graph": "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph",
+      "title": "ToBoolean"
+    }
+  }
+]

@@ -1,0 +1,34 @@
+[
+  {
+    "label": "find_valid_types",
+    "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools",
+    "tool": "find_node_types",
+    "args": {
+      "graph": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph" },
+      "type_id_filter": "Valid",
+      "context_pins": [
+        {
+          "direction": "EGPD_Output",
+          "index_id": 1,
+          "node": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph.K2Node_CallFunction_52" }
+        }
+      ]
+    }
+  },
+  {
+    "label": "find_array_types",
+    "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools",
+    "tool": "find_node_types",
+    "args": {
+      "graph": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph" },
+      "type_id_filter": "Array",
+      "context_pins": [
+        {
+          "direction": "EGPD_Output",
+          "index_id": 1,
+          "node": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph.K2Node_CallFunction_52" }
+        }
+      ]
+    }
+  }
+]

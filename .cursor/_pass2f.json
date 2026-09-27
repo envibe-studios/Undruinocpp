@@ -1,0 +1,34 @@
+[
+  {
+    "label": "isvalid_pins",
+    "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools",
+    "tool": "get_node_infos",
+    "args": {
+      "nodes": [
+        "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph.K2Node_CallArrayFunction_1"
+      ]
+    }
+  },
+  {
+    "label": "graybox_send_info",
+    "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools",
+    "tool": "get_node_infos",
+    "args": {
+      "nodes": [
+        "/Game/Blueprints/GameMode_GrayboxExpedition.GameMode_GrayboxExpedition:EventGraph.K2Node_CallFunction_13"
+      ]
+    }
+  },
+  {
+    "label": "graybox_parent",
+    "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools",
+    "tool": "get_parent",
+    "args": { "blueprint": "/Game/Blueprints/GameMode_GrayboxExpedition.GameMode_GrayboxExpedition" }
+  },
+  {
+    "label": "graybox_endplay",
+    "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools",
+    "tool": "get_connected_subgraph",
+    "args": { "node": "/Game/Blueprints/GameMode_GrayboxExpedition.GameMode_GrayboxExpedition:EventGraph.K2Node_CallFunction_13" }
+  }
+]

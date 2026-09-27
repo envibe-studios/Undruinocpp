@@ -1,0 +1,54 @@
+[
+  {
+    "label": "pc_sendline",
+    "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools",
+    "tool": "find_nodes",
+    "args": {
+      "graph": "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph",
+      "title": "SendLine"
+    }
+  },
+  {
+    "label": "pc_alloff",
+    "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools",
+    "tool": "find_nodes",
+    "args": {
+      "graph": "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph",
+      "title": "all_off"
+    }
+  },
+  {
+    "label": "esp_alloff",
+    "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools",
+    "tool": "find_nodes",
+    "args": {
+      "graph": "/Game/Blueprints/BPC_ESP32Comm.BPC_ESP32Comm:EventGraph",
+      "title": "all_off"
+    }
+  },
+  {
+    "label": "hover_alloff",
+    "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools",
+    "tool": "find_nodes",
+    "args": {
+      "graph": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph",
+      "title": "all_off"
+    }
+  },
+  {
+    "label": "gm_graphs",
+    "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools",
+    "tool": "list_graphs",
+    "args": { "blueprint": "/Game/Blueprints/GameMode_ShipPorts.GameMode_ShipPorts" }
+  },
+  {
+    "label": "find_alloff_assets",
+    "toolset": "editor_toolset.toolsets.asset.AssetTools",
+    "tool": "find_assets",
+    "args": {
+      "folder_path": "/Game",
+      "name": "GameMode",
+      "recursive": true
+    }
+  }
+]

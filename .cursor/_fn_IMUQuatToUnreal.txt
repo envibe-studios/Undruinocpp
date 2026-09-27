@@ -1,0 +1,317 @@
+﻿{
+	"status": "success",
+	"result":
+	{
+		"blueprint_path": "/Game/Blueprints/BP_Hovercraft",
+		"graph_data":
+		{
+			"graph_name": "IMUQuatToUnreal",
+			"graph_type": "EdGraph",
+			"nodes": [
+				{
+					"name": "K2Node_FunctionEntry_0",
+					"class": "K2Node_FunctionEntry",
+					"title": "IMUQuatToUnreal",
+					"pos_x": 160,
+					"pos_y": 0,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "then",
+							"type": "exec",
+							"direction": "Output",
+							"connections": 1
+						},
+						{
+							"name": "Quat",
+							"type": "struct",
+							"direction": "Output",
+							"connections": 1
+						}
+					]
+				},
+				{
+					"name": "K2Node_FunctionResult_0",
+					"class": "K2Node_FunctionResult",
+					"title": "Return Node",
+					"pos_x": 592,
+					"pos_y": 0,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "execute",
+							"type": "exec",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "Unreal Quat",
+							"type": "struct",
+							"direction": "Input",
+							"connections": 1
+						}
+					]
+				},
+				{
+					"name": "K2Node_CallFunction_0",
+					"class": "K2Node_CallFunction",
+					"title": "Break Quat",
+					"pos_x": 160,
+					"pos_y": 112,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "self",
+							"type": "object",
+							"direction": "Input",
+							"connections": 0
+						},
+						{
+							"name": "InQuat",
+							"type": "struct",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "X",
+							"type": "real",
+							"direction": "Output",
+							"connections": 1
+						},
+						{
+							"name": "Y",
+							"type": "real",
+							"direction": "Output",
+							"connections": 1
+						},
+						{
+							"name": "Z",
+							"type": "real",
+							"direction": "Output",
+							"connections": 1
+						},
+						{
+							"name": "W",
+							"type": "real",
+							"direction": "Output",
+							"connections": 1
+						}
+					]
+				},
+				{
+					"name": "K2Node_CallFunction_1",
+					"class": "K2Node_CallFunction",
+					"title": "Make Quat",
+					"pos_x": 592,
+					"pos_y": 112,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "self",
+							"type": "object",
+							"direction": "Input",
+							"connections": 0
+						},
+						{
+							"name": "X",
+							"type": "real",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "Y",
+							"type": "real",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "Z",
+							"type": "real",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "W",
+							"type": "real",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "ReturnValue",
+							"type": "struct",
+							"direction": "Output",
+							"connections": 1
+						}
+					]
+				},
+				{
+					"name": "K2Node_PromotableOperator_1",
+					"class": "K2Node_PromotableOperator",
+					"title": "float * float",
+					"pos_x": 368,
+					"pos_y": 160,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "A",
+							"type": "real",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "B",
+							"type": "real",
+							"direction": "Input",
+							"connections": 0
+						},
+						{
+							"name": "ReturnValue",
+							"type": "real",
+							"direction": "Output",
+							"connections": 1
+						}
+					]
+				},
+				{
+					"name": "K2Node_PromotableOperator_0",
+					"class": "K2Node_PromotableOperator",
+					"title": "float * float",
+					"pos_x": 368,
+					"pos_y": 240,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "A",
+							"type": "real",
+							"direction": "Input",
+							"connections": 1
+						},
+						{
+							"name": "B",
+							"type": "real",
+							"direction": "Input",
+							"connections": 0
+						},
+						{
+							"name": "ReturnValue",
+							"type": "real",
+							"direction": "Output",
+							"connections": 1
+						}
+					]
+				}
+			],
+			"connections": [
+				{
+					"from_node": "K2Node_FunctionEntry_0",
+					"from_pin": "then",
+					"to_node": "K2Node_FunctionResult_0",
+					"to_pin": "execute"
+				},
+				{
+					"from_node": "K2Node_FunctionEntry_0",
+					"from_pin": "Quat",
+					"to_node": "K2Node_CallFunction_0",
+					"to_pin": "InQuat"
+				},
+				{
+					"from_node": "K2Node_FunctionResult_0",
+					"from_pin": "execute",
+					"to_node": "K2Node_FunctionEntry_0",
+					"to_pin": "then"
+				},
+				{
+					"from_node": "K2Node_FunctionResult_0",
+					"from_pin": "Unreal Quat",
+					"to_node": "K2Node_CallFunction_1",
+					"to_pin": "ReturnValue"
+				},
+				{
+					"from_node": "K2Node_CallFunction_0",
+					"from_pin": "InQuat",
+					"to_node": "K2Node_FunctionEntry_0",
+					"to_pin": "Quat"
+				},
+				{
+					"from_node": "K2Node_CallFunction_0",
+					"from_pin": "X",
+					"to_node": "K2Node_PromotableOperator_1",
+					"to_pin": "A"
+				},
+				{
+					"from_node": "K2Node_CallFunction_0",
+					"from_pin": "Y",
+					"to_node": "K2Node_CallFunction_1",
+					"to_pin": "Y"
+				},
+				{
+					"from_node": "K2Node_CallFunction_0",
+					"from_pin": "Z",
+					"to_node": "K2Node_PromotableOperator_0",
+					"to_pin": "A"
+				},
+				{
+					"from_node": "K2Node_CallFunction_0",
+					"from_pin": "W",
+					"to_node": "K2Node_CallFunction_1",
+					"to_pin": "W"
+				},
+				{
+					"from_node": "K2Node_CallFunction_1",
+					"from_pin": "X",
+					"to_node": "K2Node_PromotableOperator_1",
+					"to_pin": "ReturnValue"
+				},
+				{
+					"from_node": "K2Node_CallFunction_1",
+					"from_pin": "Y",
+					"to_node": "K2Node_CallFunction_0",
+					"to_pin": "Y"
+				},
+				{
+					"from_node": "K2Node_CallFunction_1",
+					"from_pin": "Z",
+					"to_node": "K2Node_PromotableOperator_0",
+					"to_pin": "ReturnValue"
+				},
+				{
+					"from_node": "K2Node_CallFunction_1",
+					"from_pin": "W",
+					"to_node": "K2Node_CallFunction_0",
+					"to_pin": "W"
+				},
+				{
+					"from_node": "K2Node_CallFunction_1",
+					"from_pin": "ReturnValue",
+					"to_node": "K2Node_FunctionResult_0",
+					"to_pin": "Unreal Quat"
+				},
+				{
+					"from_node": "K2Node_PromotableOperator_1",
+					"from_pin": "A",
+					"to_node": "K2Node_CallFunction_0",
+					"to_pin": "X"
+				},
+				{
+					"from_node": "K2Node_PromotableOperator_1",
+					"from_pin": "ReturnValue",
+					"to_node": "K2Node_CallFunction_1",
+					"to_pin": "X"
+				},
+				{
+					"from_node": "K2Node_PromotableOperator_0",
+					"from_pin": "A",
+					"to_node": "K2Node_CallFunction_0",
+					"to_pin": "Z"
+				},
+				{
+					"from_node": "K2Node_PromotableOperator_0",
+					"from_pin": "ReturnValue",
+					"to_node": "K2Node_CallFunction_1",
+					"to_pin": "Z"
+				}
+			]
+		},
+		"success": true
+	}
+}

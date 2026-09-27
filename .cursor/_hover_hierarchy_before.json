@@ -1,0 +1,632 @@
+﻿{
+	"status": "success",
+	"result":
+	{
+		"components": [
+			{
+				"name": "ShipHardwareInput",
+				"class": "ShipHardwareInputComponent",
+				"is_root": true,
+				"is_default_scene_root": false,
+				"parent": null,
+				"is_scene": false
+			},
+			{
+				"name": "HoverMovement",
+				"class": "HoverMovementComponent",
+				"is_root": true,
+				"is_default_scene_root": false,
+				"parent": null,
+				"is_scene": false
+			},
+			{
+				"name": "Arrow1",
+				"class": "ArrowComponent",
+				"is_root": false,
+				"is_default_scene_root": false,
+				"parent": "Weapon_Right",
+				"relative":
+				{
+					"location": [
+						5.3290705182007514e-15,
+						0,
+						100
+					],
+					"rotation": [
+						0,
+						0,
+						0
+					],
+					"scale": [
+						0.20000000000000001,
+						1,
+						1
+					]
+				},
+				"is_scene": true
+			},
+			{
+				"name": "Arrow2",
+				"class": "ArrowComponent",
+				"is_root": false,
+				"is_default_scene_root": false,
+				"parent": "Weapon_Left",
+				"relative":
+				{
+					"location": [
+						0,
+						0,
+						100
+					],
+					"rotation": [
+						0,
+						0,
+						0
+					],
+					"scale": [
+						0.20000000000000001,
+						1,
+						1
+					]
+				},
+				"is_scene": true
+			},
+			{
+				"name": "Firing_Left",
+				"class": "FiringComponent",
+				"is_root": false,
+				"is_default_scene_root": false,
+				"parent": "Weapon_Left",
+				"relative":
+				{
+					"location": [
+						0,
+						0,
+						0
+					],
+					"rotation": [
+						0,
+						0,
+						0
+					],
+					"scale": [
+						1,
+						1,
+						1
+					]
+				},
+				"is_scene": true
+			},
+			{
+				"name": "Firing_Right",
+				"class": "FiringComponent",
+				"is_root": false,
+				"is_default_scene_root": false,
+				"parent": "Weapon_Right",
+				"relative":
+				{
+					"location": [
+						0,
+						0,
+						0
+					],
+					"rotation": [
+						0,
+						0,
+						0
+					],
+					"scale": [
+						1,
+						1,
+						1
+					]
+				},
+				"is_scene": true
+			},
+			{
+				"name": "Weapon_Left",
+				"class": "StaticMeshComponent",
+				"is_root": false,
+				"is_default_scene_root": false,
+				"parent": "Body",
+				"relative":
+				{
+					"location": [
+						3.5660363550960028e-13,
+						-99.999998783203409,
+						0
+					],
+					"rotation": [
+						0,
+						-0,
+						-90.000002091519008
+					],
+					"scale": [
+						0.5,
+						0.10000000000000001,
+						0.10000000000000001
+					]
+				},
+				"is_scene": true
+			},
+			{
+				"name": "Weapon_Right",
+				"class": "StaticMeshComponent",
+				"is_root": false,
+				"is_default_scene_root": false,
+				"parent": "Body",
+				"relative":
+				{
+					"location": [
+						1.3384761066492779e-05,
+						99.999997972005957,
+						0
+					],
+					"rotation": [
+						-0,
+						0,
+						89.99999930282722
+					],
+					"scale": [
+						0.5,
+						0.10000000000000001,
+						0.10000000000000001
+					]
+				},
+				"is_scene": true
+			},
+			{
+				"name": "Arrow",
+				"class": "ArrowComponent",
+				"is_root": false,
+				"is_default_scene_root": false,
+				"parent": "Body",
+				"relative":
+				{
+					"location": [
+						0,
+						0,
+						60
+					],
+					"rotation": [
+						0,
+						0,
+						0
+					],
+					"scale": [
+						1,
+						1,
+						1
+					]
+				},
+				"is_scene": true
+			},
+			{
+				"name": "Thruster_FR",
+				"class": "HoverThrusterComponent",
+				"is_root": false,
+				"is_default_scene_root": false,
+				"parent": "Body",
+				"relative":
+				{
+					"location": [
+						48.760330578512367,
+						50,
+						-50
+					],
+					"rotation": [
+						0,
+						0,
+						0
+					],
+					"scale": [
+						1,
+						1,
+						1
+					]
+				},
+				"is_scene": true
+			},
+			{
+				"name": "Thruster_RL",
+				"class": "HoverThrusterComponent",
+				"is_root": false,
+				"is_default_scene_root": false,
+				"parent": "Body",
+				"relative":
+				{
+					"location": [
+						-48.760330578512381,
+						-50,
+						-50
+					],
+					"rotation": [
+						0,
+						0,
+						0
+					],
+					"scale": [
+						1,
+						1,
+						1
+					]
+				},
+				"is_scene": true
+			},
+			{
+				"name": "Thruster_RR",
+				"class": "HoverThrusterComponent",
+				"is_root": false,
+				"is_default_scene_root": false,
+				"parent": "Body",
+				"relative":
+				{
+					"location": [
+						-49.090909090909079,
+						50,
+						-50
+					],
+					"rotation": [
+						0,
+						0,
+						0
+					],
+					"scale": [
+						1,
+						1,
+						1
+					]
+				},
+				"is_scene": true
+			},
+			{
+				"name": "Thruster_FL",
+				"class": "HoverThrusterComponent",
+				"is_root": false,
+				"is_default_scene_root": false,
+				"parent": "Body",
+				"relative":
+				{
+					"location": [
+						49.090909090909051,
+						-50,
+						-50
+					],
+					"rotation": [
+						0,
+						0,
+						0
+					],
+					"scale": [
+						1,
+						1,
+						1
+					]
+				},
+				"is_scene": true
+			},
+			{
+				"name": "Body",
+				"class": "StaticMeshComponent",
+				"is_root": true,
+				"is_default_scene_root": false,
+				"parent": null,
+				"relative":
+				{
+					"location": [
+						0,
+						0,
+						0
+					],
+					"rotation": [
+						0,
+						0,
+						0
+					],
+					"scale": [
+						2.75,
+						1,
+						1
+					]
+				},
+				"is_scene": true
+			},
+			{
+				"name": "SceneCaptureComponent2D_Front",
+				"class": "SceneCaptureComponent2D",
+				"is_root": false,
+				"is_default_scene_root": false,
+				"parent": "Body",
+				"relative":
+				{
+					"location": [
+						0,
+						0,
+						100
+					],
+					"rotation": [
+						0,
+						0,
+						0
+					],
+					"scale": [
+						1,
+						1,
+						1
+					]
+				},
+				"is_scene": true
+			},
+			{
+				"name": "SceneCaptureComponent2D_Left",
+				"class": "SceneCaptureComponent2D",
+				"is_root": false,
+				"is_default_scene_root": false,
+				"parent": "Body",
+				"relative":
+				{
+					"location": [
+						9.9999999999999995e-07,
+						-63.754862000000003,
+						23.860669999999999
+					],
+					"rotation": [
+						0,
+						0,
+						269.9999986056543
+					],
+					"scale": [
+						1,
+						1,
+						1
+					]
+				},
+				"is_scene": true
+			},
+			{
+				"name": "SceneCaptureComponent2D_Right",
+				"class": "SceneCaptureComponent2D",
+				"is_root": false,
+				"is_default_scene_root": false,
+				"parent": "Body",
+				"relative":
+				{
+					"location": [
+						-8.4629134573621203e-07,
+						63.754861658354486,
+						23.860669582131678
+					],
+					"rotation": [
+						0,
+						0,
+						-269.99999790848057
+					],
+					"scale": [
+						1,
+						1,
+						1
+					]
+				},
+				"is_scene": true
+			},
+			{
+				"name": "GunTip_Right",
+				"class": "StaticMeshComponent",
+				"is_root": false,
+				"is_default_scene_root": false,
+				"parent": "Weapon_Right",
+				"relative":
+				{
+					"location": [
+						50.909090999999997,
+						0,
+						0
+					],
+					"rotation": [
+						0,
+						0,
+						0
+					],
+					"scale": [
+						0.080000067129731178,
+						1.25,
+						1.25
+					]
+				},
+				"is_scene": true
+			},
+			{
+				"name": "GunTip_Left",
+				"class": "StaticMeshComponent",
+				"is_root": false,
+				"is_default_scene_root": false,
+				"parent": "Weapon_Left",
+				"relative":
+				{
+					"location": [
+						50,
+						0.00027803797991055035,
+						0
+					],
+					"rotation": [
+						0,
+						0,
+						-179.99999860565376
+					],
+					"scale": [
+						0.080000067129731178,
+						1.25,
+						1.25
+					]
+				},
+				"is_scene": true
+			},
+			{
+				"name": "Collision_FL",
+				"class": "BoxComponent",
+				"is_root": false,
+				"is_default_scene_root": false,
+				"parent": "Thruster_FL",
+				"relative":
+				{
+					"location": [
+						0,
+						0,
+						0
+					],
+					"rotation": [
+						0,
+						0,
+						0
+					],
+					"scale": [
+						1,
+						1,
+						1
+					]
+				},
+				"is_scene": true
+			},
+			{
+				"name": "Collision_FR",
+				"class": "BoxComponent",
+				"is_root": false,
+				"is_default_scene_root": false,
+				"parent": "Thruster_FR",
+				"relative":
+				{
+					"location": [
+						0,
+						0,
+						0
+					],
+					"rotation": [
+						0,
+						0,
+						0
+					],
+					"scale": [
+						1,
+						1,
+						1
+					]
+				},
+				"is_scene": true
+			},
+			{
+				"name": "Collision_RL",
+				"class": "BoxComponent",
+				"is_root": false,
+				"is_default_scene_root": false,
+				"parent": "Thruster_RL",
+				"relative":
+				{
+					"location": [
+						0,
+						0,
+						0
+					],
+					"rotation": [
+						0,
+						0,
+						0
+					],
+					"scale": [
+						1,
+						1,
+						1
+					]
+				},
+				"is_scene": true
+			},
+			{
+				"name": "Collision_RR",
+				"class": "BoxComponent",
+				"is_root": false,
+				"is_default_scene_root": false,
+				"parent": "Thruster_RR",
+				"relative":
+				{
+					"location": [
+						0,
+						0,
+						0
+					],
+					"rotation": [
+						0,
+						0,
+						0
+					],
+					"scale": [
+						1,
+						1,
+						1
+					]
+				},
+				"is_scene": true
+			},
+			{
+				"name": "MinimapUDPSender",
+				"class": "MinimapUDPSenderComponent",
+				"is_root": true,
+				"is_default_scene_root": false,
+				"parent": null,
+				"is_scene": false
+			},
+			{
+				"name": "GunTip_TopL",
+				"class": "StaticMeshComponent",
+				"is_root": false,
+				"is_default_scene_root": false,
+				"parent": "Weapon_Left",
+				"relative":
+				{
+					"location": [
+						49.999999987045747,
+						0.00027803798020056456,
+						68.119944338415038
+					],
+					"rotation": [
+						0,
+						0,
+						-179.99999860565376
+					],
+					"scale": [
+						0.080000067129731178,
+						1.25,
+						0.12242961174342781
+					]
+				},
+				"is_scene": true
+			},
+			{
+				"name": "GunTip_TopR",
+				"class": "StaticMeshComponent",
+				"is_root": false,
+				"is_default_scene_root": false,
+				"parent": "Weapon_Right",
+				"relative":
+				{
+					"location": [
+						50.909090999999997,
+						8.2437972537263704e-05,
+						68.119944338415038
+					],
+					"rotation": [
+						0,
+						0,
+						0
+					],
+					"scale": [
+						0.080000067129731178,
+						1.25,
+						0.12242961174342781
+					]
+				},
+				"is_scene": true
+			}
+		],
+		"blueprint_path": "/Game/Blueprints/BP_Hovercraft",
+		"success": true
+	}
+}

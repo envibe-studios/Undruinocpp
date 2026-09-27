@@ -1,0 +1,4 @@
+﻿{
+	"status": "error",
+	"error": "Unknown command: get_available_commands"
+}

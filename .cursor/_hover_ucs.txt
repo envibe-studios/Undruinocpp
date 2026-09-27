@@ -1,0 +1,32 @@
+﻿{
+	"status": "success",
+	"result":
+	{
+		"blueprint_path": "/Game/Blueprints/BP_Hovercraft",
+		"graph_data":
+		{
+			"graph_name": "UserConstructionScript",
+			"graph_type": "EdGraph",
+			"nodes": [
+				{
+					"name": "K2Node_FunctionEntry_0",
+					"class": "K2Node_FunctionEntry",
+					"title": "Construction Script",
+					"pos_x": 0,
+					"pos_y": 0,
+					"can_rename": false,
+					"pins": [
+						{
+							"name": "then",
+							"type": "exec",
+							"direction": "Output",
+							"connections": 0
+						}
+					]
+				}
+			],
+			"connections": []
+		},
+		"success": true
+	}
+}
