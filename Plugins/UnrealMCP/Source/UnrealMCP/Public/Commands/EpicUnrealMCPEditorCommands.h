@@ -28,4 +28,8 @@ private:
 
     // Asset management
     TSharedPtr<FJsonObject> HandleSaveAll(const TSharedPtr<FJsonObject>& Params);
+
+    // Level / instance component edits
+    TSharedPtr<FJsonObject> HandleOpenLevel(const TSharedPtr<FJsonObject>& Params);
+    TSharedPtr<FJsonObject> HandleSetActorComponentTransform(const TSharedPtr<FJsonObject>& Params);
 }; 

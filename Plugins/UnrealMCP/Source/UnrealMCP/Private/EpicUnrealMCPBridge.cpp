@@ -224,7 +224,9 @@ FString UEpicUnrealMCPBridge::ExecuteCommand(const FString& CommandType, const T
                      CommandType == TEXT("delete_actor") ||
                      CommandType == TEXT("set_actor_transform") ||
                      CommandType == TEXT("spawn_blueprint_actor") ||
-                     CommandType == TEXT("save_all"))
+                     CommandType == TEXT("save_all") ||
+                     CommandType == TEXT("open_level") ||
+                     CommandType == TEXT("set_actor_component_transform"))
             {
                 ResultJson = EditorCommands->HandleCommand(CommandType, Params);
             }
@@ -243,7 +245,14 @@ FString UEpicUnrealMCPBridge::ExecuteCommand(const FString& CommandType, const T
                      CommandType == TEXT("read_blueprint_content") ||
                      CommandType == TEXT("analyze_blueprint_graph") ||
                      CommandType == TEXT("get_blueprint_variable_details") ||
-                     CommandType == TEXT("get_blueprint_function_details"))
+                     CommandType == TEXT("get_blueprint_function_details") ||
+                     CommandType == TEXT("get_blueprint_component_hierarchy") ||
+                     CommandType == TEXT("fix_blueprint_scaled_root") ||
+                     CommandType == TEXT("correct_blueprint_relative_bake") ||
+                     CommandType == TEXT("fix_blueprint_physics_root") ||
+                     CommandType == TEXT("set_blueprint_component_transform") ||
+                     CommandType == TEXT("set_blueprint_component_absolute") ||
+                     CommandType == TEXT("reparent_blueprint_component")) // component SCS transform/attachment behavior edits
             {
                 ResultJson = BlueprintCommands->HandleCommand(CommandType, Params);
             }

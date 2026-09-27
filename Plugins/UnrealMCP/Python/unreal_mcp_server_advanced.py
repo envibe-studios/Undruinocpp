@@ -2792,5 +2792,5 @@ def rename_function(
 
 # Run the server
 if __name__ == "__main__":
-    logger.info("Starting Advanced MCP server with stdio transport")
-    mcp.run(transport='stdio') 
+    logger.info("Starting Advanced MCP server with streamable HTTP transport on http://127.0.0.1:8000/mcp")
+    mcp.run(transport='streamable-http')

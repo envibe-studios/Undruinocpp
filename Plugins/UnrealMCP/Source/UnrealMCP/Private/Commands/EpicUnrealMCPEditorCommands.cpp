@@ -16,6 +16,8 @@
 #include "Engine/SpotLight.h"
 #include "Camera/CameraActor.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/SceneComponent.h"
+#include "Engine/Level.h"
 #include "EditorSubsystem.h"
 #include "Subsystems/EditorActorSubsystem.h"
 #include "Engine/Blueprint.h"
@@ -60,6 +62,14 @@ TSharedPtr<FJsonObject> FEpicUnrealMCPEditorCommands::HandleCommand(const FStrin
     else if (CommandType == TEXT("save_all"))
     {
         return HandleSaveAll(Params);
+    }
+    else if (CommandType == TEXT("open_level"))
+    {
+        return HandleOpenLevel(Params);
+    }
+    else if (CommandType == TEXT("set_actor_component_transform"))
+    {
+        return HandleSetActorComponentTransform(Params);
     }
 
     return FEpicUnrealMCPCommonUtils::CreateErrorResponse(FString::Printf(TEXT("Unknown editor command: %s"), *CommandType));
@@ -327,5 +337,178 @@ TSharedPtr<FJsonObject> FEpicUnrealMCPEditorCommands::HandleSaveAll(const TShare
     TSharedPtr<FJsonObject> ResultObj = MakeShared<FJsonObject>();
     ResultObj->SetBoolField(TEXT("success"), bSuccess);
     ResultObj->SetStringField(TEXT("message"), bSuccess ? TEXT("All modified assets saved") : TEXT("Some assets may not have been saved"));
+    return ResultObj;
+}
+
+TSharedPtr<FJsonObject> FEpicUnrealMCPEditorCommands::HandleOpenLevel(const TSharedPtr<FJsonObject>& Params)
+{
+    FString LevelPath;
+    if (!Params->TryGetStringField(TEXT("level_path"), LevelPath))
+    {
+        return FEpicUnrealMCPCommonUtils::CreateErrorResponse(TEXT("Missing 'level_path' parameter"));
+    }
+
+    // Accept either /Game/... asset path or package path
+    if (!LevelPath.StartsWith(TEXT("/")))
+    {
+        LevelPath = FString::Printf(TEXT("/Game/%s"), *LevelPath);
+    }
+
+    const bool bSuccess = FEditorFileUtils::LoadMap(LevelPath);
+    TSharedPtr<FJsonObject> ResultObj = MakeShared<FJsonObject>();
+    ResultObj->SetBoolField(TEXT("success"), bSuccess);
+    ResultObj->SetStringField(TEXT("level_path"), LevelPath);
+    if (!bSuccess)
+    {
+        ResultObj->SetStringField(TEXT("error"), TEXT("Failed to load map"));
+    }
+    return ResultObj;
+}
+
+TSharedPtr<FJsonObject> FEpicUnrealMCPEditorCommands::HandleSetActorComponentTransform(const TSharedPtr<FJsonObject>& Params)
+{
+    FString ActorName;
+    if (!Params->TryGetStringField(TEXT("actor_name"), ActorName))
+    {
+        return FEpicUnrealMCPCommonUtils::CreateErrorResponse(TEXT("Missing 'actor_name' parameter"));
+    }
+
+    FString ComponentName;
+    if (!Params->TryGetStringField(TEXT("component_name"), ComponentName))
+    {
+        return FEpicUnrealMCPCommonUtils::CreateErrorResponse(TEXT("Missing 'component_name' parameter"));
+    }
+
+    UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+    if (!World)
+    {
+        return FEpicUnrealMCPCommonUtils::CreateErrorResponse(TEXT("Failed to get editor world"));
+    }
+
+    AActor* TargetActor = nullptr;
+    TArray<AActor*> AllActors;
+    UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), AllActors);
+    for (AActor* Actor : AllActors)
+    {
+        if (Actor && (Actor->GetName() == ActorName || Actor->GetActorLabel() == ActorName || Actor->GetName().Contains(ActorName)))
+        {
+            TargetActor = Actor;
+            break;
+        }
+    }
+
+    // Also search streaming / sub levels explicitly
+    if (!TargetActor)
+    {
+        for (ULevel* Level : World->GetLevels())
+        {
+            if (!Level) continue;
+            for (AActor* Actor : Level->Actors)
+            {
+                if (Actor && (Actor->GetName() == ActorName || Actor->GetActorLabel() == ActorName || Actor->GetName().Contains(ActorName)))
+                {
+                    TargetActor = Actor;
+                    break;
+                }
+            }
+            if (TargetActor) break;
+        }
+    }
+
+    if (!TargetActor)
+    {
+        return FEpicUnrealMCPCommonUtils::CreateErrorResponse(FString::Printf(TEXT("Actor not found: %s"), *ActorName));
+    }
+
+    USceneComponent* SceneComp = nullptr;
+    TArray<UActorComponent*> Components;
+    TargetActor->GetComponents(Components);
+    for (UActorComponent* Comp : Components)
+    {
+        if (Comp && Comp->GetName().Contains(ComponentName))
+        {
+            SceneComp = Cast<USceneComponent>(Comp);
+            if (SceneComp)
+            {
+                break;
+            }
+        }
+    }
+
+    // Also try exact match on GetName without _GEN_VARIABLE suffixes
+    if (!SceneComp)
+    {
+        for (UActorComponent* Comp : Components)
+        {
+            if (!Comp) continue;
+            const FString CompName = Comp->GetName();
+            if (CompName.StartsWith(ComponentName) || CompName.Equals(ComponentName))
+            {
+                SceneComp = Cast<USceneComponent>(Comp);
+                if (SceneComp) break;
+            }
+        }
+    }
+
+    if (!SceneComp)
+    {
+        return FEpicUnrealMCPCommonUtils::CreateErrorResponse(FString::Printf(TEXT("Component not found on actor: %s"), *ComponentName));
+    }
+
+    const FVector OldLoc = SceneComp->GetRelativeLocation();
+    const FRotator OldRot = SceneComp->GetRelativeRotation();
+    const FVector OldScale = SceneComp->GetRelativeScale3D();
+
+    if (Params->HasField(TEXT("location")))
+    {
+        SceneComp->SetRelativeLocation(FEpicUnrealMCPCommonUtils::GetVectorFromJson(Params, TEXT("location")));
+    }
+    if (Params->HasField(TEXT("rotation")))
+    {
+        SceneComp->SetRelativeRotation(FEpicUnrealMCPCommonUtils::GetRotatorFromJson(Params, TEXT("rotation")));
+    }
+    if (Params->HasField(TEXT("scale")))
+    {
+        SceneComp->SetRelativeScale3D(FEpicUnrealMCPCommonUtils::GetVectorFromJson(Params, TEXT("scale")));
+    }
+
+    SceneComp->Modify();
+    TargetActor->Modify();
+    TargetActor->MarkPackageDirty();
+
+    TSharedPtr<FJsonObject> ResultObj = MakeShared<FJsonObject>();
+    ResultObj->SetBoolField(TEXT("success"), true);
+    ResultObj->SetStringField(TEXT("actor_name"), TargetActor->GetName());
+    ResultObj->SetStringField(TEXT("component_name"), SceneComp->GetName());
+
+    auto MakeVec = [](const FVector& V)
+    {
+        return TArray<TSharedPtr<FJsonValue>>{
+            MakeShared<FJsonValueNumber>(V.X),
+            MakeShared<FJsonValueNumber>(V.Y),
+            MakeShared<FJsonValueNumber>(V.Z)
+        };
+    };
+    auto MakeRot = [](const FRotator& R)
+    {
+        return TArray<TSharedPtr<FJsonValue>>{
+            MakeShared<FJsonValueNumber>(R.Roll),
+            MakeShared<FJsonValueNumber>(R.Pitch),
+            MakeShared<FJsonValueNumber>(R.Yaw)
+        };
+    };
+
+    TSharedPtr<FJsonObject> Before = MakeShared<FJsonObject>();
+    Before->SetArrayField(TEXT("location"), MakeVec(OldLoc));
+    Before->SetArrayField(TEXT("rotation"), MakeRot(OldRot));
+    Before->SetArrayField(TEXT("scale"), MakeVec(OldScale));
+    ResultObj->SetObjectField(TEXT("before"), Before);
+
+    TSharedPtr<FJsonObject> After = MakeShared<FJsonObject>();
+    After->SetArrayField(TEXT("location"), MakeVec(SceneComp->GetRelativeLocation()));
+    After->SetArrayField(TEXT("rotation"), MakeRot(SceneComp->GetRelativeRotation()));
+    After->SetArrayField(TEXT("scale"), MakeVec(SceneComp->GetRelativeScale3D()));
+    ResultObj->SetObjectField(TEXT("after"), After);
+
     return ResultObj;
 }

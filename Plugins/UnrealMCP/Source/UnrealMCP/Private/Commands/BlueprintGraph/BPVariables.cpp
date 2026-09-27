@@ -290,7 +290,24 @@ TSharedPtr<FJsonObject> FBPVariables::SetVariableProperties(const TSharedPtr<FJs
     if (Params->HasField(TEXT("default_value")))
     {
         SetDefaultValue(*VarDesc, Params->Values.FindRef("default_value"));
-        UpdatedProperties->SetStringField("default_value", "updated");
+        UpdatedProperties->SetStringField("default_value", VarDesc->DefaultValue);
+
+        // Also push into the generated CDO so runtime/editor instances pick it up.
+        if (UClass* GeneratedClass = Blueprint->GeneratedClass)
+        {
+            if (UObject* CDO = GeneratedClass->GetDefaultObject())
+            {
+                if (FProperty* Property = GeneratedClass->FindPropertyByName(VarDesc->VarName))
+                {
+                    void* ValuePtr = Property->ContainerPtrToValuePtr<void>(CDO);
+                    const FString& DefaultStr = VarDesc->DefaultValue;
+                    if (!DefaultStr.IsEmpty() && ValuePtr)
+                    {
+                        Property->ImportText_Direct(*DefaultStr, ValuePtr, CDO, PPF_None);
+                    }
+                }
+            }
+        }
     }
 
     // Update expose_to_cinematics (CPF_Interp)

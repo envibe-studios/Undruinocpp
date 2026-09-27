@@ -37,5 +37,13 @@ private:
     TSharedPtr<FJsonObject> HandleGetBlueprintVariableDetails(const TSharedPtr<FJsonObject>& Params);
     TSharedPtr<FJsonObject> HandleGetBlueprintFunctionDetails(const TSharedPtr<FJsonObject>& Params);
 
+    // Component hierarchy helpers
+    TSharedPtr<FJsonObject> HandleGetBlueprintComponentHierarchy(const TSharedPtr<FJsonObject>& Params);
+    TSharedPtr<FJsonObject> HandleFixBlueprintScaledRoot(const TSharedPtr<FJsonObject>& Params);
+    TSharedPtr<FJsonObject> HandleCorrectBlueprintRelativeBake(const TSharedPtr<FJsonObject>& Params);
+    TSharedPtr<FJsonObject> HandleFixBlueprintPhysicsRoot(const TSharedPtr<FJsonObject>& Params);
+    TSharedPtr<FJsonObject> HandleSetBlueprintComponentTransform(const TSharedPtr<FJsonObject>& Params);
+    TSharedPtr<FJsonObject> HandleSetBlueprintComponentAbsolute(const TSharedPtr<FJsonObject>& Params);
+    TSharedPtr<FJsonObject> HandleReparentBlueprintComponent(const TSharedPtr<FJsonObject>& Params);
 
 }; 

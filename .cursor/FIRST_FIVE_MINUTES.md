@@ -5,8 +5,9 @@ When beginning work on this project:
 3. Read PROJECT_ARCHITECTURE.md.
 4. Read relevant playbooks for the task.
 5. Inspect the project before proposing changes.
-6. Use Unreal MCP when editor state is relevant.
-7. Prefer extending existing systems over creating new ones.
-8. Update documentation if architecture changes.
-9. Verify before claiming success.
-10. Leave the project cleaner than you found it.
+6. Never use any Grok agents or Grok models
+7. Use Unreal MCP when editor state is relevant.
+8. Prefer extending existing systems over creating new ones.
+9. Update documentation if architecture changes.
+10. Verify before claiming success.
+11. Leave the project cleaner than you found it.

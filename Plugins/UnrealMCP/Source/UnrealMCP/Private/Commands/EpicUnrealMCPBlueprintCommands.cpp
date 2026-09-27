@@ -11,6 +11,7 @@
 #include "Components/BoxComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/PrimitiveComponent.h"
+#include "Components/SceneComponent.h"
 #include "Materials/MaterialInterface.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Materials/Material.h"
@@ -28,6 +29,7 @@
 #include "GameFramework/Actor.h"
 #include "GameFramework/Pawn.h"
 #include "Kismet/GameplayStatics.h"
+#include "PackageTools.h"
 
 FEpicUnrealMCPBlueprintCommands::FEpicUnrealMCPBlueprintCommands()
 {
@@ -100,6 +102,34 @@ TSharedPtr<FJsonObject> FEpicUnrealMCPBlueprintCommands::HandleCommand(const FSt
     else if (CommandType == TEXT("get_blueprint_function_details"))
     {
         return HandleGetBlueprintFunctionDetails(Params);
+    }
+    else if (CommandType == TEXT("get_blueprint_component_hierarchy"))
+    {
+        return HandleGetBlueprintComponentHierarchy(Params);
+    }
+    else if (CommandType == TEXT("fix_blueprint_scaled_root"))
+    {
+        return HandleFixBlueprintScaledRoot(Params);
+    }
+    else if (CommandType == TEXT("correct_blueprint_relative_bake"))
+    {
+        return HandleCorrectBlueprintRelativeBake(Params);
+    }
+    else if (CommandType == TEXT("fix_blueprint_physics_root"))
+    {
+        return HandleFixBlueprintPhysicsRoot(Params);
+    }
+    else if (CommandType == TEXT("set_blueprint_component_transform"))
+    {
+        return HandleSetBlueprintComponentTransform(Params);
+    }
+    else if (CommandType == TEXT("set_blueprint_component_absolute"))
+    {
+        return HandleSetBlueprintComponentAbsolute(Params);
+    }
+    else if (CommandType == TEXT("reparent_blueprint_component"))
+    {
+        return HandleReparentBlueprintComponent(Params);
     }
 
     return FEpicUnrealMCPCommonUtils::CreateErrorResponse(FString::Printf(TEXT("Unknown blueprint command: %s"), *CommandType));
@@ -398,11 +428,33 @@ TSharedPtr<FJsonObject> FEpicUnrealMCPBlueprintCommands::HandleCompileBlueprint(
         return FEpicUnrealMCPCommonUtils::CreateErrorResponse(TEXT("Missing 'blueprint_name' parameter"));
     }
 
+    const bool bReloadFromDisk = Params->HasField(TEXT("reload_from_disk")) && Params->GetBoolField(TEXT("reload_from_disk"));
+
     // Find the blueprint
     UBlueprint* Blueprint = FEpicUnrealMCPCommonUtils::FindBlueprint(BlueprintName);
     if (!Blueprint)
     {
         return FEpicUnrealMCPCommonUtils::CreateErrorResponse(FString::Printf(TEXT("Blueprint not found: %s"), *BlueprintName));
+    }
+
+    if (bReloadFromDisk)
+    {
+        UPackage* Package = Blueprint->GetOutermost();
+        if (!Package)
+        {
+            return FEpicUnrealMCPCommonUtils::CreateErrorResponse(TEXT("Blueprint has no package to reload"));
+        }
+
+        // Discard in-memory edits and reload the on-disk asset (e.g. after git restore).
+        TArray<UPackage*> PackagesToReload;
+        PackagesToReload.Add(Package);
+        UPackageTools::ReloadPackages(PackagesToReload);
+
+        Blueprint = FEpicUnrealMCPCommonUtils::FindBlueprint(BlueprintName);
+        if (!Blueprint)
+        {
+            return FEpicUnrealMCPCommonUtils::CreateErrorResponse(FString::Printf(TEXT("Blueprint not found after reload: %s"), *BlueprintName));
+        }
     }
 
     // Compile the blueprint
@@ -411,6 +463,7 @@ TSharedPtr<FJsonObject> FEpicUnrealMCPBlueprintCommands::HandleCompileBlueprint(
     TSharedPtr<FJsonObject> ResultObj = MakeShared<FJsonObject>();
     ResultObj->SetStringField(TEXT("name"), BlueprintName);
     ResultObj->SetBoolField(TEXT("compiled"), true);
+    ResultObj->SetBoolField(TEXT("reloaded_from_disk"), bReloadFromDisk);
     return ResultObj;
 }
 
@@ -1282,14 +1335,79 @@ TSharedPtr<FJsonObject> FEpicUnrealMCPBlueprintCommands::HandleReadBlueprintCont
         TArray<TSharedPtr<FJsonValue>> ComponentArray;
         if (Blueprint->SimpleConstructionScript)
         {
-            for (USCS_Node* Node : Blueprint->SimpleConstructionScript->GetAllNodes())
+            USimpleConstructionScript* SCS = Blueprint->SimpleConstructionScript;
+            TMap<USCS_Node*, USCS_Node*> ChildToParent;
+            for (USCS_Node* Node : SCS->GetAllNodes())
+            {
+                if (!Node)
+                {
+                    continue;
+                }
+                for (USCS_Node* Child : Node->GetChildNodes())
+                {
+                    if (Child)
+                    {
+                        ChildToParent.Add(Child, Node);
+                    }
+                }
+            }
+
+            for (USCS_Node* Node : SCS->GetAllNodes())
             {
                 if (Node && Node->ComponentTemplate)
                 {
                     TSharedPtr<FJsonObject> CompObj = MakeShared<FJsonObject>();
                     CompObj->SetStringField(TEXT("name"), Node->GetVariableName().ToString());
                     CompObj->SetStringField(TEXT("class"), Node->ComponentTemplate->GetClass()->GetName());
-                    CompObj->SetBoolField(TEXT("is_root"), Node == Blueprint->SimpleConstructionScript->GetDefaultSceneRootNode());
+                    CompObj->SetBoolField(TEXT("is_root"), Node->IsRootNode());
+                    CompObj->SetBoolField(TEXT("is_default_scene_root"), Node == SCS->GetDefaultSceneRootNode());
+
+                    if (USCS_Node** ParentNode = ChildToParent.Find(Node))
+                    {
+                        CompObj->SetStringField(TEXT("parent"), (*ParentNode)->GetVariableName().ToString());
+                    }
+                    else if (Node->IsRootNode())
+                    {
+                        CompObj->SetField(TEXT("parent"), MakeShared<FJsonValueNull>());
+                    }
+                    else
+                    {
+                        CompObj->SetField(TEXT("parent"), MakeShared<FJsonValueNull>());
+                    }
+
+                    if (USceneComponent* Scene = Cast<USceneComponent>(Node->ComponentTemplate))
+                    {
+                        const FVector Loc = Scene->GetRelativeLocation();
+                        const FRotator Rot = Scene->GetRelativeRotation();
+                        const FVector Scale = Scene->GetRelativeScale3D();
+
+                        TSharedPtr<FJsonObject> Rel = MakeShared<FJsonObject>();
+                        TArray<TSharedPtr<FJsonValue>> LocArr;
+                        LocArr.Add(MakeShared<FJsonValueNumber>(Loc.X));
+                        LocArr.Add(MakeShared<FJsonValueNumber>(Loc.Y));
+                        LocArr.Add(MakeShared<FJsonValueNumber>(Loc.Z));
+                        Rel->SetArrayField(TEXT("location"), LocArr);
+
+                        TArray<TSharedPtr<FJsonValue>> RotArr;
+                        RotArr.Add(MakeShared<FJsonValueNumber>(Rot.Roll));
+                        RotArr.Add(MakeShared<FJsonValueNumber>(Rot.Pitch));
+                        RotArr.Add(MakeShared<FJsonValueNumber>(Rot.Yaw));
+                        Rel->SetArrayField(TEXT("rotation"), RotArr);
+
+                        TArray<TSharedPtr<FJsonValue>> ScaleArr;
+                        ScaleArr.Add(MakeShared<FJsonValueNumber>(Scale.X));
+                        ScaleArr.Add(MakeShared<FJsonValueNumber>(Scale.Y));
+                        ScaleArr.Add(MakeShared<FJsonValueNumber>(Scale.Z));
+                        Rel->SetArrayField(TEXT("scale"), ScaleArr);
+
+                        CompObj->SetObjectField(TEXT("relative"), Rel);
+                        CompObj->SetBoolField(TEXT("is_scene"), true);
+                    }
+                    else
+                    {
+                        CompObj->SetBoolField(TEXT("is_scene"), false);
+                    }
+
                     ComponentArray.Add(MakeShared<FJsonValueObject>(CompObj));
                 }
             }
@@ -1655,4 +1773,992 @@ TSharedPtr<FJsonObject> FEpicUnrealMCPBlueprintCommands::HandleGetBlueprintFunct
 
     ResultObj->SetBoolField(TEXT("success"), true);
     return ResultObj;
+}
+
+namespace
+{
+	USCS_Node* FindSCSNodeByName(USimpleConstructionScript* SCS, const FName& Name)
+	{
+		if (!SCS)
+		{
+			return nullptr;
+		}
+		for (USCS_Node* Node : SCS->GetAllNodes())
+		{
+			if (Node && Node->GetVariableName() == Name)
+			{
+				return Node;
+			}
+		}
+		return nullptr;
+	}
+
+	USCS_Node* FindParentSCSNode(USimpleConstructionScript* SCS, USCS_Node* Child)
+	{
+		if (!SCS || !Child)
+		{
+			return nullptr;
+		}
+		for (USCS_Node* Node : SCS->GetAllNodes())
+		{
+			if (!Node)
+			{
+				continue;
+			}
+			if (Node->GetChildNodes().Contains(Child))
+			{
+				return Node;
+			}
+		}
+		return nullptr;
+	}
+
+	TSharedPtr<FJsonObject> BuildComponentHierarchyJson(UBlueprint* Blueprint)
+	{
+		TSharedPtr<FJsonObject> ResultObj = MakeShared<FJsonObject>();
+		TArray<TSharedPtr<FJsonValue>> ComponentArray;
+
+		if (!Blueprint || !Blueprint->SimpleConstructionScript)
+		{
+			ResultObj->SetArrayField(TEXT("components"), ComponentArray);
+			return ResultObj;
+		}
+
+		USimpleConstructionScript* SCS = Blueprint->SimpleConstructionScript;
+		TMap<USCS_Node*, USCS_Node*> ChildToParent;
+		for (USCS_Node* Node : SCS->GetAllNodes())
+		{
+			if (!Node)
+			{
+				continue;
+			}
+			for (USCS_Node* Child : Node->GetChildNodes())
+			{
+				if (Child)
+				{
+					ChildToParent.Add(Child, Node);
+				}
+			}
+		}
+
+		for (USCS_Node* Node : SCS->GetAllNodes())
+		{
+			if (!Node || !Node->ComponentTemplate)
+			{
+				continue;
+			}
+
+			TSharedPtr<FJsonObject> CompObj = MakeShared<FJsonObject>();
+			CompObj->SetStringField(TEXT("name"), Node->GetVariableName().ToString());
+			CompObj->SetStringField(TEXT("class"), Node->ComponentTemplate->GetClass()->GetName());
+			CompObj->SetBoolField(TEXT("is_root"), Node->IsRootNode());
+			CompObj->SetBoolField(TEXT("is_default_scene_root"), Node == SCS->GetDefaultSceneRootNode());
+
+			if (USCS_Node** ParentNode = ChildToParent.Find(Node))
+			{
+				CompObj->SetStringField(TEXT("parent"), (*ParentNode)->GetVariableName().ToString());
+			}
+			else
+			{
+				CompObj->SetField(TEXT("parent"), MakeShared<FJsonValueNull>());
+			}
+
+			if (USceneComponent* Scene = Cast<USceneComponent>(Node->ComponentTemplate))
+			{
+				const FVector Loc = Scene->GetRelativeLocation();
+				const FRotator Rot = Scene->GetRelativeRotation();
+				const FVector Scale = Scene->GetRelativeScale3D();
+
+				TSharedPtr<FJsonObject> Rel = MakeShared<FJsonObject>();
+				TArray<TSharedPtr<FJsonValue>> LocArr{ MakeShared<FJsonValueNumber>(Loc.X), MakeShared<FJsonValueNumber>(Loc.Y), MakeShared<FJsonValueNumber>(Loc.Z) };
+				TArray<TSharedPtr<FJsonValue>> RotArr{ MakeShared<FJsonValueNumber>(Rot.Roll), MakeShared<FJsonValueNumber>(Rot.Pitch), MakeShared<FJsonValueNumber>(Rot.Yaw) };
+				TArray<TSharedPtr<FJsonValue>> ScaleArr{ MakeShared<FJsonValueNumber>(Scale.X), MakeShared<FJsonValueNumber>(Scale.Y), MakeShared<FJsonValueNumber>(Scale.Z) };
+				Rel->SetArrayField(TEXT("location"), LocArr);
+				Rel->SetArrayField(TEXT("rotation"), RotArr);
+				Rel->SetArrayField(TEXT("scale"), ScaleArr);
+				CompObj->SetObjectField(TEXT("relative"), Rel);
+				CompObj->SetBoolField(TEXT("is_scene"), true);
+			}
+			else
+			{
+				CompObj->SetBoolField(TEXT("is_scene"), false);
+			}
+
+			ComponentArray.Add(MakeShared<FJsonValueObject>(CompObj));
+		}
+
+		ResultObj->SetArrayField(TEXT("components"), ComponentArray);
+		return ResultObj;
+	}
+}
+
+TSharedPtr<FJsonObject> FEpicUnrealMCPBlueprintCommands::HandleGetBlueprintComponentHierarchy(const TSharedPtr<FJsonObject>& Params)
+{
+	FString BlueprintPath;
+	if (!Params->TryGetStringField(TEXT("blueprint_path"), BlueprintPath))
+	{
+		return FEpicUnrealMCPCommonUtils::CreateErrorResponse(TEXT("Missing 'blueprint_path' parameter"));
+	}
+
+	UBlueprint* Blueprint = Cast<UBlueprint>(UEditorAssetLibrary::LoadAsset(BlueprintPath));
+	if (!Blueprint)
+	{
+		return FEpicUnrealMCPCommonUtils::CreateErrorResponse(FString::Printf(TEXT("Failed to load blueprint: %s"), *BlueprintPath));
+	}
+
+	TSharedPtr<FJsonObject> ResultObj = BuildComponentHierarchyJson(Blueprint);
+	ResultObj->SetStringField(TEXT("blueprint_path"), BlueprintPath);
+	ResultObj->SetBoolField(TEXT("success"), true);
+	return ResultObj;
+}
+
+TSharedPtr<FJsonObject> FEpicUnrealMCPBlueprintCommands::HandleFixBlueprintScaledRoot(const TSharedPtr<FJsonObject>& Params)
+{
+	FString BlueprintPath;
+	if (!Params->TryGetStringField(TEXT("blueprint_path"), BlueprintPath))
+	{
+		return FEpicUnrealMCPCommonUtils::CreateErrorResponse(TEXT("Missing 'blueprint_path' parameter"));
+	}
+
+	FString ScaledComponentName = TEXT("Body");
+	Params->TryGetStringField(TEXT("scaled_component"), ScaledComponentName);
+
+	FString RootName = TEXT("Root");
+	Params->TryGetStringField(TEXT("root_name"), RootName);
+
+	UBlueprint* Blueprint = Cast<UBlueprint>(UEditorAssetLibrary::LoadAsset(BlueprintPath));
+	if (!Blueprint || !Blueprint->SimpleConstructionScript)
+	{
+		return FEpicUnrealMCPCommonUtils::CreateErrorResponse(FString::Printf(TEXT("Failed to load blueprint SCS: %s"), *BlueprintPath));
+	}
+
+	USimpleConstructionScript* SCS = Blueprint->SimpleConstructionScript;
+	SCS->Modify();
+	Blueprint->Modify();
+
+	TArray<FString> Actions;
+	USCS_Node* BodyNode = FindSCSNodeByName(SCS, FName(*ScaledComponentName));
+	if (!BodyNode)
+	{
+		return FEpicUnrealMCPCommonUtils::CreateErrorResponse(FString::Printf(TEXT("Scaled component not found: %s"), *ScaledComponentName));
+	}
+
+	// Find or create an unscaled SceneComponent that will become the true scene root.
+	// Note: USCS_Node::SetParent only writes metadata — ChildNodes/RootNodes are the real tree.
+	USCS_Node* RootNode = FindSCSNodeByName(SCS, FName(*RootName));
+	if (!RootNode)
+	{
+		RootNode = FindSCSNodeByName(SCS, TEXT("DefaultSceneRoot"));
+		if (RootNode)
+		{
+			RootNode->SetVariableName(FName(*RootName));
+			Actions.Add(TEXT("Renamed DefaultSceneRoot -> Root"));
+		}
+	}
+
+	const bool bCreatedRoot = (RootNode == nullptr);
+	if (!RootNode)
+	{
+		RootNode = SCS->CreateNode(USceneComponent::StaticClass(), FName(*RootName));
+		if (!RootNode)
+		{
+			return FEpicUnrealMCPCommonUtils::CreateErrorResponse(TEXT("Failed to create Root SceneComponent"));
+		}
+		Actions.Add(TEXT("Created Root SceneComponent"));
+	}
+
+	if (USceneComponent* RootScene = Cast<USceneComponent>(RootNode->ComponentTemplate))
+	{
+		RootScene->Modify();
+		RootScene->SetRelativeLocation(FVector::ZeroVector);
+		RootScene->SetRelativeRotation(FRotator::ZeroRotator);
+		RootScene->SetRelativeScale3D(FVector::OneVector);
+	}
+
+	// Capture Body's direct children + relative transform before mutating the tree.
+	USceneComponent* BodyScene = Cast<USceneComponent>(BodyNode->ComponentTemplate);
+	const FTransform BodyRel = BodyScene ? BodyScene->GetRelativeTransform() : FTransform::Identity;
+
+	TArray<USCS_Node*> DirectChildren;
+	for (USCS_Node* Child : BodyNode->GetChildNodes())
+	{
+		if (Child && Child != RootNode)
+		{
+			DirectChildren.Add(Child);
+		}
+	}
+
+	// If a previous attempt nested Root under Body, detach it and drop from AllNodes
+	// so AddNode can re-add it cleanly as the scene root.
+	if (USCS_Node* RootParent = FindParentSCSNode(SCS, RootNode))
+	{
+		RootParent->RemoveChildNode(RootNode, /*bRemoveFromAllNodes=*/true);
+		Actions.Add(FString::Printf(TEXT("Detached Root from %s"), *RootParent->GetVariableName().ToString()));
+	}
+
+	// Mirror USubobjectDataSubsystem::MakeNewSceneRoot for SCS:
+	// 1) Remove scaled Body from RootNodes (without validation)
+	// 2) Add Root as the scene root
+	// 3) Attach Body under Root via AddChildNode
+	if (BodyNode->IsRootNode())
+	{
+		SCS->RemoveNode(BodyNode, /*bValidateSceneRootNodes=*/false);
+		Actions.Add(FString::Printf(TEXT("Removed %s from SCS root list"), *ScaledComponentName));
+	}
+	else if (USCS_Node* BodyParent = FindParentSCSNode(SCS, BodyNode))
+	{
+		if (BodyParent != RootNode)
+		{
+			BodyParent->RemoveChildNode(BodyNode, /*bRemoveFromAllNodes=*/false);
+			Actions.Add(FString::Printf(TEXT("Detached %s from %s"), *ScaledComponentName, *BodyParent->GetVariableName().ToString()));
+		}
+	}
+
+	if (!RootNode->IsRootNode())
+	{
+		// AddNode puts Root into RootNodes and AllNodes, then validates.
+		// If Root was already in AllNodes (e.g. after detach), AddNode still works if not in RootNodes.
+		if (!SCS->GetRootNodes().Contains(RootNode))
+		{
+			SCS->AddNode(RootNode);
+			Actions.Add(bCreatedRoot ? TEXT("Added Root as scene root") : TEXT("Promoted Root to scene root"));
+		}
+	}
+
+	if (FindParentSCSNode(SCS, BodyNode) != RootNode)
+	{
+		RootNode->AddChildNode(BodyNode, /*bAddToAllNodes=*/true);
+		BodyNode->SetParent(RootNode);
+		Actions.Add(FString::Printf(TEXT("Attached %s under Root"), *ScaledComponentName));
+	}
+
+	// Bake Body's transform into each former child, then attach them under Root.
+	for (USCS_Node* Child : DirectChildren)
+	{
+		if (!Child || Child == RootNode || Child == BodyNode)
+		{
+			continue;
+		}
+
+		if (USceneComponent* ChildScene = Cast<USceneComponent>(Child->ComponentTemplate))
+		{
+			ChildScene->Modify();
+			const FTransform NewRel = BodyRel * ChildScene->GetRelativeTransform();
+			ChildScene->SetRelativeLocation(NewRel.GetLocation());
+			ChildScene->SetRelativeRotation(NewRel.Rotator());
+			ChildScene->SetRelativeScale3D(NewRel.GetScale3D());
+		}
+
+		if (FindParentSCSNode(SCS, Child) == BodyNode)
+		{
+			BodyNode->RemoveChildNode(Child, /*bRemoveFromAllNodes=*/false);
+		}
+		else if (USCS_Node* ExistingParent = FindParentSCSNode(SCS, Child))
+		{
+			if (ExistingParent != RootNode)
+			{
+				ExistingParent->RemoveChildNode(Child, /*bRemoveFromAllNodes=*/false);
+			}
+		}
+
+		if (FindParentSCSNode(SCS, Child) != RootNode)
+		{
+			RootNode->AddChildNode(Child, /*bAddToAllNodes=*/true);
+			Child->SetParent(RootNode);
+		}
+
+		Actions.Add(FString::Printf(TEXT("Moved %s from %s -> Root (transform baked)"), *Child->GetVariableName().ToString(), *ScaledComponentName));
+	}
+
+	SCS->ValidateSceneRootNodes();
+	FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
+	FKismetEditorUtilities::CompileBlueprint(Blueprint);
+	UEditorAssetLibrary::SaveLoadedAsset(Blueprint);
+	Actions.Add(TEXT("Compiled and saved"));
+
+	TSharedPtr<FJsonObject> ResultObj = BuildComponentHierarchyJson(Blueprint);
+	ResultObj->SetStringField(TEXT("blueprint_path"), BlueprintPath);
+	ResultObj->SetBoolField(TEXT("success"), true);
+
+	TArray<TSharedPtr<FJsonValue>> ActionArr;
+	for (const FString& A : Actions)
+	{
+		ActionArr.Add(MakeShared<FJsonValueString>(A));
+	}
+	ResultObj->SetArrayField(TEXT("actions"), ActionArr);
+	return ResultObj;
+}
+
+TSharedPtr<FJsonObject> FEpicUnrealMCPBlueprintCommands::HandleCorrectBlueprintRelativeBake(const TSharedPtr<FJsonObject>& Params)
+{
+	// Undoes one extra ParentRel bake on children of Root (except ScaledComponent).
+	// Used when a prior failed reparent baked transforms while nodes were still parented
+	// under the scaled component, then a successful reparent baked again.
+	FString BlueprintPath;
+	if (!Params->TryGetStringField(TEXT("blueprint_path"), BlueprintPath))
+	{
+		return FEpicUnrealMCPCommonUtils::CreateErrorResponse(TEXT("Missing 'blueprint_path' parameter"));
+	}
+
+	FString ScaledComponentName = TEXT("Body");
+	Params->TryGetStringField(TEXT("scaled_component"), ScaledComponentName);
+
+	FString RootName = TEXT("Root");
+	Params->TryGetStringField(TEXT("root_name"), RootName);
+
+	bool bRebuildAllNodesOnly = false;
+	Params->TryGetBoolField(TEXT("rebuild_all_nodes_only"), bRebuildAllNodesOnly);
+
+	UBlueprint* Blueprint = Cast<UBlueprint>(UEditorAssetLibrary::LoadAsset(BlueprintPath));
+	if (!Blueprint || !Blueprint->SimpleConstructionScript)
+	{
+		return FEpicUnrealMCPCommonUtils::CreateErrorResponse(TEXT("Failed to load blueprint"));
+	}
+
+	USimpleConstructionScript* SCS = Blueprint->SimpleConstructionScript;
+	USCS_Node* RootNode = FindSCSNodeByName(SCS, FName(*RootName));
+	USCS_Node* BodyNode = FindSCSNodeByName(SCS, FName(*ScaledComponentName));
+	if (!RootNode || !BodyNode)
+	{
+		return FEpicUnrealMCPCommonUtils::CreateErrorResponse(TEXT("Root or Body node missing"));
+	}
+
+	USceneComponent* BodyScene = Cast<USceneComponent>(BodyNode->ComponentTemplate);
+	const FTransform BodyRel = BodyScene ? BodyScene->GetRelativeTransform() : FTransform::Identity;
+	const FTransform InvBodyRel = BodyRel.Inverse();
+
+	TArray<FString> Actions;
+	SCS->Modify();
+	Blueprint->Modify();
+
+	// Rebuild AllNodes from the live RootNodes tree (dedupes after RemoveNode/AddNode cycles).
+	{
+		TArray<USCS_Node*> Rebuilt;
+		TSet<USCS_Node*> Seen;
+
+		TFunction<void(USCS_Node*)> Gather = [&](USCS_Node* Node)
+		{
+			if (!Node || Seen.Contains(Node))
+			{
+				return;
+			}
+			Seen.Add(Node);
+			Rebuilt.Add(Node);
+			for (USCS_Node* Child : Node->GetChildNodes())
+			{
+				Gather(Child);
+			}
+		};
+
+		for (USCS_Node* Root : SCS->GetRootNodes())
+		{
+			Gather(Root);
+		}
+
+		if (FArrayProperty* AllNodesProp = FindFProperty<FArrayProperty>(USimpleConstructionScript::StaticClass(), TEXT("AllNodes")))
+		{
+			FScriptArrayHelper Helper(AllNodesProp, AllNodesProp->ContainerPtrToValuePtr<void>(SCS));
+			Helper.EmptyValues();
+			for (USCS_Node* Node : Rebuilt)
+			{
+				const int32 Index = Helper.AddValue();
+				*reinterpret_cast<TObjectPtr<USCS_Node>*>(Helper.GetRawPtr(Index)) = Node;
+			}
+			Actions.Add(FString::Printf(TEXT("Rebuilt AllNodes (%d unique)"), Rebuilt.Num()));
+		}
+	}
+
+	if (!bRebuildAllNodesOnly)
+	{
+		for (USCS_Node* Child : RootNode->GetChildNodes())
+		{
+			if (!Child || Child == BodyNode)
+			{
+				continue;
+			}
+			USceneComponent* ChildScene = Cast<USceneComponent>(Child->ComponentTemplate);
+			if (!ChildScene)
+			{
+				continue;
+			}
+			ChildScene->Modify();
+			const FTransform Corrected = InvBodyRel * ChildScene->GetRelativeTransform();
+			ChildScene->SetRelativeLocation(Corrected.GetLocation());
+			ChildScene->SetRelativeRotation(Corrected.Rotator());
+			ChildScene->SetRelativeScale3D(Corrected.GetScale3D());
+			Actions.Add(FString::Printf(TEXT("Un-baked extra %s scale from %s"), *ScaledComponentName, *Child->GetVariableName().ToString()));
+		}
+	}
+
+	FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
+	FKismetEditorUtilities::CompileBlueprint(Blueprint);
+	UEditorAssetLibrary::SaveLoadedAsset(Blueprint);
+	Actions.Add(TEXT("Compiled and saved"));
+
+	TSharedPtr<FJsonObject> ResultObj = BuildComponentHierarchyJson(Blueprint);
+	ResultObj->SetStringField(TEXT("blueprint_path"), BlueprintPath);
+	ResultObj->SetBoolField(TEXT("success"), true);
+	TArray<TSharedPtr<FJsonValue>> ActionArr;
+	for (const FString& A : Actions)
+	{
+		ActionArr.Add(MakeShared<FJsonValueString>(A));
+	}
+	ResultObj->SetArrayField(TEXT("actions"), ActionArr);
+	return ResultObj;
+}
+
+TSharedPtr<FJsonObject> FEpicUnrealMCPBlueprintCommands::HandleFixBlueprintPhysicsRoot(const TSharedPtr<FJsonObject>& Params)
+{
+	// HoverMovement / HoverThruster apply forces to Owner->GetRootComponent() as UPrimitiveComponent.
+	// After the scaled-root fix, Root is a SceneComponent so forces no-op and child primitives
+	// with SimulatePhysics fall independently. Replace Scene Root with an unscaled simulating
+	// BoxComponent physics root; keep Body as a visual child (no simulate).
+	FString BlueprintPath;
+	if (!Params->TryGetStringField(TEXT("blueprint_path"), BlueprintPath))
+	{
+		return FEpicUnrealMCPCommonUtils::CreateErrorResponse(TEXT("Missing 'blueprint_path' parameter"));
+	}
+
+	FString PhysicsRootName = TEXT("PhysicsRoot");
+	Params->TryGetStringField(TEXT("physics_root_name"), PhysicsRootName);
+
+	FString BodyName = TEXT("Body");
+	Params->TryGetStringField(TEXT("body_name"), BodyName);
+
+	UBlueprint* Blueprint = Cast<UBlueprint>(UEditorAssetLibrary::LoadAsset(BlueprintPath));
+	if (!Blueprint || !Blueprint->SimpleConstructionScript)
+	{
+		return FEpicUnrealMCPCommonUtils::CreateErrorResponse(TEXT("Failed to load blueprint SCS"));
+	}
+
+	USimpleConstructionScript* SCS = Blueprint->SimpleConstructionScript;
+	SCS->Modify();
+	Blueprint->Modify();
+
+	TArray<FString> Actions;
+
+	USCS_Node* BodyNode = FindSCSNodeByName(SCS, FName(*BodyName));
+
+	USCS_Node* SceneRootNode = FindSCSNodeByName(SCS, TEXT("Root"));
+	if (!SceneRootNode)
+	{
+		for (USCS_Node* Node : SCS->GetRootNodes())
+		{
+			if (Node && Cast<USceneComponent>(Node->ComponentTemplate))
+			{
+				SceneRootNode = Node;
+				break;
+			}
+		}
+	}
+
+	if (!SceneRootNode)
+	{
+		return FEpicUnrealMCPCommonUtils::CreateErrorResponse(TEXT("Could not find current scene root"));
+	}
+
+	USCS_Node* PhysicsRootNode = nullptr;
+
+	const bool bSceneRootIsNonPrimitive =
+		SceneRootNode->ComponentTemplate
+		&& SceneRootNode->ComponentTemplate->IsA(USceneComponent::StaticClass())
+		&& !SceneRootNode->ComponentTemplate->IsA(UPrimitiveComponent::StaticClass());
+
+	if (!bSceneRootIsNonPrimitive && Cast<UPrimitiveComponent>(SceneRootNode->ComponentTemplate))
+	{
+		PhysicsRootNode = SceneRootNode;
+		PhysicsRootName = SceneRootNode->GetVariableName().ToString();
+		Actions.Add(FString::Printf(TEXT("Using existing primitive root %s"), *PhysicsRootName));
+	}
+	else
+	{
+		PhysicsRootNode = FindSCSNodeByName(SCS, FName(*PhysicsRootName));
+		if (!PhysicsRootNode)
+		{
+			PhysicsRootNode = SCS->CreateNode(UBoxComponent::StaticClass(), FName(*PhysicsRootName));
+			if (!PhysicsRootNode)
+			{
+				return FEpicUnrealMCPCommonUtils::CreateErrorResponse(TEXT("Failed to create PhysicsRoot BoxComponent"));
+			}
+			Actions.Add(TEXT("Created PhysicsRoot BoxComponent"));
+		}
+
+		UBoxComponent* Box = Cast<UBoxComponent>(PhysicsRootNode->ComponentTemplate);
+		if (!Box)
+		{
+			return FEpicUnrealMCPCommonUtils::CreateErrorResponse(TEXT("PhysicsRoot template is not a BoxComponent"));
+		}
+
+		Box->Modify();
+		FVector BodyScale(2.75f, 1.0f, 1.0f);
+		if (USceneComponent* BodyScene = BodyNode ? Cast<USceneComponent>(BodyNode->ComponentTemplate) : nullptr)
+		{
+			BodyScale = BodyScene->GetRelativeScale3D();
+		}
+		const FVector BoxExtent(50.0f * BodyScale.X, 50.0f * BodyScale.Y, 50.0f * BodyScale.Z);
+		Box->SetBoxExtent(BoxExtent);
+		Box->SetRelativeScale3D(FVector::OneVector);
+		Box->SetRelativeLocation(FVector::ZeroVector);
+		Box->SetRelativeRotation(FRotator::ZeroRotator);
+		Box->SetCollisionProfileName(TEXT("PhysicsActor"));
+		Box->SetSimulatePhysics(true);
+		Box->SetEnableGravity(true);
+		Box->BodyInstance.bSimulatePhysics = true;
+		Box->SetHiddenInGame(true);
+		Box->SetVisibility(false);
+		Actions.Add(FString::Printf(TEXT("Configured PhysicsRoot BoxExtent=(%.1f,%.1f,%.1f)"), BoxExtent.X, BoxExtent.Y, BoxExtent.Z));
+
+		if (UPrimitiveComponent* BodyPrim = BodyNode ? Cast<UPrimitiveComponent>(BodyNode->ComponentTemplate) : nullptr)
+		{
+			Box->SetLinearDamping(BodyPrim->GetLinearDamping());
+			Box->SetAngularDamping(BodyPrim->GetAngularDamping());
+			Actions.Add(TEXT("Copied damping from Body"));
+		}
+
+		if (USCS_Node* PhysParent = FindParentSCSNode(SCS, PhysicsRootNode))
+		{
+			PhysParent->RemoveChildNode(PhysicsRootNode, /*bRemoveFromAllNodes=*/true);
+		}
+
+		USCS_Node* OldRoot = SceneRootNode;
+		if (OldRoot->IsRootNode())
+		{
+			SCS->RemoveNode(OldRoot, /*bValidateSceneRootNodes=*/false);
+			Actions.Add(FString::Printf(TEXT("Removed %s from root list"), *OldRoot->GetVariableName().ToString()));
+		}
+
+		if (!PhysicsRootNode->IsRootNode())
+		{
+			SCS->AddNode(PhysicsRootNode);
+			Actions.Add(TEXT("Promoted PhysicsRoot to scene root"));
+		}
+
+		PhysicsRootNode->MoveChildNodes(OldRoot);
+		Actions.Add(FString::Printf(TEXT("Moved children from %s -> PhysicsRoot"), *OldRoot->GetVariableName().ToString()));
+
+		if (bSceneRootIsNonPrimitive)
+		{
+			if (USCS_Node* P = FindParentSCSNode(SCS, OldRoot))
+			{
+				P->RemoveChildNode(OldRoot, true);
+			}
+			if (FArrayProperty* AllNodesProp = FindFProperty<FArrayProperty>(USimpleConstructionScript::StaticClass(), TEXT("AllNodes")))
+			{
+				FScriptArrayHelper Helper(AllNodesProp, AllNodesProp->ContainerPtrToValuePtr<void>(SCS));
+				for (int32 i = Helper.Num() - 1; i >= 0; --i)
+				{
+					TObjectPtr<USCS_Node>* Elem = reinterpret_cast<TObjectPtr<USCS_Node>*>(Helper.GetRawPtr(i));
+					if (Elem && *Elem == OldRoot)
+					{
+						Helper.RemoveValues(i);
+					}
+				}
+			}
+			Actions.Add(FString::Printf(TEXT("Removed old SceneComponent root '%s'"), *OldRoot->GetVariableName().ToString()));
+		}
+		else if (FindParentSCSNode(SCS, OldRoot) != PhysicsRootNode)
+		{
+			PhysicsRootNode->AddChildNode(OldRoot, true);
+			OldRoot->SetParent(PhysicsRootNode);
+			Actions.Add(FString::Printf(TEXT("Attached former root %s under PhysicsRoot"), *OldRoot->GetVariableName().ToString()));
+		}
+	}
+
+	if (!PhysicsRootNode)
+	{
+		PhysicsRootNode = FindSCSNodeByName(SCS, FName(*PhysicsRootName));
+	}
+	if (!PhysicsRootNode)
+	{
+		return FEpicUnrealMCPCommonUtils::CreateErrorResponse(TEXT("Physics root node missing after promotion"));
+	}
+
+	for (USCS_Node* Node : SCS->GetAllNodes())
+	{
+		if (!Node || Node == PhysicsRootNode)
+		{
+			continue;
+		}
+		if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Node->ComponentTemplate))
+		{
+			if (Prim->IsSimulatingPhysics() || Prim->BodyInstance.bSimulatePhysics)
+			{
+				Prim->Modify();
+				Prim->SetSimulatePhysics(false);
+				Prim->BodyInstance.bSimulatePhysics = false;
+				Actions.Add(FString::Printf(TEXT("Disabled SimulatePhysics on %s"), *Node->GetVariableName().ToString()));
+			}
+		}
+	}
+
+	if (UPrimitiveComponent* PhysPrim = Cast<UPrimitiveComponent>(PhysicsRootNode->ComponentTemplate))
+	{
+		PhysPrim->Modify();
+		PhysPrim->SetSimulatePhysics(true);
+		PhysPrim->BodyInstance.bSimulatePhysics = true;
+		PhysPrim->SetEnableGravity(true);
+		Actions.Add(FString::Printf(TEXT("Enabled SimulatePhysics on %s"), *PhysicsRootNode->GetVariableName().ToString()));
+	}
+	else
+	{
+		return FEpicUnrealMCPCommonUtils::CreateErrorResponse(TEXT("Physics root is not a PrimitiveComponent"));
+	}
+
+	{
+		TArray<USCS_Node*> Rebuilt;
+		TSet<USCS_Node*> Seen;
+		TFunction<void(USCS_Node*)> Gather = [&](USCS_Node* Node)
+		{
+			if (!Node || Seen.Contains(Node))
+			{
+				return;
+			}
+			Seen.Add(Node);
+			Rebuilt.Add(Node);
+			for (USCS_Node* Child : Node->GetChildNodes())
+			{
+				Gather(Child);
+			}
+		};
+		for (USCS_Node* Root : SCS->GetRootNodes())
+		{
+			Gather(Root);
+		}
+		if (FArrayProperty* AllNodesProp = FindFProperty<FArrayProperty>(USimpleConstructionScript::StaticClass(), TEXT("AllNodes")))
+		{
+			FScriptArrayHelper Helper(AllNodesProp, AllNodesProp->ContainerPtrToValuePtr<void>(SCS));
+			Helper.EmptyValues();
+			for (USCS_Node* Node : Rebuilt)
+			{
+				const int32 Index = Helper.AddValue();
+				*reinterpret_cast<TObjectPtr<USCS_Node>*>(Helper.GetRawPtr(Index)) = Node;
+			}
+			Actions.Add(FString::Printf(TEXT("Rebuilt AllNodes (%d)"), Rebuilt.Num()));
+		}
+	}
+
+	SCS->ValidateSceneRootNodes();
+	FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
+	FKismetEditorUtilities::CompileBlueprint(Blueprint);
+	UEditorAssetLibrary::SaveLoadedAsset(Blueprint);
+	Actions.Add(TEXT("Compiled and saved"));
+
+	TSharedPtr<FJsonObject> ResultObj = BuildComponentHierarchyJson(Blueprint);
+	ResultObj->SetStringField(TEXT("blueprint_path"), BlueprintPath);
+	ResultObj->SetBoolField(TEXT("success"), true);
+	TArray<TSharedPtr<FJsonValue>> ActionArr;
+	for (const FString& A : Actions)
+	{
+		ActionArr.Add(MakeShared<FJsonValueString>(A));
+	}
+	ResultObj->SetArrayField(TEXT("actions"), ActionArr);
+	return ResultObj;
+}
+
+TSharedPtr<FJsonObject> FEpicUnrealMCPBlueprintCommands::HandleSetBlueprintComponentTransform(const TSharedPtr<FJsonObject>& Params)
+{
+	FString BlueprintPath;
+	if (!Params->TryGetStringField(TEXT("blueprint_path"), BlueprintPath))
+	{
+		FString BlueprintName;
+		if (Params->TryGetStringField(TEXT("blueprint_name"), BlueprintName))
+		{
+			BlueprintPath = FString::Printf(TEXT("/Game/Blueprints/%s"), *BlueprintName);
+		}
+		else
+		{
+			return FEpicUnrealMCPCommonUtils::CreateErrorResponse(TEXT("Missing 'blueprint_path' or 'blueprint_name'"));
+		}
+	}
+
+	FString ComponentName;
+	if (!Params->TryGetStringField(TEXT("component_name"), ComponentName))
+	{
+		return FEpicUnrealMCPCommonUtils::CreateErrorResponse(TEXT("Missing 'component_name' parameter"));
+	}
+
+	UBlueprint* Blueprint = Cast<UBlueprint>(UEditorAssetLibrary::LoadAsset(BlueprintPath));
+	if (!Blueprint)
+	{
+		Blueprint = FEpicUnrealMCPCommonUtils::FindBlueprint(BlueprintPath);
+	}
+	if (!Blueprint || !Blueprint->SimpleConstructionScript)
+	{
+		return FEpicUnrealMCPCommonUtils::CreateErrorResponse(FString::Printf(TEXT("Failed to load blueprint: %s"), *BlueprintPath));
+	}
+
+	USCS_Node* TargetNode = nullptr;
+	for (USCS_Node* Node : Blueprint->SimpleConstructionScript->GetAllNodes())
+	{
+		if (Node && Node->GetVariableName().ToString() == ComponentName)
+		{
+			TargetNode = Node;
+			break;
+		}
+	}
+	if (!TargetNode)
+	{
+		return FEpicUnrealMCPCommonUtils::CreateErrorResponse(FString::Printf(TEXT("Component not found: %s"), *ComponentName));
+	}
+
+	USceneComponent* Scene = Cast<USceneComponent>(TargetNode->ComponentTemplate);
+	if (!Scene)
+	{
+		return FEpicUnrealMCPCommonUtils::CreateErrorResponse(FString::Printf(TEXT("Component is not a SceneComponent: %s"), *ComponentName));
+	}
+
+	const FVector OldLoc = Scene->GetRelativeLocation();
+	const FRotator OldRot = Scene->GetRelativeRotation();
+	const FVector OldScale = Scene->GetRelativeScale3D();
+
+	if (Params->HasField(TEXT("location")))
+	{
+		Scene->SetRelativeLocation(FEpicUnrealMCPCommonUtils::GetVectorFromJson(Params, TEXT("location")));
+	}
+	if (Params->HasField(TEXT("rotation")))
+	{
+		// rotation array is [pitch, yaw, roll] (same as other MCP set commands)
+		Scene->SetRelativeRotation(FEpicUnrealMCPCommonUtils::GetRotatorFromJson(Params, TEXT("rotation")));
+	}
+	if (Params->HasField(TEXT("scale")))
+	{
+		Scene->SetRelativeScale3D(FEpicUnrealMCPCommonUtils::GetVectorFromJson(Params, TEXT("scale")));
+	}
+
+	const bool bCompile = !Params->HasField(TEXT("compile")) || Params->GetBoolField(TEXT("compile"));
+	const bool bSave = Params->HasField(TEXT("save")) && Params->GetBoolField(TEXT("save"));
+
+	FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
+	if (bCompile)
+	{
+		FKismetEditorUtilities::CompileBlueprint(Blueprint);
+	}
+	if (bSave)
+	{
+		UEditorAssetLibrary::SaveLoadedAsset(Blueprint);
+	}
+
+	const FVector NewLoc = Scene->GetRelativeLocation();
+	const FRotator NewRot = Scene->GetRelativeRotation();
+	const FVector NewScale = Scene->GetRelativeScale3D();
+
+	TSharedPtr<FJsonObject> ResultObj = MakeShared<FJsonObject>();
+	ResultObj->SetBoolField(TEXT("success"), true);
+	ResultObj->SetStringField(TEXT("blueprint_path"), BlueprintPath);
+	ResultObj->SetStringField(TEXT("component_name"), ComponentName);
+
+	auto MakeVec = [](const FVector& V)
+	{
+		TArray<TSharedPtr<FJsonValue>> Arr{
+			MakeShared<FJsonValueNumber>(V.X),
+			MakeShared<FJsonValueNumber>(V.Y),
+			MakeShared<FJsonValueNumber>(V.Z)
+		};
+		return Arr;
+	};
+	auto MakeRot = [](const FRotator& R)
+	{
+		// Dump as [roll, pitch, yaw] to match hierarchy dump convention
+		TArray<TSharedPtr<FJsonValue>> Arr{
+			MakeShared<FJsonValueNumber>(R.Roll),
+			MakeShared<FJsonValueNumber>(R.Pitch),
+			MakeShared<FJsonValueNumber>(R.Yaw)
+		};
+		return Arr;
+	};
+
+	TSharedPtr<FJsonObject> Before = MakeShared<FJsonObject>();
+	Before->SetArrayField(TEXT("location"), MakeVec(OldLoc));
+	Before->SetArrayField(TEXT("rotation"), MakeRot(OldRot));
+	Before->SetArrayField(TEXT("scale"), MakeVec(OldScale));
+	ResultObj->SetObjectField(TEXT("before"), Before);
+
+	TSharedPtr<FJsonObject> After = MakeShared<FJsonObject>();
+	After->SetArrayField(TEXT("location"), MakeVec(NewLoc));
+	After->SetArrayField(TEXT("rotation"), MakeRot(NewRot));
+	After->SetArrayField(TEXT("scale"), MakeVec(NewScale));
+	ResultObj->SetObjectField(TEXT("after"), After);
+
+	return ResultObj;
+}
+
+TSharedPtr<FJsonObject> FEpicUnrealMCPBlueprintCommands::HandleSetBlueprintComponentAbsolute(const TSharedPtr<FJsonObject>& Params)
+{
+	FString BlueprintPath;
+	if (!Params->TryGetStringField(TEXT("blueprint_path"), BlueprintPath))
+	{
+		FString BlueprintName;
+		if (Params->TryGetStringField(TEXT("blueprint_name"), BlueprintName))
+		{
+			BlueprintPath = FString::Printf(TEXT("/Game/Blueprints/%s"), *BlueprintName);
+		}
+		else
+		{
+			return FEpicUnrealMCPCommonUtils::CreateErrorResponse(TEXT("Missing 'blueprint_path' or 'blueprint_name'"));
+		}
+	}
+
+	FString ComponentName;
+	if (!Params->TryGetStringField(TEXT("component_name"), ComponentName))
+	{
+		return FEpicUnrealMCPCommonUtils::CreateErrorResponse(TEXT("Missing 'component_name' parameter"));
+	}
+
+	UBlueprint* Blueprint = Cast<UBlueprint>(UEditorAssetLibrary::LoadAsset(BlueprintPath));
+	if (!Blueprint)
+	{
+		Blueprint = FEpicUnrealMCPCommonUtils::FindBlueprint(BlueprintPath);
+	}
+	if (!Blueprint || !Blueprint->SimpleConstructionScript)
+	{
+		return FEpicUnrealMCPCommonUtils::CreateErrorResponse(FString::Printf(TEXT("Failed to load blueprint: %s"), *BlueprintPath));
+	}
+
+	USCS_Node* TargetNode = FindSCSNodeByName(Blueprint->SimpleConstructionScript, FName(*ComponentName));
+	if (!TargetNode)
+	{
+		return FEpicUnrealMCPCommonUtils::CreateErrorResponse(FString::Printf(TEXT("Component not found: %s"), *ComponentName));
+	}
+
+	USceneComponent* Scene = Cast<USceneComponent>(TargetNode->ComponentTemplate);
+	if (!Scene)
+	{
+		return FEpicUnrealMCPCommonUtils::CreateErrorResponse(FString::Printf(TEXT("Component is not a SceneComponent: %s"), *ComponentName));
+	}
+
+	bool bAbsoluteLocation = Scene->IsUsingAbsoluteLocation();
+	bool bAbsoluteRotation = Scene->IsUsingAbsoluteRotation();
+	bool bAbsoluteScale = Scene->IsUsingAbsoluteScale();
+	Params->TryGetBoolField(TEXT("absolute_location"), bAbsoluteLocation);
+	Params->TryGetBoolField(TEXT("absolute_rotation"), bAbsoluteRotation);
+	Params->TryGetBoolField(TEXT("absolute_scale"), bAbsoluteScale);
+
+	const bool bOldAbsLocation = Scene->IsUsingAbsoluteLocation();
+	const bool bOldAbsRotation = Scene->IsUsingAbsoluteRotation();
+	const bool bOldAbsScale = Scene->IsUsingAbsoluteScale();
+
+	Scene->Modify();
+	Scene->SetAbsolute(bAbsoluteLocation, bAbsoluteRotation, bAbsoluteScale);
+
+	const bool bCompile = !Params->HasField(TEXT("compile")) || Params->GetBoolField(TEXT("compile"));
+	const bool bSave = Params->HasField(TEXT("save")) && Params->GetBoolField(TEXT("save"));
+
+	FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
+	if (bCompile)
+	{
+		FKismetEditorUtilities::CompileBlueprint(Blueprint);
+	}
+	if (bSave)
+	{
+		UEditorAssetLibrary::SaveLoadedAsset(Blueprint);
+	}
+
+	TSharedPtr<FJsonObject> ResultObj = MakeShared<FJsonObject>();
+	ResultObj->SetBoolField(TEXT("success"), true);
+	ResultObj->SetStringField(TEXT("blueprint_path"), BlueprintPath);
+	ResultObj->SetStringField(TEXT("component_name"), ComponentName);
+	ResultObj->SetBoolField(TEXT("old_absolute_location"), bOldAbsLocation);
+	ResultObj->SetBoolField(TEXT("old_absolute_rotation"), bOldAbsRotation);
+	ResultObj->SetBoolField(TEXT("old_absolute_scale"), bOldAbsScale);
+	ResultObj->SetBoolField(TEXT("new_absolute_location"), Scene->IsUsingAbsoluteLocation());
+	ResultObj->SetBoolField(TEXT("new_absolute_rotation"), Scene->IsUsingAbsoluteRotation());
+	ResultObj->SetBoolField(TEXT("new_absolute_scale"), Scene->IsUsingAbsoluteScale());
+	return ResultObj;
+}
+
+TSharedPtr<FJsonObject> FEpicUnrealMCPBlueprintCommands::HandleReparentBlueprintComponent(const TSharedPtr<FJsonObject>& Params)
+{
+	FString BlueprintPath;
+	if (!Params->TryGetStringField(TEXT("blueprint_path"), BlueprintPath))
+	{
+		FString BlueprintName;
+		if (Params->TryGetStringField(TEXT("blueprint_name"), BlueprintName))
+		{
+			BlueprintPath = FString::Printf(TEXT("/Game/Blueprints/%s"), *BlueprintName);
+		}
+		else
+		{
+			return FEpicUnrealMCPCommonUtils::CreateErrorResponse(TEXT("Missing 'blueprint_path' or 'blueprint_name'"));
+		}
+	}
+
+	FString ComponentName;
+	FString NewParentName;
+	if (!Params->TryGetStringField(TEXT("component_name"), ComponentName))
+	{
+		return FEpicUnrealMCPCommonUtils::CreateErrorResponse(TEXT("Missing 'component_name' parameter"));
+	}
+	if (!Params->TryGetStringField(TEXT("new_parent_name"), NewParentName))
+	{
+		return FEpicUnrealMCPCommonUtils::CreateErrorResponse(TEXT("Missing 'new_parent_name' parameter"));
+	}
+
+	UBlueprint* Blueprint = Cast<UBlueprint>(UEditorAssetLibrary::LoadAsset(BlueprintPath));
+	if (!Blueprint)
+	{
+		Blueprint = FEpicUnrealMCPCommonUtils::FindBlueprint(BlueprintPath);
+	}
+	if (!Blueprint || !Blueprint->SimpleConstructionScript)
+	{
+		return FEpicUnrealMCPCommonUtils::CreateErrorResponse(FString::Printf(TEXT("Failed to load blueprint: %s"), *BlueprintPath));
+	}
+
+	USimpleConstructionScript* SCS = Blueprint->SimpleConstructionScript;
+	USCS_Node* ChildNode = FindSCSNodeByName(SCS, FName(*ComponentName));
+	USCS_Node* NewParentNode = FindSCSNodeByName(SCS, FName(*NewParentName));
+	if (!ChildNode)
+	{
+		return FEpicUnrealMCPCommonUtils::CreateErrorResponse(FString::Printf(TEXT("Component not found: %s"), *ComponentName));
+	}
+	if (!NewParentNode)
+	{
+		return FEpicUnrealMCPCommonUtils::CreateErrorResponse(FString::Printf(TEXT("New parent not found: %s"), *NewParentName));
+	}
+	if (ChildNode == NewParentNode)
+	{
+		return FEpicUnrealMCPCommonUtils::CreateErrorResponse(TEXT("Component cannot be parented to itself"));
+	}
+
+	FString OldParentName = TEXT("");
+	if (USCS_Node* OldParent = FindParentSCSNode(SCS, ChildNode))
+	{
+		OldParentName = OldParent->GetVariableName().ToString();
+		if (OldParent != NewParentNode)
+		{
+			OldParent->RemoveChildNode(ChildNode, /*bRemoveFromAllNodes=*/false);
+		}
+	}
+	else if (ChildNode->IsRootNode())
+	{
+		SCS->RemoveNode(ChildNode, /*bValidateSceneRootNodes=*/false);
+		OldParentName = TEXT("<root>");
+	}
+
+	if (FindParentSCSNode(SCS, ChildNode) != NewParentNode)
+	{
+		NewParentNode->AddChildNode(ChildNode, /*bAddToAllNodes=*/true);
+		ChildNode->SetParent(NewParentNode);
+	}
+
+	SCS->ValidateSceneRootNodes();
+
+	const bool bCompile = !Params->HasField(TEXT("compile")) || Params->GetBoolField(TEXT("compile"));
+	const bool bSave = Params->HasField(TEXT("save")) && Params->GetBoolField(TEXT("save"));
+	FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
+	if (bCompile)
+	{
+		FKismetEditorUtilities::CompileBlueprint(Blueprint);
+	}
+	if (bSave)
+	{
+		UEditorAssetLibrary::SaveLoadedAsset(Blueprint);
+	}
+
+	TSharedPtr<FJsonObject> ResultObj = MakeShared<FJsonObject>();
+	ResultObj->SetBoolField(TEXT("success"), true);
+	ResultObj->SetStringField(TEXT("blueprint_path"), BlueprintPath);
+	ResultObj->SetStringField(TEXT("component_name"), ComponentName);
+	ResultObj->SetStringField(TEXT("old_parent_name"), OldParentName);
+	ResultObj->SetStringField(TEXT("new_parent_name"), NewParentName);
+	return ResultObj;
 }
