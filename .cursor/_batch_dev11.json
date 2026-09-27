@@ -1,0 +1,10 @@
+[
+  { "label": "rm beam1", "toolset": "editor_toolset.toolsets.scene.SceneTools", "tool": "remove_from_scene",
+    "args": { "actor": { "refPath": "/Game/Level/HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_WeaponBeam_C_0" } } },
+  { "label": "rm beam2", "toolset": "editor_toolset.toolsets.scene.SceneTools", "tool": "remove_from_scene",
+    "args": { "actor": { "refPath": "/Game/Level/HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_WeaponBeam_C_1" } } },
+  { "label": "rm tracer", "toolset": "editor_toolset.toolsets.scene.SceneTools", "tool": "remove_from_scene",
+    "args": { "actor": { "refPath": "/Game/Level/HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_WeaponTracer_C_0" } } },
+  { "label": "place tester", "toolset": "editor_toolset.toolsets.scene.SceneTools", "tool": "add_to_scene_from_asset",
+    "args": { "asset_path": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest", "name": "ZZ_WeaponFXTest", "xform": { "location": { "x": 0.0, "y": 0.0, "z": 500.0 }, "rotation": { "pitch": 0.0, "yaw": 0.0, "roll": 0.0 } } } }
+]

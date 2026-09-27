@@ -1,0 +1,8 @@
+[
+  { "label": "weaponfire", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire" } } },
+  { "label": "weaponfiremode", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFireMode" } } },
+  { "label": "setmagarrays", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:SetMagArrays" } } }
+]

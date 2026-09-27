@@ -1,0 +1,12 @@
+[
+  { "label": "find gt eg", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "title": ">" } },
+  { "label": "find gt wf", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire" }, "title": ">" } },
+  { "label": "find integer eg", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "title": "integer" } },
+  { "label": "find promote eg", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "title": "Promotable" } },
+  { "label": "list graphs", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "list_graphs",
+    "args": { "blueprint": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft" } } }
+]

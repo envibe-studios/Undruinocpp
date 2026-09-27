@@ -1,0 +1,4 @@
+[
+  { "label": "read graph", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl", "args": { "graph": { "refPath": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest:EventGraph" } } },
+  { "label": "still in level?", "toolset": "editor_toolset.toolsets.scene.SceneTools", "tool": "find_actors", "args": { "name": "*WeaponFXTest*", "tag": "", "collision_channels": [] } }
+]

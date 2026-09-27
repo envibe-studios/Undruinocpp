@@ -1,0 +1,8 @@
+[
+  { "label": "find whilebeaming", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "title": "WhileBeaming" } },
+  { "label": "find firing left", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "title": "Get Firing_Left" } },
+  { "label": "find firing right", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "title": "Get Firing_Right" } }
+]

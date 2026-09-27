@@ -1,0 +1,11 @@
+[
+  { "label": "setmag left call", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_node_infos",
+    "args": { "nodes": [
+      { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_CallFunction_27" },
+      { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_CallFunction_28" }
+    ] } },
+  { "label": "parent firing left", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "get_parent_component",
+    "args": { "component": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:Firing_Left_GEN_VARIABLE" } } },
+  { "label": "parent gun tip left", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "get_parent_component",
+    "args": { "component": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:GunTip_Left_GEN_VARIABLE" } } }
+]

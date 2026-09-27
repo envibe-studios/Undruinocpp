@@ -1,0 +1,4 @@
+[
+  { "label": "pc eg dsl", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl", "args": { "graph": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph" } } },
+  { "label": "hover weaponfire", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl", "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire" } } }
+]

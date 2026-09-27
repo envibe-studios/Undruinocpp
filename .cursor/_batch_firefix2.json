@@ -1,0 +1,8 @@
+[
+  { "label": "print nodes", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_node_infos",
+    "args": { "nodes": [
+      { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_CallFunction_9" },
+      { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_CallFunction_11" }
+    ] } },
+  { "label": "live compile tools", "toolset": "EditorToolset.EditorAppToolset", "tool": "list_tools" }
+]

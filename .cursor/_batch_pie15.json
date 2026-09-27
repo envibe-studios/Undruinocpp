@@ -1,0 +1,6 @@
+[
+  { "label": "t186", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "get_actor_transform",
+    "args": { "actor": { "refPath": "/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_WeaponTracer_C_186" } } },
+  { "label": "t191", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "get_actor_transform",
+    "args": { "actor": { "refPath": "/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_WeaponTracer_C_191" } } }
+]

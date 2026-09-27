@@ -1,0 +1,12 @@
+[
+  { "label": "clamp left", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "create_node",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "type_id": "Math|Integer|Max", "pos": { "x": -1040, "y": 880 } } },
+  { "label": "clamp right", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "create_node",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "type_id": "Math|Integer|Max", "pos": { "x": -1040, "y": 624 } } },
+  { "label": "sb tostr", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "create_node",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "type_id": "Utilities|String|ToString(Integer)", "pos": { "x": -320, "y": 624 } } },
+  { "label": "sb append", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "create_node",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "type_id": "Utilities|String|Append", "pos": { "x": -160, "y": 624 } } },
+  { "label": "break right after set", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "title": "Break WeaponMag" } }
+]

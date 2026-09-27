@@ -1,0 +1,4 @@
+[
+  { "label": "current level", "toolset": "editor_toolset.toolsets.scene.SceneTools", "tool": "get_current_level", "args": {} },
+  { "label": "load course", "toolset": "editor_toolset.toolsets.scene.SceneTools", "tool": "load_level", "args": { "level_path": "/Game/Level/HoverHandlingCourse" } }
+]

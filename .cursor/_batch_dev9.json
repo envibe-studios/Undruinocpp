@@ -1,0 +1,7 @@
+[
+  { "label": "write test graph", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "write_graph_dsl",
+    "args": { "graph": { "refPath": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest:EventGraph" },
+      "code": "(event EventBeginPlay (Utilities|FlowControl|Delay :Duration 2.0) (bind pawn (Game|GetPlayerPawn :PlayerIndex 0)) (bind comps (Actor|GetComponentsByClass :self pawn :ComponentClass \"/Script/Unduinocpp.FiringComponent\")) (bind mode (Utilities|Enum|BytetoEnumEFiringModeType :Byte (Variables|Default|GetTestMode))) (Development|PrintString :InString \"FXTEST forcing fire\" :Duration 20.0) (for c comps (bind fc (Utilities|Casting|CastToFiringComponent :Object c) (:then (Firing|Control|SetFiringMode :self fc :NewMode mode) (Firing|Control|SetFiring :self fc :bShouldFire true)) (:CastFailed))))" } },
+  { "label": "compile test", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "compile_blueprint",
+    "args": { "blueprint": { "refPath": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest" } } }
+]

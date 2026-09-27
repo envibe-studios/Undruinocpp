@@ -1,0 +1,5 @@
+[
+  { "label": "pc graphs", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "list_graphs", "args": { "blueprint": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller" } } },
+  { "label": "find print nodes eg", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes", "args": { "graph": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph" }, "title": "Print String" } },
+  { "label": "find print weaponfire", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes", "args": { "graph": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph" }, "title": "*Ammo*" } }
+]

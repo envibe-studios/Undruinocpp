@@ -1,0 +1,82 @@
+[
+  { "label": "break L event to set", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "break_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 1, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_ComponentBoundEvent_1" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_SetFieldsInStruct_0" } }
+    } },
+  { "label": "event L to branch", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "connect_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 1, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_ComponentBoundEvent_1" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_IfThenElse_1" } }
+    } },
+  { "label": "bActive L to and", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "connect_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_BreakStruct_4" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_CommutativeAssociativeBinaryOperator_7" } }
+    } },
+  { "label": "mode L to eq", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "connect_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 3, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_BreakStruct_4" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_EnumEquality_0" } }
+    } },
+  { "label": "eq L bullet", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "set_pin_value",
+    "args": {
+      "pin": { "direction": "EGPD_Input", "index_id": 1, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_EnumEquality_0" } },
+      "value": "Bullet"
+    } },
+  { "label": "eq L to and", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "connect_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_EnumEquality_0" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 1, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_CommutativeAssociativeBinaryOperator_7" } }
+    } },
+  { "label": "and L to branch", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "connect_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_CommutativeAssociativeBinaryOperator_7" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 1, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_IfThenElse_1" } }
+    } },
+  { "label": "branch L then to set", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "connect_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_IfThenElse_1" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_SetFieldsInStruct_0" } }
+    } },
+  { "label": "break R event to set", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "break_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 1, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_ComponentBoundEvent_0" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_SetFieldsInStruct_1" } }
+    } },
+  { "label": "event R to branch", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "connect_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 1, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_ComponentBoundEvent_0" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_IfThenElse_3" } }
+    } },
+  { "label": "bActive R to and", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "connect_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_BreakStruct_1" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_CommutativeAssociativeBinaryOperator_8" } }
+    } },
+  { "label": "mode R to eq", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "connect_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 3, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_BreakStruct_1" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_EnumEquality_1" } }
+    } },
+  { "label": "eq R bullet", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "set_pin_value",
+    "args": {
+      "pin": { "direction": "EGPD_Input", "index_id": 1, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_EnumEquality_1" } },
+      "value": "Bullet"
+    } },
+  { "label": "eq R to and", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "connect_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_EnumEquality_1" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 1, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_CommutativeAssociativeBinaryOperator_8" } }
+    } },
+  { "label": "and R to branch", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "connect_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_CommutativeAssociativeBinaryOperator_8" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 1, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_IfThenElse_3" } }
+    } },
+  { "label": "branch R then to set", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "connect_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_IfThenElse_3" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_SetFieldsInStruct_1" } }
+    } }
+]

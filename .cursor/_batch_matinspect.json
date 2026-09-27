@@ -1,0 +1,8 @@
+[
+  { "label": "find reload tick", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
+    "args": { "graph": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph" }, "name": "*Reload*" } },
+  { "label": "pc eventgraph", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
+    "args": { "graph": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph" } } },
+  { "label": "weaponmags", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
+    "args": { "instance": { "refPath": "/Game/Blueprints/PC_Controller.Default__PC_Controller_C" }, "properties": ["WeaponMags", "ReloadRate"] } }
+]

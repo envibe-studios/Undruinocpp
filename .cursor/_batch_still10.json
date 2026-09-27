@@ -1,0 +1,17 @@
+[
+  { "label": "firing left live", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
+    "args": {
+      "instance": { "refPath": "/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_Hovercraft_C_0.Firing_Left" },
+      "properties": ["CurrentFiringMode", "BulletConfig", "bDrawDebug", "bAutoActivate", "bIsActive"]
+    } },
+  { "label": "mag left live", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
+    "args": {
+      "instance": { "refPath": "/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_Hovercraft_C_0" },
+      "properties": ["MagLeft", "MagRight"]
+    } },
+  { "label": "pc shi live", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
+    "args": {
+      "instance": { "refPath": "/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_Hovercraft_C_0.ShipHardwareInput" },
+      "properties": ["bAutoApplyTriggerFiring", "bForwardTriggerToSendFire"]
+    } }
+]

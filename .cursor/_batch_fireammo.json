@@ -1,0 +1,15 @@
+[
+  { "label": "world", "tool": "query_editor_state" },
+  { "label": "hover fns", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "list_functions",
+    "args": { "blueprint": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft" } } },
+  { "label": "weaponfire dsl", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire" } } },
+  { "label": "sendweaponaim dsl", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:SendWeaponAim" } } },
+  { "label": "sendfire dsl", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:SendFire" } } },
+  { "label": "sendweaponmode dsl", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:SendWeaponMode" } } },
+  { "label": "pc fns", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "list_functions",
+    "args": { "blueprint": { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller" } } }
+]

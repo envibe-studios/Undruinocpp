@@ -1,0 +1,20 @@
+[
+  { "label": "beam1 state", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
+    "args": { "instance": { "refPath": "/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_WeaponBeam_C_1" },
+      "properties": ["bHidden", "IsReady", "FiringComp", "Muzzle"] } },
+  { "label": "beam0 state", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
+    "args": { "instance": { "refPath": "/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_WeaponBeam_C_0" },
+      "properties": ["bHidden", "IsReady", "FiringComp", "Muzzle"] } },
+  { "label": "visuals L", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
+    "args": { "instance": { "refPath": "/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_Hovercraft_C_0.WeaponVisuals_Left" },
+      "properties": ["FiringComp", "Muzzle", "Beam"] } },
+  { "label": "visuals R", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
+    "args": { "instance": { "refPath": "/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_Hovercraft_C_0.WeaponVisuals_Right" },
+      "properties": ["FiringComp", "Muzzle", "Beam"] } },
+  { "label": "firing R", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
+    "args": { "instance": { "refPath": "/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_Hovercraft_C_0.Firing_Right" },
+      "properties": ["CurrentFiringMode"] } },
+  { "label": "beam0 mesh mat", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
+    "args": { "instance": { "refPath": "/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_WeaponBeam_C_0.BeamMesh" },
+      "properties": ["OverrideMaterials"] } }
+]

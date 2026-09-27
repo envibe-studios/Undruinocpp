@@ -1,0 +1,14 @@
+﻿{
+	"jsonrpc": "2.0",
+	"id": 2,
+	"result":
+	{
+		"content": [
+			{
+				"type": "text",
+				"text": "Function \"Snapshot\", input param \"ref\" is required by the function input schema Json, but is missing from the incoming function input params Json.\nFunction schema Json -\n{\"type\":\"object\",\"properties\":{\"ref\":{\"type\":\"string\",\"description\":\"Subtree root ref. Empty = all windows.\"},\"maxDepth\":{\"type\":\"integer\",\"description\":\"Maximum depth (default 30).\",\"default\":30},\"bIncludeSourceLocations\":{\"type\":\"boolean\",\"description\":\"Include [src=File:Line] tags showing where each widget was created in C++.\",\"default\":false}},\"required\":[\"ref\"]}\nFunction input params Json -\n{\"interactive\":true,\"compact\":true,\"depth\":8,\"cursor\":false}"
+			}
+		],
+		"isError": true
+	}
+}

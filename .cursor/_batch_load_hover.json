@@ -1,0 +1,7 @@
+[
+  { "label": "exists", "toolset": "editor_toolset.toolsets.asset.AssetTools", "tool": "exists", "args": { "path": "/Game/Blueprints/BP_Hovercraft" } },
+  { "label": "load", "toolset": "editor_toolset.toolsets.asset.AssetTools", "tool": "load_asset", "args": { "asset_path": "/Game/Blueprints/BP_Hovercraft" } },
+  { "label": "class", "toolset": "editor_toolset.toolsets.asset.AssetTools", "tool": "get_asset_class", "args": { "asset_path": "/Game/Blueprints/BP_Hovercraft" } },
+  { "label": "compile", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "compile_blueprint", "args": { "blueprint": { "path": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft" } } },
+  { "label": "save", "toolset": "editor_toolset.toolsets.asset.AssetTools", "tool": "save_assets", "args": { "asset_paths": ["/Game/Blueprints/BP_Hovercraft"] } }
+]

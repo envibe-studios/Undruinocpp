@@ -1,0 +1,20 @@
+[
+  { "label": "debug left", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "set_properties",
+    "args": {
+      "instance": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:Firing_Left_GEN_VARIABLE" },
+      "values": "{ \"bDrawDebug\": true }"
+    } },
+  { "label": "debug right", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "set_properties",
+    "args": {
+      "instance": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:Firing_Right_GEN_VARIABLE" },
+      "values": "{ \"bDrawDebug\": true }"
+    } },
+  { "label": "print left", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "create_node",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "type_id": "Development|PrintString", "pos": { "x": -80, "y": 736 } } },
+  { "label": "print right", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "create_node",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "type_id": "Development|PrintString", "pos": { "x": -80, "y": 480 } } },
+  { "label": "break left ammo", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_node_infos",
+    "args": { "nodes": [
+      { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_BreakStruct_4" }
+    ] } }
+]

@@ -1,0 +1,15 @@
+[
+  { "label": "rm and pin C", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "remove_node_pin",
+    "args": {
+      "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire.K2Node_CommutativeAssociativeBinaryOperator_0" },
+      "pin": { "direction": "EGPD_Input", "index_id": 2, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire.K2Node_CommutativeAssociativeBinaryOperator_0" } }
+    } },
+  { "label": "save", "toolset": "editor_toolset.toolsets.asset.AssetTools", "tool": "save_assets",
+    "args": { "asset_paths": ["/Game/Blueprints/BP_Hovercraft"] } },
+  { "label": "compile", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "compile_blueprint",
+    "args": { "blueprint": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft" } } },
+  { "label": "wf and pins", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_node_infos",
+    "args": { "nodes": [
+      { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire.K2Node_CommutativeAssociativeBinaryOperator_0" }
+    ] } }
+]

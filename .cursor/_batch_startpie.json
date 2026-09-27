@@ -1,0 +1,6 @@
+[
+  { "label": "tracer class", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "search_subclasses",
+    "args": { "base_class": { "refPath": "/Script/Engine.Actor" }, "class_name": "WeaponVisualTracer" } },
+  { "label": "start pie", "toolset": "EditorToolset.EditorAppToolset", "tool": "StartPIE",
+    "args": { "options": { "bSimulate": false, "playMode": "PlayMode_InViewPort", "warmupSeconds": 4 } } }
+]

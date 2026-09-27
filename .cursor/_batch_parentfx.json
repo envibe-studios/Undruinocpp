@@ -1,0 +1,30 @@
+[
+  { "label": "parent left", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "get_parent_component",
+    "args": { "component": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:WeaponFireVisuals_GEN_VARIABLE" } } },
+  { "label": "parent right", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "get_parent_component",
+    "args": { "component": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:WeaponFireVisuals1_GEN_VARIABLE" } } },
+  { "label": "set parent left", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "set_parent_component",
+    "args": {
+      "component": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:WeaponFireVisuals_GEN_VARIABLE" },
+      "parent": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:Firing_Left_GEN_VARIABLE" }
+    } },
+  { "label": "set parent right", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "set_parent_component",
+    "args": {
+      "component": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:WeaponFireVisuals1_GEN_VARIABLE" },
+      "parent": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:Firing_Right_GEN_VARIABLE" }
+    } },
+  { "label": "set firing left", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "set_properties",
+    "args": {
+      "instance": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:WeaponFireVisuals_GEN_VARIABLE" },
+      "values": "{ \"FiringComp\": \"/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:Firing_Left_GEN_VARIABLE\" }"
+    } },
+  { "label": "set firing right", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "set_properties",
+    "args": {
+      "instance": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:WeaponFireVisuals1_GEN_VARIABLE" },
+      "values": "{ \"FiringComp\": \"/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:Firing_Right_GEN_VARIABLE\" }"
+    } },
+  { "label": "compile hover", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "compile_blueprint",
+    "args": { "blueprint": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft" } } },
+  { "label": "save", "toolset": "editor_toolset.toolsets.asset.AssetTools", "tool": "save_assets",
+    "args": { "asset_paths": ["/Game/Blueprints/BP_Hovercraft"] } }
+]

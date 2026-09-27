@@ -1,0 +1,8 @@
+[
+  { "label": "right", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_connected_subgraph",
+    "args": { "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_ComponentBoundEvent_0" } } },
+  { "label": "find branch", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_node_types",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "type_id_filter": "Branch", "context_pins": [] } },
+  { "label": "wf dsl", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire" } } }
+]

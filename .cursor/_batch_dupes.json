@@ -1,0 +1,10 @@
+[
+  { "label": "p FireVisuals_Left", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "get_parent_component",
+    "args": { "component": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:FireVisuals_Left_GEN_VARIABLE" } } },
+  { "label": "p WeaponFireVisuals", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "get_parent_component",
+    "args": { "component": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:WeaponFireVisuals_GEN_VARIABLE" } } },
+  { "label": "p FireVisuals_Right", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "get_parent_component",
+    "args": { "component": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:FireVisuals_Right_GEN_VARIABLE" } } },
+  { "label": "p WeaponFireVisuals1", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "get_parent_component",
+    "args": { "component": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:WeaponFireVisuals1_GEN_VARIABLE" } } }
+]

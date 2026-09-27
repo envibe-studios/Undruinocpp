@@ -1,0 +1,6 @@
+[
+  { "label": "exists", "toolset": "editor_toolset.toolsets.asset.AssetTools", "tool": "exists", "args": { "path": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest" } },
+  { "label": "load", "toolset": "editor_toolset.toolsets.asset.AssetTools", "tool": "load_asset", "args": { "asset_path": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest" } },
+  { "label": "find assets", "toolset": "editor_toolset.toolsets.asset.AssetTools", "tool": "find_assets", "args": { "folder_path": "/Game/Blueprints/FX", "name": "*", "recursive": true } },
+  { "label": "find all fxtest level", "toolset": "editor_toolset.toolsets.scene.SceneTools", "tool": "find_actors", "args": { "name": "*FX*", "tag": "", "collision_channels": [] } }
+]

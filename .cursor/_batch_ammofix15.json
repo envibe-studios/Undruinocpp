@@ -1,0 +1,68 @@
+[
+  { "label": "undo mode to setammo", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "break_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFireMode.K2Node_CallFunction_6" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFireMode.K2Node_CallFunction_13" } }
+    } },
+  { "label": "undo setammo to branch", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "break_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFireMode.K2Node_CallFunction_13" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFireMode.K2Node_IfThenElse_0" } }
+    } },
+  { "label": "mode to branch", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "connect_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFireMode.K2Node_CallFunction_6" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFireMode.K2Node_IfThenElse_0" } }
+    } },
+  { "label": "break then to switch", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "break_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFireMode.K2Node_IfThenElse_0" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFireMode.K2Node_SwitchEnum_0" } }
+    } },
+  { "label": "then to setammo", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "connect_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFireMode.K2Node_IfThenElse_0" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFireMode.K2Node_CallFunction_13" } }
+    } },
+  { "label": "setammo to switch", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "connect_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFireMode.K2Node_CallFunction_13" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFireMode.K2Node_SwitchEnum_0" } }
+    } },
+  { "label": "setammo self", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "connect_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 1, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFireMode.K2Node_FunctionEntry_0" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 1, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFireMode.K2Node_CallFunction_13" } }
+    } },
+  { "label": "setammo amount", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "connect_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 9, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFireMode.K2Node_BreakStruct_2" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 2, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFireMode.K2Node_CallFunction_13" } }
+    } },
+  { "label": "break else mat", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "break_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 1, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFireMode.K2Node_IfThenElse_0" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFireMode.K2Node_CallFunction_0" } }
+    } },
+  { "label": "else to setammo0", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "connect_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 1, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFireMode.K2Node_IfThenElse_0" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFireMode.K2Node_CallFunction_14" } }
+    } },
+  { "label": "setammo0 to mat", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "connect_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFireMode.K2Node_CallFunction_14" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFireMode.K2Node_CallFunction_0" } }
+    } },
+  { "label": "setammo0 self", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "connect_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 1, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFireMode.K2Node_FunctionEntry_0" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 1, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFireMode.K2Node_CallFunction_14" } }
+    } },
+  { "label": "setammo0 zero", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "set_pin_value",
+    "args": { "pin": { "direction": "EGPD_Input", "index_id": 2, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFireMode.K2Node_CallFunction_14" } }, "value": "0" } },
+  { "label": "compile", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "compile_blueprint",
+    "args": { "blueprint": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft" } } },
+  { "label": "save", "toolset": "editor_toolset.toolsets.asset.AssetTools", "tool": "save_assets",
+    "args": { "asset_paths": ["/Game/Blueprints/BP_Hovercraft"] } }
+]

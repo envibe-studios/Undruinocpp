@@ -1,0 +1,7 @@
+[
+  { "label": "infos", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_node_infos",
+    "args": { "nodes": [
+      { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_Message_9" },
+      { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_Message_8" }
+    ] } }
+]

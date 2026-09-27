@@ -1,0 +1,10 @@
+[
+  { "label": "array length", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_node_types",
+    "args": { "graph": { "refPath": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest:EventGraph" }, "type_id_filter": "Array|Length", "context_pins": [] } },
+  { "label": "tostring int", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_node_types",
+    "args": { "graph": { "refPath": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest:EventGraph" }, "type_id_filter": "String|ToString", "context_pins": [] } },
+  { "label": "display name", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_node_types",
+    "args": { "graph": { "refPath": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest:EventGraph" }, "type_id_filter": "DisplayName", "context_pins": [] } },
+  { "label": "add Armed var", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "add_variable",
+    "args": { "blueprint": { "refPath": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest" }, "name": "Armed", "type_name": "bool" } }
+]

@@ -1,0 +1,13 @@
+[
+  { "label": "whilebeaming infos", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_node_infos",
+    "args": { "nodes": [
+      { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_Message_11" },
+      { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_Message_10" },
+      { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_ComponentBoundEvent_13" },
+      { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_ComponentBoundEvent_14" }
+    ] } },
+  { "label": "bpi graphs", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "list_graphs",
+    "args": { "blueprint": { "refPath": "/Game/Blueprints/Interfaces/BPI_Beamable.BPI_Beamable" } } },
+  { "label": "bp beamable graphs", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "list_graphs",
+    "args": { "blueprint": { "refPath": "/Game/Blueprints/LevelLogic/BP_Beamable.BP_Beamable" } } }
+]

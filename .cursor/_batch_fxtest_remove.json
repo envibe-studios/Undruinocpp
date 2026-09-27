@@ -1,0 +1,37 @@
+[
+  {
+    "label": "remove fx test actor",
+    "toolset": "editor_toolset.toolsets.scene.SceneTools",
+    "tool": "remove_from_scene",
+    "args": {
+      "actor": { "refPath": "/Game/Level/HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_WeaponFXTest_C_0" }
+    }
+  },
+  {
+    "label": "clear event graph debug",
+    "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools",
+    "tool": "write_graph_dsl",
+    "args": {
+      "graph": { "refPath": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest:EventGraph" },
+      "code": ""
+    }
+  },
+  {
+    "label": "compile fxtest",
+    "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools",
+    "tool": "compile_blueprint",
+    "args": { "blueprint": { "refPath": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest" } }
+  },
+  {
+    "label": "save assets",
+    "toolset": "editor_toolset.toolsets.asset.AssetTools",
+    "tool": "save_assets",
+    "args": { "asset_paths": ["/Game/Blueprints/FX/Dev/BP_WeaponFXTest", "/Game/Level/HoverHandlingCourse"] }
+  },
+  {
+    "label": "confirm gone",
+    "toolset": "EditorToolset.EditorAppToolset",
+    "tool": "GetVisibleActors",
+    "args": {}
+  }
+]

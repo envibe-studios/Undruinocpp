@@ -1,0 +1,14 @@
+[
+  { "label": "BeamPivot", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
+    "args": { "instance": { "refPath": "/Game/Level/HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_WeaponBeam_C_0.BeamPivot" },
+      "properties": ["RelativeLocation", "RelativeRotation", "RelativeScale3D", "bVisible"] } },
+  { "label": "BeamMesh", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
+    "args": { "instance": { "refPath": "/Game/Level/HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_WeaponBeam_C_0.BeamMesh" },
+      "properties": ["RelativeLocation", "RelativeRotation", "RelativeScale3D", "bVisible", "StaticMesh", "OverrideMaterials"] } },
+  { "label": "ImpactMesh", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
+    "args": { "instance": { "refPath": "/Game/Level/HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_WeaponBeam_C_0.ImpactMesh" },
+      "properties": ["RelativeLocation", "RelativeScale3D", "bVisible", "StaticMesh"] } },
+  { "label": "TracerMesh CDO", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
+    "args": { "instance": { "refPath": "/Game/Blueprints/FX/BP_WeaponTracer.BP_WeaponTracer_C:TracerMesh_GEN_VARIABLE" },
+      "properties": ["RelativeLocation", "RelativeRotation", "RelativeScale3D", "bVisible", "StaticMesh", "OverrideMaterials"] } }
+]

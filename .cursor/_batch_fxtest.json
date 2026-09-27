@@ -1,0 +1,6 @@
+[
+  { "label": "find fx actors", "toolset": "editor_toolset.toolsets.scene.SceneTools", "tool": "find_actors", "args": { "name": "*FXTest*", "tag": "", "collision_channels": [] } },
+  { "label": "find weapon fx", "toolset": "editor_toolset.toolsets.scene.SceneTools", "tool": "find_actors", "args": { "name": "*WeaponFX*", "tag": "", "collision_channels": [] } },
+  { "label": "list graphs", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "list_graphs", "args": { "blueprint": { "path": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest" } } },
+  { "label": "get eg", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_graph", "args": { "blueprint": { "path": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest" }, "graph_name": "EventGraph" } }
+]

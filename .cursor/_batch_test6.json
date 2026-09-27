@@ -1,0 +1,8 @@
+[
+  { "label": "pivot scale importtext", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "set_properties",
+    "args": { "instance": { "refPath": "/Game/Level/HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_WeaponBeam_C_0.BeamPivot" },
+      "values": "{ \"RelativeScale3D\": \"(X=0.26,Y=0.26,Z=20.0)\" }" } },
+  { "label": "read pivot", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
+    "args": { "instance": { "refPath": "/Game/Level/HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_WeaponBeam_C_0.BeamPivot" },
+      "properties": ["RelativeScale3D"] } }
+]

@@ -1,0 +1,18 @@
+[
+  { "label": "weaponfire dsl", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire" } } },
+  { "label": "setfiring pin", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_node_infos",
+    "args": { "nodes": [
+      { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire.K2Node_CallFunction_1" }
+    ] } },
+  { "label": "left cdo", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
+    "args": {
+      "instance": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:Firing_Left_GEN_VARIABLE" },
+      "properties": ["bAutoActivate", "bDrawDebug", "CurrentFiringMode", "BulletConfig"]
+    } },
+  { "label": "pc mags", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
+    "args": {
+      "instance": { "refPath": "/Game/Blueprints/PC_Controller.Default__PC_Controller_C" },
+      "properties": ["WeaponMags"]
+    } }
+]

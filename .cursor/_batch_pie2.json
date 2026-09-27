@@ -1,0 +1,4 @@
+[
+  { "label": "pie running", "toolset": "EditorToolset.EditorAppToolset", "tool": "IsPIERunning", "args": {} },
+  { "label": "visible actors", "toolset": "EditorToolset.EditorAppToolset", "tool": "GetVisibleActors", "args": {} }
+]

@@ -1,0 +1,6 @@
+(fn WeaponFire (TriggerDown PortSide)
+  (bind _currentammo (Utilities|Struct|BreakWeaponMag (Variables|Default|SetCurrentMag (select PortSide (Variables|Default|GetMagLeft) (Variables|Default|GetMagRight)))))
+  (bind _output_get (Variables|Default|SetCurrentMag (select PortSide (Variables|Default|GetMagLeft) (Variables|Default|GetMagRight))))
+  (Firing|Control|SetFiring (select PortSide (|GetFiring_Left) (|GetFiring_Right)) (and (Utilities|Struct|BreakWeaponMag _output_get) TriggerDown))
+  (MiniCRT|SetCurrentAmmo (|GetBP_MiniCRTWeaponDisplayComponent) _currentammo))
+

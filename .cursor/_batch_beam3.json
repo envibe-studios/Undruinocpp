@@ -1,0 +1,20 @@
+[
+  { "label": "write ShowBeam", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "write_graph_dsl",
+    "args": { "graph": { "refPath": "/Game/Blueprints/FX/BP_WeaponBeam.BP_WeaponBeam:ShowBeam" },
+      "code": "(fn ShowBeam (Mat Thickness ImpactSize HasTarget Target)\n  (bind mz (Variables|Default|GetMuzzle))\n  (bind fc (Variables|Default|GetFiringComp))\n  (bind pivot (Variables|Default|GetBeamPivot))\n  (bind impact (Variables|Default|GetImpactMesh))\n  (bind start (Transformation|GetWorldLocation mz))\n  (bind dir (Transformation|GetForwardVector fc))\n  (bind endpoint (CallFunction|ResolveEnd :Start start :Dir dir :HasTarget HasTarget :Target Target))\n  (bind len (Math|Vector|VectorLength (- endpoint start)))\n  (bind t (/ Thickness 100.0))\n  (bind isz (/ ImpactSize 100.0))\n  (Transformation|SetActorLocationAndRotation :NewLocation start :NewRotation (Math|Rotator|FindLookatRotation start endpoint))\n  (Transformation|SetRelativeScale3D pivot (Math|Vector|MakeVector t t (/ len 100.0)))\n  (Transformation|SetRelativeScale3D impact (Math|Vector|MakeVector isz isz isz))\n  (Transformation|SetRelativeLocation impact (Math|Vector|MakeVector len 0.0 0.0))\n  (Rendering|Material|SetMaterial (Variables|Default|GetBeamMesh) 0 Mat)\n  (Rendering|Material|SetMaterial impact 0 Mat)\n  (Rendering|SetActorHiddenInGame :bNewHidden false))" } },
+
+  { "label": "write EventGraph", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "write_graph_dsl",
+    "args": { "graph": { "refPath": "/Game/Blueprints/FX/BP_WeaponBeam.BP_WeaponBeam:EventGraph" },
+      "code": "(event EventTick (DeltaSeconds)\n  (if (Variables|Default|GetIsReady)\n    (bind fc (Variables|Default|GetFiringComp))\n    (if (Firing|Control|IsFiring fc)\n      (switch Utilities|FlowControl|Switch|SwitchonEFiringModeType (Firing|Control|GetFiringMode fc)\n        (:Bullet\n          (CallFunction|HideBeam))\n        (:TractorBeam\n          (CallFunction|ShowBeam :Mat (Variables|Default|GetTractorMaterial) :Thickness (Variables|Default|GetTractorThickness) :ImpactSize (Variables|Default|GetTractorImpactSize) :HasTarget (Firing|TractorBeam|HasTractorTarget fc) :Target (Firing|TractorBeam|GetTractorTarget fc)))\n        (:Scanner\n          (CallFunction|ShowBeam :Mat (Variables|Default|GetScanMaterial) :Thickness (Variables|Default|GetScanThickness) :ImpactSize (Variables|Default|GetScanImpactSize) :HasTarget (Firing|Scanner|HasScanTarget fc) :Target (Firing|Scanner|GetScanTarget fc)))\n        (:Custom\n          (CallFunction|HideBeam)))\n      (else\n        (CallFunction|HideBeam)))))" } },
+
+  { "label": "compile", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "compile_blueprint",
+    "args": { "blueprint": { "refPath": "/Game/Blueprints/FX/BP_WeaponBeam.BP_WeaponBeam" } } },
+  { "label": "read ShowBeam", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
+    "args": { "graph": { "refPath": "/Game/Blueprints/FX/BP_WeaponBeam.BP_WeaponBeam:ShowBeam" } } },
+  { "label": "read ResolveEnd", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
+    "args": { "graph": { "refPath": "/Game/Blueprints/FX/BP_WeaponBeam.BP_WeaponBeam:ResolveEnd" } } },
+  { "label": "read EventGraph", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
+    "args": { "graph": { "refPath": "/Game/Blueprints/FX/BP_WeaponBeam.BP_WeaponBeam:EventGraph" } } },
+  { "label": "read Initialize", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl",
+    "args": { "graph": { "refPath": "/Game/Blueprints/FX/BP_WeaponBeam.BP_WeaponBeam:Initialize" } } }
+]

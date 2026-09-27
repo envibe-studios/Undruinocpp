@@ -1,0 +1,10 @@
+[
+  { "label": "prints by class", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire" }, "title": "*", "node_class": "K2Node_CallFunction" } },
+  { "label": "if nodes", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire" }, "title": "*", "node_class": "K2Node_IfThenElse" } },
+  { "label": "switch nodes", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire" }, "title": "*", "node_class": "K2Node_SwitchInteger" } },
+  { "label": "all call", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire" }, "title": "Print String", "node_class": "K2Node_CallFunction" } }
+]

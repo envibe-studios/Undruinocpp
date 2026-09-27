@@ -1,0 +1,8 @@
+[
+  { "label": "mag left props", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_variable_default_value",
+    "args": { "blueprint": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft" }, "variable_name": "MagLeft" } },
+  { "label": "mag right props", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_variable_default_value",
+    "args": { "blueprint": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft" }, "variable_name": "MagRight" } },
+  { "label": "list var tools", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "list_variables",
+    "args": { "blueprint": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft" } } }
+]

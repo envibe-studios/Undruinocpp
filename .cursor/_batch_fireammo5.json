@@ -1,0 +1,17 @@
+[
+  { "label": "after left set", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_node_infos",
+    "args": { "nodes": [
+      { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_VariableSet_0" },
+      { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_VariableSet_1" },
+      { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_PromotableOperator_0" },
+      { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_PromotableOperator_3" },
+      { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_VariableGet_16" },
+      { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_VariableGet_15" }
+    ] } },
+  { "label": "hover comps", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "get_components",
+    "args": { "actor": { "refPath": "/Game/Blueprints/BP_Hovercraft.Default__BP_Hovercraft_C" } } },
+  { "label": "find setmagarrays", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "title": "SetMagArrays" } },
+  { "label": "find print", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "title": "Print String" } }
+]

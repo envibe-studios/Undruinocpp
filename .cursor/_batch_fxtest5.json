@@ -1,0 +1,6 @@
+[
+  { "label": "find BP_Weapon", "toolset": "editor_toolset.toolsets.scene.SceneTools", "tool": "find_actors", "args": { "name": "BP_Weapon*", "tag": "", "collision_channels": [] } },
+  { "label": "find FXTest exact", "toolset": "editor_toolset.toolsets.scene.SceneTools", "tool": "find_actors", "args": { "name": "BP_WeaponFXTest*", "tag": "", "collision_channels": [] } },
+  { "label": "find by type", "toolset": "editor_toolset.toolsets.scene.SceneTools", "tool": "find_actors", "args": { "name": "*", "actor_type": { "refPath": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest_C" }, "tag": "", "collision_channels": [] } },
+  { "label": "all folders", "toolset": "editor_toolset.toolsets.scene.SceneTools", "tool": "get_folders", "args": {} }
+]

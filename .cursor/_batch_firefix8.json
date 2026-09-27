@@ -1,0 +1,6 @@
+[
+  { "label": "update next", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_node_infos",
+    "args": { "nodes": [
+      { "refPath": "/Game/Blueprints/PC_Controller.PC_Controller:EventGraph.K2Node_CallFunction_34" }
+    ] } }
+]

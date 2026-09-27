@@ -1,0 +1,10 @@
+[
+  { "label": "beam actors", "toolset": "editor_toolset.toolsets.scene.SceneTools", "tool": "find_actors",
+    "args": { "name": "WeaponBeam", "tag": "", "collision_channels": [] } },
+  { "label": "guntip L", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
+    "args": { "instance": { "refPath": "/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_Hovercraft_C_0.GunTip_Left" },
+      "properties": ["ComponentVelocity"] } },
+  { "label": "firing L mode", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
+    "args": { "instance": { "refPath": "/Game/Level/UEDPIE_0_HoverHandlingCourse.HoverHandlingCourse:PersistentLevel.BP_Hovercraft_C_0.Firing_Left" },
+      "properties": ["CurrentFiringMode", "RelativeLocation", "RelativeRotation"] } }
+]

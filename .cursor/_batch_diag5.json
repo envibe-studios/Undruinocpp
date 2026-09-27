@@ -1,0 +1,16 @@
+[
+  { "label": "aim subgraph", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_connected_subgraph",
+    "args": { "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_Event_3" } } },
+  { "label": "fire subgraph", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_connected_subgraph",
+    "args": { "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_Event_9" } } },
+  { "label": "throttle subgraph", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_connected_subgraph",
+    "args": { "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_Event_5" } } },
+  { "label": "find sendweaponmode", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "title": "SendWeaponMode" } },
+  { "label": "find init visuals", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "find_nodes",
+    "args": { "graph": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph" }, "title": "Init Weapon Visuals" } },
+  { "label": "try rm firevis L", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "remove_component",
+    "args": { "component": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:FireVisuals_Left_GEN_VARIABLE" } } },
+  { "label": "try rm firevis R", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "remove_component",
+    "args": { "component": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:FireVisuals_Right_GEN_VARIABLE" } } }
+]

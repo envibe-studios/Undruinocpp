@@ -1,0 +1,6 @@
+[
+  { "label": "list graphs", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "list_graphs", "args": { "blueprint": { "refPath": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest" } } },
+  { "label": "dsl docs hint", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "read_graph_dsl", "args": { "graph": { "refPath": "/Game/Blueprints/FX/Dev/BP_WeaponFXTest.BP_WeaponFXTest:EventGraph" } } },
+  { "label": "find in level", "toolset": "editor_toolset.toolsets.scene.SceneTools", "tool": "find_actors", "args": { "name": "*WeaponFXTest*", "tag": "", "collision_channels": [] } },
+  { "label": "current level?", "toolset": "EditorToolset.EditorAppToolset", "tool": "GetSelectedActors", "args": {} }
+]

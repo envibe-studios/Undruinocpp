@@ -1,0 +1,13 @@
+[
+  { "label": "setfields", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_node_infos",
+    "args": { "nodes": [{ "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_SetFieldsInStruct_0" }] } },
+  { "label": "break0 only", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_node_infos",
+    "args": { "nodes": [{ "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_BreakStruct_0" }] } },
+  { "label": "event1", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_node_infos",
+    "args": { "nodes": [{ "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_ComponentBoundEvent_1" }] } },
+  { "label": "wf setfiring", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_node_infos",
+    "args": { "nodes": [
+      { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire.K2Node_CallFunction_1" },
+      { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFire.K2Node_IfThenElse_1" }
+    ] } }
+]

@@ -1,0 +1,5 @@
+[
+  { "label": "gamemode props", "toolset": "editor_toolset.toolsets.object.ObjectTools", "tool": "get_properties",
+    "args": { "instance": { "refPath": "/Game/Blueprints/GameMode_ShipPorts.Default__GameMode_ShipPorts_C" },
+      "properties": ["DefaultPawnClass", "PlayerControllerClass"] } }
+]

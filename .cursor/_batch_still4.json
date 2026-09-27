@@ -1,0 +1,7 @@
+[
+  { "label": "cast and setmode", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "get_node_infos",
+    "args": { "nodes": [
+      { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFireMode.K2Node_CastByteToEnum_0" },
+      { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:WeaponFireMode.K2Node_CallFunction_6" }
+    ] } }
+]

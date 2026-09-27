@@ -1,0 +1,26 @@
+[
+  { "label": "connect left", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "connect_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_VariableGet_26" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 3, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_Message_11" } }
+    } },
+  { "label": "connect right", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "connect_pins",
+    "args": {
+      "output_pin": { "direction": "EGPD_Output", "index_id": 0, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_VariableGet_28" } },
+      "input_pin": { "direction": "EGPD_Input", "index_id": 3, "node": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft:EventGraph.K2Node_Message_10" } }
+    } },
+  { "label": "add fx left", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "add_component",
+    "args": {
+      "owner": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:Firing_Left_GEN_VARIABLE" },
+      "component_type": { "refPath": "/Script/Unduinocpp.WeaponFireVisualsComponent" },
+      "name": "FireVisuals_Left"
+    } },
+  { "label": "add fx right", "toolset": "editor_toolset.toolsets.actor.ActorTools", "tool": "add_component",
+    "args": {
+      "owner": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft_C:Firing_Right_GEN_VARIABLE" },
+      "component_type": { "refPath": "/Script/Unduinocpp.WeaponFireVisualsComponent" },
+      "name": "FireVisuals_Right"
+    } },
+  { "label": "compile hover", "toolset": "editor_toolset.toolsets.blueprint.BlueprintTools", "tool": "compile_blueprint",
+    "args": { "blueprint": { "refPath": "/Game/Blueprints/BP_Hovercraft.BP_Hovercraft" } } }
+]
