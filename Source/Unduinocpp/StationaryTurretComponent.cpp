@@ -4,11 +4,16 @@
 
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
+#include "GameFramework/Pawn.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
 #include "Components/SceneComponent.h"
 #include "Components/PrimitiveComponent.h"
+#include "AI/EnemyAIController.h"
+#include "AI/EnemyTypes.h"
+#include "HoverThrusterComponent.h"
+#include "BehaviorTree/BlackboardComponent.h"
 
 static USceneComponent* ResolveSceneComponent(const UActorComponent* OwnerComp, const FComponentReference& Ref)
 {
@@ -89,6 +94,7 @@ UStationaryTurretComponent::UStationaryTurretComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.TickGroup = TG_PrePhysics;
+	PriorityPartTags.Add(FName(TEXT("Engine")));
 }
 
 void UStationaryTurretComponent::BeginPlay()
@@ -110,6 +116,8 @@ void UStationaryTurretComponent::BeginPlay()
 	FireCooldown = 0.0f;
 	NextMuzzleIndex = 0;
 	bHasSmoothedAimPoint = false;
+	TimeSincePartReselect = ShipPartReselectInterval;
+	CurrentAimPart.Reset();
 }
 
 void UStationaryTurretComponent::ResolveSetupComponents()
@@ -202,6 +210,28 @@ void UStationaryTurretComponent::TickComponent(float DeltaTime, ELevelTick TickT
 	FVector SmoothedAimWorld = FVector::ZeroVector;
 	if (Target)
 	{
+		TimeSincePartReselect += DeltaTime;
+		const bool bForcePartPick = TimeSincePartReselect >= ShipPartReselectInterval;
+		if (bForcePartPick)
+		{
+			TimeSincePartReselect = 0.0f;
+		}
+
+		// Drop 0-HP thrusters immediately — do not keep aiming until the reselect interval.
+		if (CurrentAimPart.IsValid() && !IsShipPartViable(CurrentAimPart.Get()))
+		{
+			CurrentAimPart.Reset();
+			TimeSincePartReselect = 0.0f;
+			bHasSmoothedAimPoint = false;
+		}
+
+		const USceneComponent* AimPartBefore = CurrentAimPart.Get();
+		RefreshShipPartAim(Target, bForcePartPick || !CurrentAimPart.IsValid());
+		if (CurrentAimPart.Get() != AimPartBefore)
+		{
+			bHasSmoothedAimPoint = false;
+		}
+
 		const FVector MuzzleLocForAim = GetMuzzleLocation();
 		const FVector RawAimPoint = (bEnableTargetLeading && ProjectileSpeed > 0.0f)
 			? ComputeLeadAimPoint(MuzzleLocForAim, Target)
@@ -242,11 +272,92 @@ void UStationaryTurretComponent::SetFiringEnabled(bool bEnabled)
 	bFiringEnabled = bEnabled;
 }
 
+void UStationaryTurretComponent::SetExternalTarget(AActor* NewTarget)
+{
+	if (IsTargetValid(NewTarget))
+	{
+		CurrentTarget = NewTarget;
+		TimeSincePartReselect = ShipPartReselectInterval;
+		CurrentAimPart.Reset();
+	}
+	else
+	{
+		ClearCurrentTarget();
+	}
+}
+
+void UStationaryTurretComponent::ClearCurrentTarget()
+{
+	CurrentTarget.Reset();
+	CurrentAimPart.Reset();
+	bHasSmoothedAimPoint = false;
+}
+
+AActor* UStationaryTurretComponent::AcquireTargetFromEnemyAI() const
+{
+	AActor* Owner = GetOwner();
+	if (!Owner)
+	{
+		return nullptr;
+	}
+
+	const APawn* OwnerPawn = Cast<APawn>(Owner);
+	if (!OwnerPawn)
+	{
+		return nullptr;
+	}
+
+	const AEnemyAIController* AIC = Cast<AEnemyAIController>(OwnerPawn->GetController());
+	if (!AIC)
+	{
+		return nullptr;
+	}
+
+	const UBlackboardComponent* BB = AIC->GetBlackboardComponent();
+	if (!BB)
+	{
+		return nullptr;
+	}
+
+	return Cast<AActor>(BB->GetValueAsObject(FEnemyBlackboardKeys::TargetActor));
+}
+
 void UStationaryTurretComponent::AcquireTarget()
 {
 	UWorld* World = GetWorld();
 	AActor* Owner = GetOwner();
-	if (!World || !Owner || TargetTag.IsNone())
+	if (!World || !Owner)
+	{
+		CurrentTarget.Reset();
+		return;
+	}
+
+	if (bUseEnemyAITarget)
+	{
+		if (AActor* AITarget = AcquireTargetFromEnemyAI())
+		{
+			if (IsTargetValid(AITarget))
+			{
+				const float DistSq = FVector::DistSquared(Owner->GetActorLocation(), AITarget->GetActorLocation());
+				const float MaxDistSq = (TargetingRange > 0.0f) ? FMath::Square(TargetingRange) : TNumericLimits<float>::Max();
+				if (DistSq <= MaxDistSq && (!bRequireLineOfSight || HasLineOfSightTo(AITarget)))
+				{
+					if (CurrentTarget.Get() != AITarget)
+					{
+						CurrentAimPart.Reset();
+						TimeSincePartReselect = ShipPartReselectInterval;
+					}
+					CurrentTarget = AITarget;
+					return;
+				}
+			}
+		}
+		// No usable AI target — clear and optionally fall through to tag scan.
+		CurrentTarget.Reset();
+		CurrentAimPart.Reset();
+	}
+
+	if (TargetTag.IsNone())
 	{
 		CurrentTarget.Reset();
 		return;
@@ -286,6 +397,11 @@ void UStationaryTurretComponent::AcquireTarget()
 		}
 	}
 
+	if (CurrentTarget.Get() != Best)
+	{
+		CurrentAimPart.Reset();
+		TimeSincePartReselect = ShipPartReselectInterval;
+	}
 	CurrentTarget = Best;
 }
 
@@ -307,8 +423,13 @@ bool UStationaryTurretComponent::IsTargetValid(AActor* Candidate) const
 		return false;
 	}
 
-	// Must have the tag (defensive even though acquisition uses tag query)
-	if (!TargetTag.IsNone() && !Candidate->ActorHasTag(TargetTag))
+	if (Candidate->ActorHasTag(FName(TEXT("Enemy"))))
+	{
+		return false;
+	}
+
+	// Tag scan path requires TargetTag. Enemy AI path may select Targetable ships without it.
+	if (!bUseEnemyAITarget && !TargetTag.IsNone() && !Candidate->ActorHasTag(TargetTag))
 	{
 		return false;
 	}
@@ -388,7 +509,7 @@ FVector UStationaryTurretComponent::GetMuzzleLocation() const
 	return Owner ? Owner->GetActorLocation() : FVector::ZeroVector;
 }
 
-FVector UStationaryTurretComponent::GetTargetAimPoint(AActor* Target) const
+FVector UStationaryTurretComponent::GetActorFallbackAimPoint(AActor* Target) const
 {
 	if (!Target)
 	{
@@ -404,6 +525,130 @@ FVector UStationaryTurretComponent::GetTargetAimPoint(AActor* Target) const
 		}
 	}
 	return Point + AimOffset;
+}
+
+bool UStationaryTurretComponent::IsShipPartViable(const USceneComponent* Part)
+{
+	if (!IsValid(Part))
+	{
+		return false;
+	}
+
+	if (const UHoverThrusterComponent* Thruster = Cast<UHoverThrusterComponent>(Part))
+	{
+		// CurrentHitpoints <= 0
+		return !Thruster->IsDestroyed();
+	}
+
+	return true;
+}
+
+void UStationaryTurretComponent::RefreshShipPartAim(AActor* Target, bool bForce)
+{
+	if (!Target || !bPrioritizeShipParts)
+	{
+		CurrentAimPart.Reset();
+		return;
+	}
+
+	if (!bForce && IsShipPartViable(CurrentAimPart.Get()))
+	{
+		return;
+	}
+
+	CurrentAimPart.Reset();
+
+	TArray<UHoverThrusterComponent*> Thrusters;
+	Target->GetComponents<UHoverThrusterComponent>(Thrusters);
+
+	TArray<UHoverThrusterComponent*> Priority;
+	TArray<UHoverThrusterComponent*> Secondary;
+	Priority.Reserve(Thrusters.Num());
+	Secondary.Reserve(Thrusters.Num());
+
+	for (UHoverThrusterComponent* Thruster : Thrusters)
+	{
+		if (!IsShipPartViable(Thruster))
+		{
+			continue;
+		}
+
+		bool bPriority = false;
+		for (const FName& Tag : PriorityPartTags)
+		{
+			if (Tag.IsNone())
+			{
+				continue;
+			}
+			if (Thruster->ComponentHasTag(Tag) || Thruster->GetFName().ToString().Contains(Tag.ToString()))
+			{
+				bPriority = true;
+				break;
+			}
+		}
+
+		if (bPriority)
+		{
+			Priority.Add(Thruster);
+		}
+		else
+		{
+			Secondary.Add(Thruster);
+		}
+	}
+
+	const TArray<UHoverThrusterComponent*>& Pool = Priority.Num() > 0 ? Priority : Secondary;
+	if (Pool.Num() > 0)
+	{
+		CurrentAimPart = Pool[FMath::RandRange(0, Pool.Num() - 1)];
+		return;
+	}
+
+	// No living thrusters — look for any non-thruster scene component matching priority tags.
+	TArray<UActorComponent*> SceneComps;
+	Target->GetComponents(USceneComponent::StaticClass(), SceneComps);
+	TArray<USceneComponent*> TaggedParts;
+	for (UActorComponent* C : SceneComps)
+	{
+		USceneComponent* SC = Cast<USceneComponent>(C);
+		if (!SC || Cast<UHoverThrusterComponent>(SC) || !IsShipPartViable(SC))
+		{
+			continue;
+		}
+		for (const FName& Tag : PriorityPartTags)
+		{
+			if (!Tag.IsNone() && (SC->ComponentHasTag(Tag) || SC->GetFName().ToString().Contains(Tag.ToString())))
+			{
+				TaggedParts.Add(SC);
+				break;
+			}
+		}
+	}
+	if (TaggedParts.Num() > 0)
+	{
+		CurrentAimPart = TaggedParts[FMath::RandRange(0, TaggedParts.Num() - 1)];
+	}
+}
+
+FVector UStationaryTurretComponent::GetTargetAimPoint(AActor* Target) const
+{
+	if (!Target)
+	{
+		return FVector::ZeroVector;
+	}
+
+	if (bPrioritizeShipParts)
+	{
+		if (USceneComponent* Part = CurrentAimPart.Get())
+		{
+			if (IsShipPartViable(Part))
+			{
+				return Part->GetComponentLocation() + AimOffset;
+			}
+		}
+	}
+
+	return GetActorFallbackAimPoint(Target);
 }
 
 bool UStationaryTurretComponent::SolveInterceptTime(const FVector& RelativePos, const FVector& TargetVel, float ProjectileSpeedCmPerSec, float& OutT)
@@ -469,7 +714,16 @@ bool UStationaryTurretComponent::SolveInterceptTime(const FVector& RelativePos, 
 FVector UStationaryTurretComponent::ComputeLeadAimPoint(const FVector& MuzzleLoc, AActor* Target) const
 {
 	const FVector TargetPos = GetTargetAimPoint(Target);
-	const FVector TargetVel = Target ? Target->GetVelocity() : FVector::ZeroVector;
+	FVector TargetVel = Target ? Target->GetVelocity() : FVector::ZeroVector;
+
+	// Prefer the ship actor velocity even when aiming at a thruster component.
+	if (Target && TargetVel.IsNearlyZero())
+	{
+		if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Target->GetRootComponent()))
+		{
+			TargetVel = Prim->GetPhysicsLinearVelocity();
+		}
+	}
 
 	float T = 0.0f;
 	const FVector R = TargetPos - MuzzleLoc;

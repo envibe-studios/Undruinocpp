@@ -234,9 +234,44 @@ public:
 	// DEBUG
 	// ============================================================================
 
-	/** Draw debug visualization */
+	/** Draw verbose debug visualization (aim cones, continuous beams, hit spheres). */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Firing|Debug")
 	bool bDrawDebug = false;
+
+	/**
+	 * Draw laser-style shot tracers when bullets fire (and simple beams for tractor/scanner).
+	 * Independent of bDrawDebug so you can see RoF / hits without the full debug overlay.
+	 * Prefer OnBulletFired for production Niagara/mesh VFX; this is for session feedback.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Firing|Visuals")
+	bool bShowShotVisuals = true;
+
+	/** How long each bullet laser stays visible (seconds). Shorter = clearer RoF pulsing. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Firing|Visuals", meta = (ClampMin = "0.01", ClampMax = "1.0", EditCondition = "bShowShotVisuals"))
+	float ShotVisualLifetime = 0.08f;
+
+	/** Laser thickness in unreal units (cm). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Firing|Visuals", meta = (ClampMin = "0.5", ClampMax = "20.0", EditCondition = "bShowShotVisuals"))
+	float ShotVisualThickness = 3.0f;
+
+	/** Tracer color for bullet shots that miss / fly through. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Firing|Visuals", meta = (EditCondition = "bShowShotVisuals"))
+	FColor ShotVisualColor = FColor(255, 80, 40);
+
+	/** Tracer / impact color for bullet shots that hit. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Firing|Visuals", meta = (EditCondition = "bShowShotVisuals"))
+	FColor ShotHitVisualColor = FColor(255, 220, 60);
+
+	/** While firing in bullet mode, draw ammo + RoF text near the muzzle. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Firing|Visuals", meta = (EditCondition = "bShowShotVisuals"))
+	bool bShowAmmoDebugText = true;
+
+	/**
+	 * If true, bullet hits call UGameplayStatics::ApplyDamage on the hit actor
+	 * (feeds UEnemyHealthComponent / turrets via OnTakeAnyDamage). Delegates still fire.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Firing|Bullet Mode")
+	bool bApplyDamageOnHit = true;
 
 	// ============================================================================
 	// BULLET MODE EVENTS
@@ -561,6 +596,12 @@ protected:
 
 	/** Reset mode-specific state when switching modes */
 	void ResetModeState();
+
+	/** Draw a short-lived laser tracer for one bullet shot. */
+	void DrawBulletShotVisual(const FVector& Origin, const FVector& EndPoint, bool bHit) const;
+
+	/** Draw ammo / rate-of-fire overlay near the muzzle while firing. */
+	void DrawAmmoDebugOverlay() const;
 
 private:
 	/** Whether weapon is actively firing */

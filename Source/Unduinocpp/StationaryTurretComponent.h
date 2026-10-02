@@ -80,6 +80,28 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Turret|Targeting")
 	FName TargetTag = FName("Targetable");
 
+	/**
+	 * When true, prefer the possessing Enemy AI blackboard TargetActor over tag scanning.
+	 * Falls back to tag scan if no AI target is available.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Turret|Targeting|EnemyAI")
+	bool bUseEnemyAITarget = false;
+
+	/**
+	 * When aiming at a ship, prefer individual components (thrusters / Engine-tagged parts)
+	 * over actor center of mass. Matches Enemy AI dive targeting.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Turret|Targeting|EnemyAI")
+	bool bPrioritizeShipParts = true;
+
+	/** Component tags treated as high-priority aim points (e.g. engines). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Turret|Targeting|EnemyAI")
+	TArray<FName> PriorityPartTags;
+
+	/** How often to re-pick a ship part aim point while locked on a target (seconds). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Turret|Targeting|EnemyAI", meta = (ClampMin = "0.05"))
+	float ShipPartReselectInterval = 1.25f;
+
 	/** Max distance to consider targets (cm). */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Turret|Targeting", meta = (ClampMin = "0.0"))
 	float TargetingRange = 15000.0f;
@@ -99,6 +121,13 @@ public:
 	/** Current target actor (read-only). */
 	UFUNCTION(BlueprintPure, Category = "Turret|Targeting")
 	AActor* GetCurrentTarget() const { return CurrentTarget.Get(); }
+
+	/** Force a specific target (used by Enemy AI bridge / tests). */
+	UFUNCTION(BlueprintCallable, Category = "Turret|Targeting")
+	void SetExternalTarget(AActor* NewTarget);
+
+	UFUNCTION(BlueprintCallable, Category = "Turret|Targeting")
+	void ClearCurrentTarget();
 
 	// ============================================================================
 	// AIMING
@@ -192,10 +221,14 @@ public:
 
 protected:
 	void AcquireTarget();
+	AActor* AcquireTargetFromEnemyAI() const;
 	bool IsTargetValid(AActor* Candidate) const;
 	bool HasLineOfSightTo(AActor* Candidate) const;
 
 	void ResolveSetupComponents();
+	void RefreshShipPartAim(AActor* Target, bool bForce);
+	/** False for null/invalid parts and thrusters at 0 HP. */
+	static bool IsShipPartViable(const USceneComponent* Part);
 
 	FVector GetMuzzleLocation() const;
 	/** Muzzle used for aiming/LOS when multiple muzzles exist (stable; does not alternate each tick). */
@@ -203,6 +236,7 @@ protected:
 	/** Muzzle used for the next shot (round-robin when enabled). */
 	USceneComponent* GetFireMuzzleSceneComponent() const;
 	FVector GetTargetAimPoint(AActor* Target) const;
+	FVector GetActorFallbackAimPoint(AActor* Target) const;
 	FVector ComputeLeadAimPoint(const FVector& MuzzleLoc, AActor* Target) const;
 	static bool SolveInterceptTime(const FVector& RelativePos, const FVector& TargetVel, float ProjectileSpeedCmPerSec, float& OutT);
 
@@ -230,10 +264,14 @@ private:
 	UPROPERTY()
 	TWeakObjectPtr<AActor> CurrentTarget;
 
+	UPROPERTY(Transient)
+	TWeakObjectPtr<USceneComponent> CurrentAimPart;
+
 	FRotator InitialYawRelative = FRotator::ZeroRotator;
 	FRotator InitialPitchRelative = FRotator::ZeroRotator;
 
 	float TimeSinceLastScan = 0.0f;
+	float TimeSincePartReselect = 0.0f;
 	float FireCooldown = 0.0f;
 	bool bFiringEnabled = true;
 
