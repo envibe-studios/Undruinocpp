@@ -32,6 +32,7 @@ public class ArduinoCommunication : ModuleRules
 				"Networking",
 				"Slate",
 				"SlateCore",
+				"UMG",
 				"RHI",
 				"RenderCore",
 				"Unduinocpp"

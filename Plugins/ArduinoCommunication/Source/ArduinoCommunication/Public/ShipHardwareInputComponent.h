@@ -203,6 +203,22 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship Hardware|Weapon Mags")
 	bool bAutoApplyImuRotation = true;
 
+	/** If true, call SetFiring on the side-matched FiringComponent from the IMU trigger bit.
+	 *  This is the reliable path for shot/beam visuals (does not depend on BP ProcessEvent). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship Hardware|Weapon Mags")
+	bool bAutoApplyTriggerFiring = true;
+
+	/** If true, call the owner pawn's SendWeaponAim Blueprint function (Weapon_Left / Weapon_Right).
+	 *  Enable this when the visible gun mesh is driven by SendWeaponAim rather than FiringComponent. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship Hardware|Weapon Mags")
+	bool bForwardAimToSendWeaponAim = true;
+
+	/** If true, call the owner pawn's SendFire Blueprint function on each WeaponImu packet.
+	 *  BP_Hovercraft::SendFire -> WeaponFire -> SetFiring (mag-gated). Without this, trigger
+	 *  only aims the mesh and never starts UFiringComponent (no shots / beam visuals). */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship Hardware|Weapon Mags")
+	bool bForwardTriggerToSendFire = true;
+
 	/** If true, automatically apply weapon mag config when tag is inserted */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship Hardware|Weapon Mags")
 	bool bAutoApplyWeaponMag = true;
@@ -307,12 +323,60 @@ private:
 	/** Track previous weapon tag inserted state for change detection (keyed by TagId) */
 	TMap<int64, bool> WeaponTagInsertedState;
 
+	/** Per-gun RFID occupancy (ReaderIndex/Side: 0=Port, 1=Starboard). Trigger must not fire without a mag. */
+	bool bPortWeaponTagPresent = false;
+	bool bStarboardWeaponTagPresent = false;
+
 	/** Track previous reload tag inserted state for change detection (keyed by TagId) */
 	TMap<int64, bool> ReloadTagInsertedState;
+
+	/** True while the reload bay reports a present RFID tag (reader index 2). */
+	bool bReloadBayOccupied = false;
+
+	/** Last non-zero reload-bay UID while occupied; used when firmware sends remove with UID=0. */
+	int64 LastReloadBayUID = 0;
 
 	/** Bind to the subsystem's delegates */
 	void BindToSubsystem();
 
 	/** Unbind from the subsystem's delegates */
 	void UnbindFromSubsystem();
+
+	/** Auto-wire FiringComponentPort/Starboard from owner child components when unset. */
+	void ResolveFiringComponentRefs();
+
+	/** Resolve weapon side from payload byte, with Src device-id fallback (3=Port, 6=Starboard). */
+	static uint8 ResolveImuSide(uint8 PayloadSide, uint8 Src);
+
+	/** Pick the FiringComponent that should receive IMU data for this side/src. */
+	UFiringComponent* ResolveFiringComponentForImu(uint8 Side, uint8 Src) const;
+
+	/** Pawn that owns Weapon_Left/Weapon_Right and FiringComponents (may differ from GetOwner on PC). */
+	AActor* ResolveWeaponActor() const;
+
+	/** Only one ShipHardwareInput per ShipId should bind to the serial subsystem (prefer PlayerController). */
+	bool TryRegisterAsPrimaryHandler();
+	void UnregisterPrimaryHandler();
+
+	/** Log one decoded WEAPON_IMU packet and routing decision. */
+	void LogWeaponImuPacket(uint8 Src, uint8 Type, int32 Seq, uint8 PayloadSide, uint8 ResolvedSide, const FWeaponImuData& ImuData, UFiringComponent* TargetFiring) const;
+
+	/** Accumulate per-src IMU counts and emit a summary every few seconds. */
+	void TrackWeaponImuStats(uint8 Src, uint8 ResolvedSide, UFiringComponent* TargetFiring);
+
+	/** Call the pawn's Blueprint SendWeaponAim (Weapon_Left/Weapon_Right visual path + trigger). */
+	void InvokeSendWeaponAimOnOwner(uint8 ResolvedSide, const FQuat& Orientation, bool bTriggerHeld) const;
+
+	/** Call the pawn's Blueprint SendFire (mag-gated SetFiring via WeaponFire). */
+	void InvokeSendFireOnOwner(uint8 ResolvedSide, bool bTriggerHeld) const;
+
+	/** Per-source WEAPON_IMU counters (since last summary). */
+	int32 ImuCountPortSrc = 0;
+	int32 ImuCountStarboardSrc = 0;
+	int32 ImuCountOtherSrc = 0;
+	int32 ImuCountNoTarget = 0;
+	double LastImuStatsLogSeconds = 0.0;
+
+	/** Primary handler per ShipId — avoids duplicate IMU when both PC and pawn have this component. */
+	bool bIsPrimaryHandler = false;
 };
