@@ -1,5 +1,5 @@
 // Hover Movement Component - Provides movement controls for hover vehicles
-// Handles forward/backward thrust, turning, and coordinates with hover thrusters
+// Handles forward/backward thrust, turning, boost/turbo, and coordinates with hover thrusters
 
 #pragma once
 
@@ -14,6 +14,8 @@ class UHoverThrusterComponent;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnMovementInputChanged, float, ThrottleInput, float, SteeringInput);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnThrottleChanged, float, NewThrottle);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSteeringChanged, float, NewSteering);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBoostActiveChanged, bool, bIsBoostActive);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBoostEnergyChanged, float, BoostEnergy);
 
 /**
  * Hover Movement Component
@@ -24,8 +26,10 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSteeringChanged, float, NewSteeri
  * Features:
  * - Forward/backward thrust with gradual input support (pedals, triggers)
  * - Left/right turning with gradual input support (steering wheels, joysticks)
+ * - Turn-bank via differential thruster hover-height bias (banks into turns with real hover physics)
  * - Configurable acceleration and deceleration curves
  * - Input smoothing for natural feel
+ * - Hold-to-boost turbo with draining/recharging energy pool
  * - Full Blueprint exposure for input binding
  *
  * Usage:
@@ -33,6 +37,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSteeringChanged, float, NewSteeri
  *   2. Configure thrust and turn forces
  *   3. Bind SetThrottleInput() and SetSteeringInput() to input actions
  *   4. For digital input, use MoveForward/MoveBackward/TurnLeft/TurnRight
+ *   5. Tune Hover Movement|Turn Bank on the movement component (works with registered thrusters)
+ *   6. Bind SetBoostInput() for keyboard or ESP32 turbo start/end
  */
 UCLASS(ClassGroup=(Vehicle), meta=(BlueprintSpawnableComponent), BlueprintType, Blueprintable)
 class UNDUINOCPP_API UHoverMovementComponent : public UActorComponent
@@ -107,6 +113,48 @@ public:
 	float FullTurnSpeed = 500.0f;
 
 	// ============================================================================
+	// TURN BANK (thruster-driven lean)
+	// ============================================================================
+
+	/**
+	 * If true, steering biases outer/inner thruster hover heights so the craft banks into turns.
+	 * Works with UHoverThrusterComponent springs instead of fighting angular damping with roll torque.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hover Movement|Turn Bank")
+	bool bEnableTurnBank = true;
+
+	/**
+	 * Max hover-height bias applied to left/right thrusters at full bank (cm).
+	 * Outer thrusters raise, inner thrusters lower, producing a physics bank into the turn.
+	 * Start small (8-20) for a subtle hovercraft lean.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hover Movement|Turn Bank", meta = (ClampMin = "0.0", ClampMax = "100.0", EditCondition = "bEnableTurnBank"))
+	float MaxBankHeightOffset = 14.0f;
+
+	/** How quickly bank bias approaches the steering target */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hover Movement|Turn Bank", meta = (ClampMin = "0.1", EditCondition = "bEnableTurnBank"))
+	float BankResponseSpeed = 4.0f;
+
+	/** If true, bank amount scales with forward speed */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hover Movement|Turn Bank", meta = (EditCondition = "bEnableTurnBank"))
+	bool bScaleBankWithSpeed = true;
+
+	/** Minimum bank multiplier when nearly stationary (0-1) */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hover Movement|Turn Bank", meta = (ClampMin = "0.0", ClampMax = "1.0", EditCondition = "bEnableTurnBank && bScaleBankWithSpeed"))
+	float MinBankMultiplierAtRest = 0.15f;
+
+	/** Forward speed at which full bank is available (cm/s) */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hover Movement|Turn Bank", meta = (ClampMin = "1.0", EditCondition = "bEnableTurnBank && bScaleBankWithSpeed"))
+	float FullBankSpeed = 600.0f;
+
+	/**
+	 * Optional assist torque around the forward axis to help the bank settle.
+	 * Keep low; primary bank comes from thruster height bias. 0 = thrusters only.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hover Movement|Turn Bank", meta = (ClampMin = "0.0", EditCondition = "bEnableTurnBank"))
+	float BankAssistTorque = 0.0f;
+
+	// ============================================================================
 	// INPUT SMOOTHING
 	// ============================================================================
 
@@ -135,6 +183,34 @@ public:
 	float MaxStrafeThrust = 15000.0f;
 
 	// ============================================================================
+	// BOOST / TURBO
+	// ============================================================================
+
+	/** If true, boost input and energy drain/recharge are processed */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hover Movement|Boost")
+	bool bEnableBoost = true;
+
+	/** Maximum boost energy (seconds of continuous boost at BoostDrainRate 1.0) */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hover Movement|Boost", meta = (ClampMin = "0.1", EditCondition = "bEnableBoost"))
+	float MaxBoostEnergy = 3.0f;
+
+	/** Energy drained per second while boost is active */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hover Movement|Boost", meta = (ClampMin = "0.0", EditCondition = "bEnableBoost"))
+	float BoostDrainRate = 1.0f;
+
+	/** Energy restored per second while boost is not active */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hover Movement|Boost", meta = (ClampMin = "0.0", EditCondition = "bEnableBoost"))
+	float BoostRechargeRate = 0.4f;
+
+	/** Minimum energy required to start boost after it has ended */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hover Movement|Boost", meta = (ClampMin = "0.0", EditCondition = "bEnableBoost"))
+	float MinEnergyToStart = 0.2f;
+
+	/** Forward thrust multiplier while boost is active */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hover Movement|Boost", meta = (ClampMin = "1.0", EditCondition = "bEnableBoost"))
+	float BoostThrustMultiplier = 2.0f;
+
+	// ============================================================================
 	// DEBUG
 	// ============================================================================
 
@@ -157,6 +233,14 @@ public:
 	/** Event fired when steering changes */
 	UPROPERTY(BlueprintAssignable, Category = "Hover Movement|Events")
 	FOnSteeringChanged OnSteeringChanged;
+
+	/** Event fired when boost active state changes */
+	UPROPERTY(BlueprintAssignable, Category = "Hover Movement|Events")
+	FOnBoostActiveChanged OnBoostActiveChanged;
+
+	/** Event fired when boost energy changes */
+	UPROPERTY(BlueprintAssignable, Category = "Hover Movement|Events")
+	FOnBoostEnergyChanged OnBoostEnergyChanged;
 
 	// ============================================================================
 	// INPUT FUNCTIONS - Analog/Gradual Input (Triggers, Pedals, Steering Wheels)
@@ -184,6 +268,15 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Hover Movement|Input")
 	void SetStrafeInput(float Value);
+
+	/**
+	 * Authoritative analog drive for a full frame (dual sticks, etc.).
+	 * When bActive is true, these values replace RawThrottle/Steering/Strafe at the start of
+	 * movement Tick — so later SetThrottleInput(0) from ESP/keyboard idle cannot wipe them
+	 * before forces are applied. When bActive is false, normal Set*Input / digital paths resume.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Hover Movement|Input")
+	void SetExternalAnalogInput(float Throttle, float Steering, float Strafe, bool bActive);
 
 	// ============================================================================
 	// INPUT FUNCTIONS - Digital Input (Keyboard, Buttons)
@@ -235,6 +328,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Hover Movement|Input")
 	void StrafeRight(bool bPressed);
 
+	/**
+	 * Hold-to-boost input (keyboard Left Shift or ESP32 turbo start/end).
+	 * Boost activates when held with enough energy; ends on release or empty tank.
+	 * @param bPressed - True while boost is requested
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Hover Movement|Input")
+	void SetBoostInput(bool bPressed);
+
 	// ============================================================================
 	// STATE QUERY FUNCTIONS
 	// ============================================================================
@@ -252,6 +353,13 @@ public:
 	 */
 	UFUNCTION(BlueprintPure, Category = "Hover Movement|State")
 	float GetCurrentSteering() const;
+
+	/**
+	 * Get current turn-bank amount (-1 to +1, positive = bank right / into a right turn)
+	 * @return Current smoothed bank amount
+	 */
+	UFUNCTION(BlueprintPure, Category = "Hover Movement|State")
+	float GetCurrentBankAmount() const;
 
 	/**
 	 * Get current strafe value (-1 to +1)
@@ -302,6 +410,24 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Hover Movement|State")
 	bool IsGrounded() const;
 
+	/**
+	 * Whether boost is currently applying the thrust multiplier
+	 */
+	UFUNCTION(BlueprintPure, Category = "Hover Movement|Boost")
+	bool IsBoostActive() const;
+
+	/**
+	 * Remaining boost energy (same units as MaxBoostEnergy)
+	 */
+	UFUNCTION(BlueprintPure, Category = "Hover Movement|Boost")
+	float GetBoostEnergy() const;
+
+	/**
+	 * Remaining boost energy as 0-1 fraction of MaxBoostEnergy
+	 */
+	UFUNCTION(BlueprintPure, Category = "Hover Movement|Boost")
+	float GetBoostEnergyNormalized() const;
+
 	// ============================================================================
 	// CONTROL FUNCTIONS
 	// ============================================================================
@@ -351,6 +477,12 @@ protected:
 	/** Apply turning torque based on current steering */
 	void ApplyTurning(float DeltaTime);
 
+	/** Bias thruster hover heights so the craft banks into turns */
+	void ApplyTurnBank(float DeltaTime);
+
+	/** Clear thruster height offsets applied by turn-bank */
+	void ClearTurnBankOffsets();
+
 	/** Apply strafe force based on current strafe input */
 	void ApplyStrafeForce(float DeltaTime);
 
@@ -360,11 +492,27 @@ protected:
 	/** Update input smoothing */
 	void UpdateInputSmoothing(float DeltaTime);
 
+	/** Update boost active state and energy drain/recharge */
+	void UpdateBoost(float DeltaTime);
+
+	/** Set boost active state and broadcast if changed */
+	void SetBoostActive(bool bNewActive);
+
 	/** Get the primitive component for physics operations */
 	UPrimitiveComponent* GetPhysicsComponent() const;
 
 	/** Calculate turn multiplier based on speed */
 	float GetSpeedBasedTurnMultiplier() const;
+
+	/** Calculate bank multiplier based on speed */
+	float GetSpeedBasedBankMultiplier() const;
+
+	/**
+	 * Axis used for yaw/steering torque.
+	 * Uses thruster ground normals when available so turning stays heading-stable while banked,
+	 * instead of rotating around the tilted actor-up axis (which fights thrusters and unwinds the turn).
+	 */
+	FVector GetTurnAxis() const;
 
 private:
 	/** Whether movement is enabled */
@@ -379,10 +527,19 @@ private:
 	float RawSteeringInput = 0.0f;
 	float RawStrafeInput = 0.0f;
 
+	/** External analog latch (dual sticks) — applied in Tick before smoothing */
+	bool bExternalAnalogActive = false;
+	float ExternalThrottleInput = 0.0f;
+	float ExternalSteeringInput = 0.0f;
+	float ExternalStrafeInput = 0.0f;
+
 	/** Smoothed/current values */
 	float CurrentThrottle = 0.0f;
 	float CurrentSteering = 0.0f;
 	float CurrentStrafe = 0.0f;
+
+	/** Smoothed bank amount (-1 left bank ... +1 right bank) */
+	float CurrentBankAmount = 0.0f;
 
 	/** Digital input tracking */
 	bool bForwardPressed = false;
@@ -391,6 +548,15 @@ private:
 	bool bRightPressed = false;
 	bool bStrafeLeftPressed = false;
 	bool bStrafeRightPressed = false;
+
+	/** Boost requested by keyboard or hardware (hold semantics) */
+	bool bBoostInputHeld = false;
+
+	/** Whether boost is currently applying thrust multiplier */
+	bool bBoostActive = false;
+
+	/** Remaining boost energy */
+	float BoostEnergy = 3.0f;
 
 	/** Cached physics component */
 	UPROPERTY()

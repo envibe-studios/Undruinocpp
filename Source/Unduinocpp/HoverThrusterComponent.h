@@ -67,6 +67,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hover Thruster|Physics", meta = (ClampMin = "0.0", ClampMax = "1000.0"))
 	float HoverHeight = 150.0f;
 
+	/**
+	 * Runtime height bias applied on top of HoverHeight (cm).
+	 * Positive raises this corner; negative lowers it.
+	 * Used by UHoverMovementComponent turn-bank to create a physics bank via differential thruster targets.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hover Thruster|Physics", meta = (ClampMin = "-200.0", ClampMax = "200.0"))
+	float HoverHeightOffset = 0.0f;
+
 	/** Maximum force the thruster can apply (in Newtons) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hover Thruster|Physics", meta = (ClampMin = "0.0"))
 	float MaxHoverForce = 50000.0f;
@@ -262,6 +270,20 @@ public:
 	 */
 	UFUNCTION(BlueprintPure, Category = "Hover Thruster|Physics")
 	float GetForceEffectiveness() const;
+
+	/**
+	 * Get the effective hover height including runtime bias (HoverHeight + HoverHeightOffset)
+	 * @return Effective target hover height in cm
+	 */
+	UFUNCTION(BlueprintPure, Category = "Hover Thruster|Physics")
+	float GetEffectiveHoverHeight() const;
+
+	/**
+	 * Set runtime hover height bias used for turn-bank / attitude shaping
+	 * @param NewOffset - Height offset in cm (positive raises this thruster's target)
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Hover Thruster|Physics")
+	void SetHoverHeightOffset(float NewOffset);
 
 	/**
 	 * Perform ground trace and calculate hover force
