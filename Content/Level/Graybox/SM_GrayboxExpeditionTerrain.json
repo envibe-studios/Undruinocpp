@@ -1,0 +1,13 @@
+{
+  "xs": 241,
+  "ys": 191,
+  "step_cm": 100,
+  "x_min": -12000,
+  "x_max": 12000,
+  "y_min": -2000,
+  "y_max": 17000,
+  "z_min": -163.31981985780888,
+  "z_max": 581.9735452388284,
+  "obj": "d:\\Unreals\\Undruinocpp\\Content\\Level\\Graybox\\SM_GrayboxExpeditionTerrain.obj",
+  "r16": "d:\\Unreals\\Undruinocpp\\Content\\Level\\Graybox\\SM_GrayboxExpeditionTerrain.r16"
+}
