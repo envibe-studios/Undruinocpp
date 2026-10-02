@@ -1,0 +1,26 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0.1",
+	"FriendlyName": "ScreenBridge",
+	"Description": "An Unreal Engine plugin designed to create and manage multiple windows for multi-screen experiences.",
+	"Category": "Tools",
+	"CreatedBy": "Srivanth",
+	"CreatedByURL": "https://www.linkedin.com/in/srivanth-s-7a19b123a/",
+	"DocsURL": "https://drive.google.com/file/d/133dBLzhYPMAV-Fz3DgxKyoEAyFaLi6EB/view?usp=sharing",
+	"MarketplaceURL": "com.epicgames.launcher.ue.Fab.product.3eec0414-a196-4763-ac67-59cf3a0cf531",
+	"SupportURL": "https://discord.gg/9rZEhE7DP2",
+	"EngineVersion": "5.8.0",
+	"CanContainContent": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "ScreenBridge",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"PlatformAllowList": [
+				"Win64"
+			]
+		}
+	]
+}
