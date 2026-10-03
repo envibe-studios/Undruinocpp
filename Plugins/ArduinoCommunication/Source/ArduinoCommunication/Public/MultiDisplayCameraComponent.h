@@ -3,7 +3,7 @@
 // SETUP GUIDE:
 // 1. Create an empty Actor in the level for EACH monitor you want to display on.
 // 2. Add a MultiDisplayCameraComponent to each Actor.
-// 3. Set "Target Display Index" to the desired monitor (0 = primary, 1 = second, etc.).
+// 3. Set "Target Display Index" to the desired monitor (0 = primary/forward, 1 = second, etc.).
 // 4. Position/rotate the Actor to point the camera where you want.
 // 5. Optionally attach the component to a SpringArm or parent component for rotation inheritance.
 // 6. Run as Standalone Game (not PIE) for best results.
@@ -52,7 +52,7 @@ public:
 
 	/** The display/monitor index to output to (0 = primary display, 1 = second monitor, etc.) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiDisplay|Settings", meta = (ClampMin = "0", ClampMax = "7"))
-	int32 TargetDisplayIndex = 1;
+	int32 TargetDisplayIndex = 0;
 
 	/** Whether to use borderless fullscreen mode on the target display */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiDisplay|Settings")

@@ -33,7 +33,7 @@ In the **Details** panel under the **MultiDisplay | Settings** category:
 
 | Property | Default | Description |
 |----------|---------|-------------|
-| **Target Display Index** | `1` | Which monitor to output to. `0` = primary monitor, `1` = second monitor, `2` = third, etc. |
+| **Target Display Index** | `0` | Which monitor to output to. `0` = primary/forward monitor, `1` = second monitor, `2` = third, etc. |
 | **Fullscreen** | `true` | When enabled, the window opens in borderless fullscreen on the target monitor. |
 | **Render Target Width** | `0` | Width in pixels. `0` = auto-detect from the monitor's native resolution. |
 | **Render Target Height** | `0` | Height in pixels. `0` = auto-detect from the monitor's native resolution. |
@@ -111,7 +111,7 @@ UMultiDisplayCameraComponent* DisplayCamera;
 
 // In constructor
 DisplayCamera = CreateDefaultSubobject<UMultiDisplayCameraComponent>(TEXT("DisplayCamera"));
-DisplayCamera->TargetDisplayIndex = 1;
+DisplayCamera->TargetDisplayIndex = 0;
 DisplayCamera->bFullscreen = true;
 DisplayCamera->SetupAttachment(RootComponent);
 
