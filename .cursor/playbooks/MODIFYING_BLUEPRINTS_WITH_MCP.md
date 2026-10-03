@@ -92,7 +92,32 @@ When using MCP:
 
 Do not create a second implementation of behavior that already exists elsewhere.
 
-## 7. Compile Immediately
+## 7. Keep Blueprint Graphs Neat
+
+When adding or editing nodes, leave the graph readable enough that another
+engineer can immediately see the execution flow and data flow.
+
+Use this layout style:
+
+- Keep connected nodes close to each other instead of stretching wires across the graph.
+- Align related execution chains horizontally from left to right.
+- Keep repeated logic blocks parallel to each other, with matching nodes at similar X/Y positions.
+- Prefer straight, short wires with minimal crossing.
+- Use reroute nodes only when they make a wire path cleaner and easier to follow.
+- Keep data wires visually grouped with the execution chain they support.
+- Leave consistent vertical spacing between separate branches or repeated event blocks.
+
+The preferred visual reference is a clean Blueprint graph where custom events
+sit in a tidy left column, their connected function calls sit directly to the
+right, and matching event chains are stacked in parallel rows. Exec wires run
+mostly straight left-to-right. Data wires stay short and intentional, dipping
+only as needed before entering the next node. Repeated actions use the same
+spacing and alignment, making the graph feel organized, compact, and easy to scan.
+
+Do not perform broad graph rearrangement for its own sake, but when touching
+a graph, leave the affected nodes cleaner than you found them.
+
+## 8. Compile Immediately
 
 After a meaningful Blueprint change:
 
@@ -103,7 +128,7 @@ After a meaningful Blueprint change:
 
 Do not continue stacking edits on top of a Blueprint that no longer compiles.
 
-## 8. Save Intentionally
+## 9. Save Intentionally
 
 Save the asset after successful verification.
 
@@ -111,7 +136,7 @@ Do not repeatedly save broken intermediate states when avoidable.
 
 If a change fails midway, restore or repair the Blueprint before continuing.
 
-## 9. Test Runtime Behavior
+## 10. Test Runtime Behavior
 
 When appropriate:
 
@@ -124,7 +149,7 @@ When appropriate:
 
 A successful Blueprint compile does not prove the feature works.
 
-## 10. Use Temporary Diagnostics Carefully
+## 11. Use Temporary Diagnostics Carefully
 
 Temporary Print String nodes or logging may be added during debugging.
 
@@ -134,7 +159,7 @@ When debugging is complete:
 - preserve existing permanent diagnostics
 - do not remove useful observability simply because the immediate bug is fixed
 
-## 11. Avoid Destructive MCP Operations
+## 12. Avoid Destructive MCP Operations
 
 Before any destructive operation, such as:
 
@@ -149,7 +174,7 @@ confirm that the change is necessary and understand its dependencies.
 
 If uncertainty remains, ask before proceeding.
 
-## 12. Verify Neighboring Systems
+## 13. Verify Neighboring Systems
 
 After changing a Blueprint, test dependent systems where relevant.
 
@@ -164,7 +189,7 @@ Examples:
 - mission logic
 - hardware callbacks
 
-## 13. Update Documentation Only When Needed
+## 14. Update Documentation Only When Needed
 
 Update project documentation if the Blueprint change introduces:
 
@@ -175,7 +200,7 @@ Update project documentation if the Blueprint change introduces:
 
 Do not document routine graph edits.
 
-## 14. Completion Report
+## 15. Completion Report
 
 When finished, summarize:
 

@@ -126,6 +126,8 @@ Avoid rebuilding working graphs.
 
 Prefer targeted edits.
 
+Keep edited Blueprint nodes neat: connected nodes should stay close, execution chains should read left-to-right, repeated chains should be aligned in parallel rows, and wires should be short with minimal crossing.
+
 Compile after significant Blueprint changes.
 
 ---
