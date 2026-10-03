@@ -140,6 +140,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dual Stick|Tuning", meta = (ClampMin = "0.25", ClampMax = "4.0"))
 	float ResponseExponent = 1.2f;
 
+	/**
+	 * Drive hover movement through independent left/right side thrust.
+	 * This makes the sticks behave like tank controls: left stick feeds left-side
+	 * thrusters, right stick feeds right-side thrusters, and opposite sticks pivot.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dual Stick|Tuning")
+	bool bUseDifferentialTankThrust = true;
+
 	/** Absolute clamp applied to each normalized axis and to mixed outputs. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dual Stick|Tuning", meta = (ClampMin = "0.1", ClampMax = "1.0"))
 	float MaxInputClamp = 1.0f;

@@ -85,14 +85,31 @@ void UHoverMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType
 		}
 	}
 
+	if (bExternalTankActive)
+	{
+		RawThrottleInput = 0.5f * (ExternalLeftTankInput + ExternalRightTankInput);
+		RawSteeringInput = 0.5f * (ExternalLeftTankInput - ExternalRightTankInput);
+		if (bEnableStrafe)
+		{
+			RawStrafeInput = ExternalStrafeInput;
+		}
+	}
+
 	// Update smoothed input values
 	UpdateInputSmoothing(DeltaTime);
 
 	UpdateBoost(DeltaTime);
 
 	// Apply forces
-	ApplyThrust(DeltaTime);
-	ApplyTurning(DeltaTime);
+	if (bExternalTankActive)
+	{
+		ApplyDifferentialTankThrust(DeltaTime);
+	}
+	else
+	{
+		ApplyThrust(DeltaTime);
+		ApplyTurning(DeltaTime);
+	}
 	ApplyTurnBank(DeltaTime);
 
 	if (bEnableStrafe)
@@ -141,7 +158,12 @@ void UHoverMovementComponent::SetStrafeInput(float Value)
 
 void UHoverMovementComponent::SetExternalAnalogInput(float Throttle, float Steering, float Strafe, bool bActive)
 {
+	const bool bWasExternalAnalogActive = bExternalAnalogActive;
 	bExternalAnalogActive = bActive;
+	if (bActive)
+	{
+		bExternalTankActive = false;
+	}
 	ExternalThrottleInput = FMath::Clamp(Throttle, -1.0f, 1.0f);
 	ExternalSteeringInput = FMath::Clamp(Steering, -1.0f, 1.0f);
 	ExternalStrafeInput = FMath::Clamp(Strafe, -1.0f, 1.0f);
@@ -154,6 +176,42 @@ void UHoverMovementComponent::SetExternalAnalogInput(float Throttle, float Steer
 		{
 			RawStrafeInput = ExternalStrafeInput;
 		}
+	}
+	else if (bWasExternalAnalogActive)
+	{
+		RawThrottleInput = 0.0f;
+		RawSteeringInput = 0.0f;
+		RawStrafeInput = 0.0f;
+	}
+}
+
+void UHoverMovementComponent::SetExternalTankInput(float Left, float Right, float Strafe, bool bActive)
+{
+	const bool bWasExternalTankActive = bExternalTankActive;
+	bExternalTankActive = bActive;
+	if (bActive)
+	{
+		bExternalAnalogActive = false;
+	}
+
+	ExternalLeftTankInput = FMath::Clamp(Left, -1.0f, 1.0f);
+	ExternalRightTankInput = FMath::Clamp(Right, -1.0f, 1.0f);
+	ExternalStrafeInput = FMath::Clamp(Strafe, -1.0f, 1.0f);
+
+	if (bActive)
+	{
+		RawThrottleInput = 0.5f * (ExternalLeftTankInput + ExternalRightTankInput);
+		RawSteeringInput = 0.5f * (ExternalLeftTankInput - ExternalRightTankInput);
+		if (bEnableStrafe)
+		{
+			RawStrafeInput = ExternalStrafeInput;
+		}
+	}
+	else if (bWasExternalTankActive)
+	{
+		RawThrottleInput = 0.0f;
+		RawSteeringInput = 0.0f;
+		RawStrafeInput = 0.0f;
 	}
 }
 
@@ -591,6 +649,143 @@ void UHoverMovementComponent::ApplyThrust(float DeltaTime)
 			0,
 			3.0f
 		);
+	}
+}
+
+void UHoverMovementComponent::ApplyDifferentialTankThrust(float DeltaTime)
+{
+	if (RegisteredThrusters.Num() == 0)
+	{
+		ApplyThrust(DeltaTime);
+		ApplyTurning(DeltaTime);
+		return;
+	}
+
+	UPrimitiveComponent* PhysComp = GetPhysicsComponent();
+	if (!PhysComp || !PhysComp->IsSimulatingPhysics())
+	{
+		return;
+	}
+
+	AActor* Owner = GetOwner();
+	if (!Owner)
+	{
+		return;
+	}
+
+	const FVector TurnAxis = GetTurnAxis();
+	FVector ForwardVector = FVector::VectorPlaneProject(Owner->GetActorForwardVector(), TurnAxis).GetSafeNormal();
+	if (ForwardVector.IsNearlyZero())
+	{
+		ForwardVector = Owner->GetActorForwardVector();
+	}
+
+	float MaxLateralAbs = 0.0f;
+	int32 LeftThrusterCount = 0;
+	int32 RightThrusterCount = 0;
+
+	for (const UHoverThrusterComponent* Thruster : RegisteredThrusters)
+	{
+		if (!Thruster)
+		{
+			continue;
+		}
+
+		const FVector LocalPos = Owner->GetActorTransform().InverseTransformPosition(Thruster->GetComponentLocation());
+		MaxLateralAbs = FMath::Max(MaxLateralAbs, FMath::Abs(LocalPos.Y));
+		if (LocalPos.Y < -KINDA_SMALL_NUMBER)
+		{
+			++LeftThrusterCount;
+		}
+		else if (LocalPos.Y > KINDA_SMALL_NUMBER)
+		{
+			++RightThrusterCount;
+		}
+	}
+
+	if (MaxLateralAbs <= KINDA_SMALL_NUMBER || LeftThrusterCount == 0 || RightThrusterCount == 0)
+	{
+		ApplyThrust(DeltaTime);
+		ApplyTurning(DeltaTime);
+		return;
+	}
+
+	auto GetSideForce = [this](float Input)
+	{
+		if (FMath::IsNearlyZero(Input))
+		{
+			return 0.0f;
+		}
+
+		float Magnitude = Input > 0.0f
+			? Input * MaxForwardThrust * 0.5f
+			: Input * MaxBackwardThrust * 0.5f;
+
+		if (bBoostActive && Input > 0.0f)
+		{
+			Magnitude *= BoostThrustMultiplier;
+		}
+
+		return Magnitude;
+	};
+
+	const float LeftSideForce = GetSideForce(ExternalLeftTankInput);
+	const float RightSideForce = GetSideForce(ExternalRightTankInput);
+
+	if (FMath::IsNearlyZero(LeftSideForce) && FMath::IsNearlyZero(RightSideForce))
+	{
+		return;
+	}
+
+	for (UHoverThrusterComponent* Thruster : RegisteredThrusters)
+	{
+		if (!Thruster)
+		{
+			continue;
+		}
+
+		const FVector LocalPos = Owner->GetActorTransform().InverseTransformPosition(Thruster->GetComponentLocation());
+		float SideForce = 0.0f;
+		int32 SideCount = 0;
+
+		if (LocalPos.Y < -KINDA_SMALL_NUMBER)
+		{
+			SideForce = LeftSideForce;
+			SideCount = LeftThrusterCount;
+		}
+		else if (LocalPos.Y > KINDA_SMALL_NUMBER)
+		{
+			SideForce = RightSideForce;
+			SideCount = RightThrusterCount;
+		}
+		else
+		{
+			continue;
+		}
+
+		if (SideCount <= 0 || FMath::IsNearlyZero(SideForce))
+		{
+			continue;
+		}
+
+		const FVector Force = ForwardVector * (SideForce / static_cast<float>(SideCount)) * Thruster->GetForceEffectiveness();
+		PhysComp->AddForceAtLocation(Force, Thruster->GetComponentLocation());
+
+		if (bDrawDebug)
+		{
+			const FColor ArrowColor = SideForce >= 0.0f ? FColor::Green : FColor::Red;
+			DrawDebugDirectionalArrow(
+				GetWorld(),
+				Thruster->GetComponentLocation(),
+				Thruster->GetComponentLocation() + Force.GetSafeNormal() * 160.0f,
+				16.0f,
+				ArrowColor,
+				false,
+				-1.0f,
+				0,
+				3.0f
+			);
+		}
 	}
 }
 

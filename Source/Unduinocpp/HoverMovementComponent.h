@@ -278,6 +278,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Hover Movement|Input")
 	void SetExternalAnalogInput(float Throttle, float Steering, float Strafe, bool bActive);
 
+	/**
+	 * Authoritative differential tank drive for a full frame.
+	 * Left/Right values are independent side thrust channels (-1 reverse, +1 forward).
+	 * When active, thrust is applied at registered left/right thruster positions instead
+	 * of the centerline throttle force, producing real tank-style yaw.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Hover Movement|Input")
+	void SetExternalTankInput(float Left, float Right, float Strafe, bool bActive);
+
 	// ============================================================================
 	// INPUT FUNCTIONS - Digital Input (Keyboard, Buttons)
 	// ============================================================================
@@ -474,6 +483,9 @@ protected:
 	/** Apply thrust force based on current throttle */
 	void ApplyThrust(float DeltaTime);
 
+	/** Apply differential side thrust for tank controls */
+	void ApplyDifferentialTankThrust(float DeltaTime);
+
 	/** Apply turning torque based on current steering */
 	void ApplyTurning(float DeltaTime);
 
@@ -532,6 +544,11 @@ private:
 	float ExternalThrottleInput = 0.0f;
 	float ExternalSteeringInput = 0.0f;
 	float ExternalStrafeInput = 0.0f;
+
+	/** External tank latch (dual sticks) — drives left/right side thrust directly */
+	bool bExternalTankActive = false;
+	float ExternalLeftTankInput = 0.0f;
+	float ExternalRightTankInput = 0.0f;
 
 	/** Smoothed/current values */
 	float CurrentThrottle = 0.0f;

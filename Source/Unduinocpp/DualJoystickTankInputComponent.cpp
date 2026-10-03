@@ -198,7 +198,14 @@ void UDualJoystickTankInputComponent::ApplyToMovement()
 		return;
 	}
 
-	CachedMovement->SetExternalAnalogInput(ForwardInput, YawInput, StrafeInput, bActive);
+	if (bUseDifferentialTankThrust)
+	{
+		CachedMovement->SetExternalTankInput(LeftY, RightY, StrafeInput, bActive);
+	}
+	else
+	{
+		CachedMovement->SetExternalAnalogInput(ForwardInput, YawInput, StrafeInput, bActive);
+	}
 
 	bDrivingMovement = bActive;
 }
