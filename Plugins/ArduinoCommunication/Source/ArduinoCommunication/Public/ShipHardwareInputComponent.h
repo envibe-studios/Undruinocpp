@@ -201,7 +201,7 @@ public:
 	/** If true, automatically apply IMU orientation to the matching FiringComponent each packet.
 	 *  Routing priority: FiringComponentPort/Starboard (by Side byte) -> FiringComponent (fallback). */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship Hardware|Weapon Mags")
-	bool bAutoApplyImuRotation = true;
+	bool bAutoApplyImuRotation = false;
 
 	/** If true, call SetFiring on the side-matched FiringComponent from the IMU trigger bit.
 	 *  This is the reliable path for shot/beam visuals (does not depend on BP ProcessEvent). */

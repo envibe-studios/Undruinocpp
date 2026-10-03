@@ -207,8 +207,8 @@ void UShipHardwareInputComponent::OnFrameParsedHandler(FName InShipId, uint8 Src
 				LogWeaponImuPacket(Src, Type, Seq, ImuData.Side, ResolvedSide, ImuData, TargetFiring);
 				TrackWeaponImuStats(Src, ResolvedSide, TargetFiring);
 
-				// Auto-apply IMU orientation to the side-matched FiringComponent.
-				if (bAutoApplyImuRotation && TargetFiring)
+				// Auto-apply directly only when SendWeaponAim is not also driving the weapon mesh.
+				if (bAutoApplyImuRotation && !bForwardAimToSendWeaponAim && TargetFiring)
 				{
 					TargetFiring->ApplyImuOrientation(Orientation);
 				}
@@ -596,7 +596,7 @@ void UShipHardwareInputComponent::ResolveFiringComponentRefs()
 		FiringComponentStarboard ? *FiringComponentStarboard->GetName() : TEXT("<unset>"),
 		FiringComponent ? *FiringComponent->GetName() : TEXT("<unset>"));
 
-	if (!bAutoApplyImuRotation && FiringComponents.Num() > 1)
+	if (!bAutoApplyImuRotation && !bForwardAimToSendWeaponAim && FiringComponents.Num() > 1)
 	{
 		UE_LOG(LogWeaponImu, Warning, TEXT("ShipHardwareInput[%s]: Dual guns but bAutoApplyImuRotation=false — enable it or use bForwardAimToSendWeaponAim."),
 			*GetOwner()->GetName());

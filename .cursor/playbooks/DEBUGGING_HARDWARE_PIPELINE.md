@@ -351,3 +351,12 @@ Explain why the fix works.
 Explain why alternative hypotheses were rejected.
 
 Document architectural lessons if appropriate.
+---
+
+# Weapon IMU Aim Ownership
+
+For hovercraft weapons, keep exactly one authoritative aim path active. The preferred setup is: ShipHardwareInput forwards WEAPON_IMU to SendWeaponAim / SendFire, and direct IMU auto-apply to FiringComponents stays disabled.
+
+If beams, scan rays, tractor beams, and bullets all oversteer together, check for duplicate aim application first: a controller or pawn ShipHardwareInput may be applying IMU directly while also forwarding SendWeaponAim. In PIE, filter Output Log for LogWeaponImu and confirm the active handler reports autoApply=off and forwardSendWeaponAim=on.
+
+When both PC_Controller and BP_Hovercraft contain ShipHardwareInput for the same ShipId, the PlayerController should be the primary runtime handler. The pawn-side component may remain configured for asset compatibility, but it should not be another live aim authority.
