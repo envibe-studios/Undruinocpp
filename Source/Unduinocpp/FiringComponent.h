@@ -136,7 +136,7 @@ struct FScannerModeConfig : public FFiringModeConfig
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scanner", meta = (ClampMin = "0.1"))
 	float ScanDuration = 2.0f;
 
-	/** Tags that objects must have (Actor Tags or Component Tags) to be scannable. Empty = all objects eligible. Checks both Actor->Tags and RootComponent->ComponentTags. */
+	/** Tags that objects must have (Actor Tags or any component tag) to be scannable. Empty = all objects eligible. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scanner")
 	TArray<FName> ScannableTags;
 

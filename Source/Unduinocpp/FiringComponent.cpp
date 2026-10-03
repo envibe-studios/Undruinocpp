@@ -3,6 +3,7 @@
 #include "FiringComponent.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/Controller.h"
+#include "Components/ActorComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/World.h"
@@ -695,11 +696,15 @@ bool UFiringComponent::CanScanActor(AActor* Actor) const
 		return false;
 	}
 
-	// Check tags if any are specified — actor must have at least one matching tag
-	// Checks both Actor Tags and Component Tags on the root component
+	// Check tags if any are specified — actor must have at least one matching tag.
+	// Scannable actors often keep the tag on their visible/collision component,
+	// which may not be the root component.
 	if (ScannerConfig.ScannableTags.Num() > 0)
 	{
 		bool bHasMatchingTag = false;
+		TArray<UActorComponent*> ActorComponents;
+		Actor->GetComponents(ActorComponents);
+
 		for (const FName& Tag : ScannerConfig.ScannableTags)
 		{
 			if (Actor->ActorHasTag(Tag))
@@ -707,10 +712,17 @@ bool UFiringComponent::CanScanActor(AActor* Actor) const
 				bHasMatchingTag = true;
 				break;
 			}
-			// Also check component tags on the root component
-			if (Actor->GetRootComponent() && Actor->GetRootComponent()->ComponentHasTag(Tag))
+
+			for (const UActorComponent* Component : ActorComponents)
 			{
-				bHasMatchingTag = true;
+				if (Component && Component->ComponentHasTag(Tag))
+				{
+					bHasMatchingTag = true;
+					break;
+				}
+			}
+			if (bHasMatchingTag)
+			{
 				break;
 			}
 		}
