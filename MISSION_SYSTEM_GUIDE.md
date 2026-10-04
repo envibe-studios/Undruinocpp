@@ -212,8 +212,9 @@ Resource harvesting uses resource tags on the spawned pickup chunks. Do not wire
    - `ResourceTags`: one or more `Gameplay.Resource.*` gameplay tags, for example `Gameplay.Resource.Crystal`
    - Owner: the source `BP_ResourceNode`
 4. The player tractor beams the pickup into the collection socket.
-5. `UFiringComponent` reads the pickup's `ResourceTags` and calls `ReportResourceCollectedForPawn`.
-6. `UMissionManagerSubsystem` checks all active `CollectResourceCount` objectives and increments only matching objectives.
+5. `BP_Beamable` marks itself `Collected` when it reaches the collection socket and then destroys itself.
+6. `UFiringComponent` detects that collected state, reads the pickup's `ResourceTags`, resolves the collecting player pawn, and calls `ReportResourceCollectedForPawn`.
+7. `UMissionManagerSubsystem` checks all active `CollectResourceCount` objectives and increments only matching objectives.
 
 ### Setting up a resource node
 
@@ -284,6 +285,9 @@ If a harvested chunk does not progress the mission:
 - Confirm the pickup actor has actor tag `Tractorable`.
 - Confirm the pickup has a non-empty `ResourceTags` gameplay tag container.
 - Confirm the pickup's owner is the source `BP_ResourceNode` if using `ZoneReference`.
+- Confirm the pickup uses the normal `BP_Beamable` collection flow: `EventWhileBeaming` should set `Collected = true` when the pickup reaches the ship collection socket before calling `DestroyActor`.
+- Confirm the firing component can resolve the collecting player pawn. The tractor path checks the firing component owner, owner instigator, owner owner, and attach-parent owner. If none of those are the player pawn, mission progress will not be reported and the log will say `Resource collection could not report mission progress`.
+- Confirm the Output Log shows `Reporting collected resource ... with tags ...` when a chunk is collected. If this line is missing, the chunk is not reaching the C++ resource-report path.
 - Confirm the project has been rebuilt after changing mission/resource C++ fields; Blueprint assets need the reflected `RequiredResourceTag` and `ReportResourceCollectedForPawn` API.
 
 ## Per-player objectives (races, checkpoints)

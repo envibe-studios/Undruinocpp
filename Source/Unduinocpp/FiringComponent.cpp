@@ -469,9 +469,7 @@ void UFiringComponent::ProcessTractorBeamMode(float DeltaTime)
 			return;
 		}
 
-		// BP_Beamable destroys its chunk when its collection socket is within 37.5 cm.
-		// Report just before that destruction so mission progress does not depend on a
-		// Blueprint event chain being present on the collecting pawn.
+		// Fallback for setups where the firing origin is near the collection socket.
 		if (!bTractorCollectionReported && Distance <= 50.0f)
 		{
 			bTractorCollectionReported = true;
@@ -481,6 +479,20 @@ void UFiringComponent::ProcessTractorBeamMode(float DeltaTime)
 
 		// Broadcast pulling event with distance
 		OnTractorBeamPulling.Broadcast(Target, Distance);
+
+		// BP_Beamable marks itself Collected immediately before DestroyActor once its
+		// cone reaches the ship collection socket. Check that flag after the Blueprint
+		// event so mission progress follows the actual collection point, not the muzzle.
+		if (!bTractorCollectionReported)
+		{
+			const FBoolProperty* CollectedProperty = FindFProperty<FBoolProperty>(Target->GetClass(), TEXT("Collected"));
+			if (CollectedProperty && CollectedProperty->GetPropertyValue_InContainer(Target))
+			{
+				bTractorCollectionReported = true;
+				ReportTractorMissionProgress(Target);
+				OnObjectCollected.Broadcast(Target);
+			}
+		}
 
 		// Debug / session visualization
 		if (bDrawDebug || bShowShotVisuals)
@@ -535,14 +547,41 @@ void UFiringComponent::ReportTractorMissionProgress(AActor* CollectedActor)
 
 	UWorld* World = GetWorld();
 	UGameInstance* GameInstance = World ? World->GetGameInstance() : nullptr;
-	APawn* ReportingPawn = Cast<APawn>(GetOwner());
+
+	AActor* OwnerActor = GetOwner();
+	APawn* ReportingPawn = Cast<APawn>(OwnerActor);
+	if (!ReportingPawn && OwnerActor)
+	{
+		ReportingPawn = OwnerActor->GetInstigator();
+	}
+	if (!ReportingPawn && OwnerActor)
+	{
+		ReportingPawn = Cast<APawn>(OwnerActor->GetOwner());
+	}
+	if (!ReportingPawn && OwnerActor && OwnerActor->GetRootComponent())
+	{
+		if (const USceneComponent* ParentComponent = OwnerActor->GetRootComponent()->GetAttachParent())
+		{
+			ReportingPawn = Cast<APawn>(ParentComponent->GetOwner());
+		}
+	}
 	if (!GameInstance || !ReportingPawn)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("FiringComponent[%s]: Resource collection could not report mission progress because no reporting pawn was found. Owner=%s Collected=%s"),
+			*GetName(),
+			OwnerActor ? *OwnerActor->GetName() : TEXT("<none>"),
+			*CollectedActor->GetName());
 		return;
 	}
 
 	if (UMissionManagerSubsystem* Missions = GameInstance->GetSubsystem<UMissionManagerSubsystem>())
 	{
+		UE_LOG(LogTemp, Log, TEXT("FiringComponent[%s]: Reporting collected resource %s for pawn %s with tags %s"),
+			*GetName(),
+			*CollectedActor->GetName(),
+			*ReportingPawn->GetName(),
+			*ResourceTags->ToStringSimple());
+
 		Missions->ReportResourceCollectedForPawn(
 			ReportingPawn,
 			*ResourceTags,
