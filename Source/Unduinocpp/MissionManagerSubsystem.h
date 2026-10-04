@@ -176,6 +176,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Mission|Server")
 	void ReportResourceCollectedForPawn(APawn* Pawn, const FGameplayTagContainer& ResourceTags, int32 DeltaCount, AActor* SourceActor, EMissionRole ReporterRole);
 
+	/**
+	 * Report that a pawn completed a scan on an actor. Advances active Exploration objectives whose
+	 * TargetActorClass matches the scanned actor. ZoneReference can further restrict by actor tag/name.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Mission|Server")
+	void ReportScannedActorForPawn(APawn* Pawn, AActor* ScannedActor, int32 DeltaCount, EMissionRole ReporterRole);
+
 	/** Read per-player progress for UI (works on owning client after replication). */
 	UFUNCTION(BlueprintPure, Category = "Mission")
 	void GetPerPlayerObjectiveProgress(APlayerState* PlayerState, FName MissionID, int32 ObjectiveIndex, bool& bFound, FMissionObjectiveProgress& OutProgress) const;

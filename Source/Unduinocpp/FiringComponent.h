@@ -9,6 +9,7 @@
 
 // Forward declarations
 class UPrimitiveComponent;
+class APawn;
 
 /**
  * Firing mode type enumeration
@@ -575,6 +576,12 @@ protected:
 
 	/** Reports mission progress when a tagged resource reaches collection distance. */
 	void ReportTractorMissionProgress(AActor* CollectedActor);
+
+	/** Reports mission progress when scanner mode completes on an actor. */
+	void ReportScanMissionProgress(AActor* ScannedActor);
+
+	/** Resolve the pawn responsible for this weapon event. */
+	APawn* ResolveReportingPawn() const;
 
 	/** Process scanner mode */
 	void ProcessScannerMode(float DeltaTime);

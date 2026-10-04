@@ -516,6 +516,20 @@ This call must happen on the server or through a server-authoritative flow.
 
 For resource harvesting, prefer `ReportResourceCollectedForPawn` over hardcoding a mission ID on the pickup. The tractor beam path already does this for `BP_Beamable` chunks by reading their `ResourceTags`.
 
+## Scannable Object Objectives
+
+Scanner completion is reported by `UFiringComponent` when scanner mode reaches 100% on a target. The mission manager advances any active scan-style objective that matches the scanned actor.
+
+To make a scannable objective:
+
+1. Set `ObjectiveType` to `Exploration`.
+2. Set `TargetActorClass` to the scannable actor class, for example `BP_Scannable`.
+3. Set `TargetCount` to the number of scans required.
+4. Set `ObjectiveScope` to `Per player` if each player must scan it themselves, or `Session` if one scan should count for the crew.
+5. Optionally set `ZoneReference` to an actor tag or actor name when only one placed scannable should count.
+
+The scannable actor still needs to be detectable by the scanner, usually by giving its hit component a `Scannable` component tag matching the firing component's scanner configuration.
+
 ## Mission UI (text readout)
 
 To show **current active missions** and **objective progress** in a widget, and have the text update when `ReportObjectiveProgress` (or per-player progress) runs:

@@ -369,6 +369,59 @@ void UMissionManagerSubsystem::ReportResourceCollectedForPawn(APawn* Pawn, const
 	}
 }
 
+void UMissionManagerSubsystem::ReportScannedActorForPawn(APawn* Pawn, AActor* ScannedActor, int32 DeltaCount, EMissionRole ReporterRole)
+{
+	if (!HasAuthority() || DeltaCount == 0 || !Pawn || !ScannedActor)
+	{
+		return;
+	}
+
+	AMissionGameState* GS = GetOrFindMissionGameState();
+	if (!GS)
+	{
+		return;
+	}
+
+	for (const auto& Pair : MissionDataMap)
+	{
+		const FName MissionID = Pair.Key;
+		UMissionDataAsset* Data = Pair.Value;
+		if (!Data || GS->GetMissionState(MissionID) != EMissionState::Active)
+		{
+			continue;
+		}
+
+		for (int32 ObjectiveIndex = 0; ObjectiveIndex < Data->Objectives.Num(); ++ObjectiveIndex)
+		{
+			const FMissionObjectiveDef& ObjDef = Data->Objectives[ObjectiveIndex];
+			if (ObjDef.ObjectiveType != EObjectiveType::Exploration)
+			{
+				continue;
+			}
+
+			UClass* TargetClass = ObjDef.TargetActorClass.LoadSynchronous();
+			if (!TargetClass || !ScannedActor->IsA(TargetClass))
+			{
+				continue;
+			}
+
+			if (!ObjDef.ZoneReference.IsNone() && !MissionActorMatchesReference(ScannedActor, ObjDef.ZoneReference))
+			{
+				continue;
+			}
+
+			if (ObjDef.ObjectiveScope == EObjectiveScope::PerPlayer)
+			{
+				ReportObjectiveProgressForPawn(Pawn, MissionID, ObjectiveIndex, DeltaCount, ReporterRole);
+			}
+			else
+			{
+				ReportObjectiveProgress(MissionID, ObjectiveIndex, DeltaCount, ReporterRole);
+			}
+		}
+	}
+}
+
 void UMissionManagerSubsystem::GetPerPlayerObjectiveProgress(APlayerState* PlayerState, FName MissionID, int32 ObjectiveIndex, bool& bFound, FMissionObjectiveProgress& OutProgress) const
 {
 	bFound = false;

@@ -549,22 +549,7 @@ void UFiringComponent::ReportTractorMissionProgress(AActor* CollectedActor)
 	UGameInstance* GameInstance = World ? World->GetGameInstance() : nullptr;
 
 	AActor* OwnerActor = GetOwner();
-	APawn* ReportingPawn = Cast<APawn>(OwnerActor);
-	if (!ReportingPawn && OwnerActor)
-	{
-		ReportingPawn = OwnerActor->GetInstigator();
-	}
-	if (!ReportingPawn && OwnerActor)
-	{
-		ReportingPawn = Cast<APawn>(OwnerActor->GetOwner());
-	}
-	if (!ReportingPawn && OwnerActor && OwnerActor->GetRootComponent())
-	{
-		if (const USceneComponent* ParentComponent = OwnerActor->GetRootComponent()->GetAttachParent())
-		{
-			ReportingPawn = Cast<APawn>(ParentComponent->GetOwner());
-		}
-	}
+	APawn* ReportingPawn = ResolveReportingPawn();
 	if (!GameInstance || !ReportingPawn)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("FiringComponent[%s]: Resource collection could not report mission progress because no reporting pawn was found. Owner=%s Collected=%s"),
@@ -589,6 +574,64 @@ void UFiringComponent::ReportTractorMissionProgress(AActor* CollectedActor)
 			CollectedActor->GetOwner(),
 			EMissionRole::Any);
 	}
+}
+
+void UFiringComponent::ReportScanMissionProgress(AActor* ScannedActor)
+{
+	if (!ScannedActor)
+	{
+		return;
+	}
+
+	UWorld* World = GetWorld();
+	UGameInstance* GameInstance = World ? World->GetGameInstance() : nullptr;
+	AActor* OwnerActor = GetOwner();
+	APawn* ReportingPawn = ResolveReportingPawn();
+	if (!GameInstance || !ReportingPawn)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FiringComponent[%s]: Scan could not report mission progress because no reporting pawn was found. Owner=%s Scanned=%s"),
+			*GetName(),
+			OwnerActor ? *OwnerActor->GetName() : TEXT("<none>"),
+			*ScannedActor->GetName());
+		return;
+	}
+
+	if (UMissionManagerSubsystem* Missions = GameInstance->GetSubsystem<UMissionManagerSubsystem>())
+	{
+		UE_LOG(LogTemp, Log, TEXT("FiringComponent[%s]: Reporting scanned actor %s for pawn %s"),
+			*GetName(),
+			*ScannedActor->GetName(),
+			*ReportingPawn->GetName());
+
+		Missions->ReportScannedActorForPawn(
+			ReportingPawn,
+			ScannedActor,
+			1,
+			EMissionRole::Any);
+	}
+}
+
+APawn* UFiringComponent::ResolveReportingPawn() const
+{
+	AActor* OwnerActor = GetOwner();
+	APawn* ReportingPawn = Cast<APawn>(OwnerActor);
+	if (!ReportingPawn && OwnerActor)
+	{
+		ReportingPawn = OwnerActor->GetInstigator();
+	}
+	if (!ReportingPawn && OwnerActor)
+	{
+		ReportingPawn = Cast<APawn>(OwnerActor->GetOwner());
+	}
+	if (!ReportingPawn && OwnerActor && OwnerActor->GetRootComponent())
+	{
+		if (const USceneComponent* ParentComponent = OwnerActor->GetRootComponent()->GetAttachParent())
+		{
+			ReportingPawn = Cast<APawn>(ParentComponent->GetOwner());
+		}
+	}
+
+	return ReportingPawn;
 }
 
 bool UFiringComponent::CanTractorActor(AActor* Actor) const
@@ -732,6 +775,7 @@ void UFiringComponent::ProcessScannerMode(float DeltaTime)
 		if (CurrentScanProgress >= 1.0f)
 		{
 			OnScanComplete.Broadcast(Target);
+			ReportScanMissionProgress(Target);
 			ScanTarget.Reset();
 			CurrentScanProgress = 0.0f;
 		}
