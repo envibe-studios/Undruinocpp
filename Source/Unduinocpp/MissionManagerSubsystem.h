@@ -7,6 +7,7 @@
 #include "Tickable.h"
 #include "Engine/DataAsset.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "GameplayTagContainer.h"
 #include "MissionTypes.h"
 #include "MissionDataAsset.h"
 #include "MissionGameState.h"
@@ -14,6 +15,7 @@
 
 class APlayerState;
 class APawn;
+class AActor;
 class AMissionPlayerState;
 
 /** Generic world event by name (e.g. AudioEvent_ThreatIncreased). Name-only; no middleware. */
@@ -166,6 +168,13 @@ public:
 	/** Convenience: get PlayerState from Pawn and call ReportObjectiveProgressForPlayer. */
 	UFUNCTION(BlueprintCallable, Category = "Mission|Server")
 	void ReportObjectiveProgressForPawn(APawn* Pawn, FName MissionID, int32 ObjectiveIndex, int32 DeltaCount, EMissionRole ReporterRole);
+
+	/**
+	 * Report that a pawn collected a resource. Advances every active CollectResourceCount objective
+	 * whose RequiredResourceTag matches ResourceTags. Empty RequiredResourceTag means any resource.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Mission|Server")
+	void ReportResourceCollectedForPawn(APawn* Pawn, const FGameplayTagContainer& ResourceTags, int32 DeltaCount, AActor* SourceActor, EMissionRole ReporterRole);
 
 	/** Read per-player progress for UI (works on owning client after replication). */
 	UFUNCTION(BlueprintPure, Category = "Mission")

@@ -573,6 +573,9 @@ protected:
 	/** Check if an actor can be tractored (tag check) */
 	bool CanTractorActor(AActor* Actor) const;
 
+	/** Reports mission progress when a tagged resource reaches collection distance. */
+	void ReportTractorMissionProgress(AActor* CollectedActor);
+
 	/** Process scanner mode */
 	void ProcessScannerMode(float DeltaTime);
 
@@ -613,6 +616,9 @@ private:
 	/** Current tractor beam target */
 	UPROPERTY()
 	TWeakObjectPtr<AActor> TractorTarget;
+
+	/** Prevents repeated mission reports while the same chunk is inside the collection threshold. */
+	bool bTractorCollectionReported = false;
 
 	/** Current scan target */
 	UPROPERTY()

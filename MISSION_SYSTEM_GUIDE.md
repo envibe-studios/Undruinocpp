@@ -163,6 +163,7 @@ Each objective supports:
 - `RequiredRole`
 - `TimeLimitSeconds`
 - `ZoneReference`
+- `RequiredResourceTag`
 - `StateThresholdPercent`
 - `DisplayName`
 
@@ -197,6 +198,93 @@ Example:
 - When a player enters a mission zone, call `ReportObjectiveProgress()`
 - When a repair completes, call `ReportObjectiveProgress()`
 - When an enemy generator is destroyed, call `ReportObjectiveProgress()`
+
+## Resource Harvesting Objectives
+
+Resource harvesting uses resource tags on the spawned pickup chunks. Do not wire resource pickups directly to a mission ID. The pickup reports what resource was collected, then the mission manager advances any active `CollectResourceCount` objective that matches that resource.
+
+### Runtime flow
+
+1. The player damages a `BP_ResourceNode` chunk with bullets.
+2. `BP_ResourceNode` spawns a `BP_Beamable` pickup chunk.
+3. The spawned pickup has:
+   - Actor tag: `Tractorable`
+   - `ResourceTags`: one or more `Gameplay.Resource.*` gameplay tags, for example `Gameplay.Resource.Crystal`
+   - Owner: the source `BP_ResourceNode`
+4. The player tractor beams the pickup into the collection socket.
+5. `UFiringComponent` reads the pickup's `ResourceTags` and calls `ReportResourceCollectedForPawn`.
+6. `UMissionManagerSubsystem` checks all active `CollectResourceCount` objectives and increments only matching objectives.
+
+### Setting up a resource node
+
+For a node that can spawn tractorable resource pickups:
+
+- Place or create a `BP_ResourceNode`.
+- Make sure the node spawns `BP_Beamable` chunks with the node as the spawned actor's **Owner**.
+- Make sure the spawned `BP_Beamable` has actor tag `Tractorable`.
+- Set `BP_Beamable.ResourceTags` to the resource it represents:
+  - Crystal: `Gameplay.Resource.Crystal`
+  - Metal: `Gameplay.Resource.Metal`
+  - Plant: `Gameplay.Resource.Plant`
+
+If you create separate node Blueprints, prefer setting the pickup `ResourceTags` in the node's spawn logic or in the pickup class defaults. The mission should read resource tags; the node should not hardcode a mission ID.
+
+### Setting up the mission objective
+
+In the `MissionDataAsset`:
+
+1. Add an objective.
+2. Set `ObjectiveType` to `CollectResourceCount`.
+3. Set `TargetCount` to the number of chunks needed.
+4. Set `ObjectiveScope`:
+   - `Per player` if each player must collect their own chunks.
+   - `Session` if the whole crew shares one count.
+5. Set `RequiredResourceTag`:
+   - `Gameplay.Resource.Crystal` for crystal-only collection.
+   - `Gameplay.Resource.Metal` for metal-only collection.
+   - `Gameplay.Resource.Plant` for plant-only collection.
+   - Leave empty only when any resource type should count.
+
+Example: "Harvest 3 crystal chunks"
+
+- `ObjectiveType = CollectResourceCount`
+- `TargetCount = 3`
+- `ObjectiveScope = Per player`
+- `RequiredResourceTag = Gameplay.Resource.Crystal`
+- `DisplayName = Harvest 3 Resource Chunks`
+
+### Multiple resource missions
+
+Because matching is tag-based, several resource missions can be active at once:
+
+- A crystal chunk increments objectives requiring `Gameplay.Resource.Crystal`.
+- A metal chunk increments objectives requiring `Gameplay.Resource.Metal`.
+- A generic "collect any resource" objective with empty `RequiredResourceTag` increments for any resource pickup.
+
+This means an intentionally broad "collect any 5 resources" mission can progress at the same time as a specific "collect 3 crystals" mission. If that is not desired, give the broad mission stricter visibility, activation, or source restrictions.
+
+### Restricting a mission to a specific node
+
+Use `ZoneReference` only when a mission should count resources from a particular source node.
+
+Options:
+
+- Add an actor tag to the source `BP_ResourceNode`, for example `Mission.HarvestAlpha`, and set the objective's `ZoneReference` to `Mission.HarvestAlpha`.
+- Or set `ZoneReference` to the source node actor name.
+
+When `ZoneReference` is empty, any node that spawns a matching resource tag can count. When `ZoneReference` is set, the source node must match that tag or name.
+
+### Troubleshooting resource harvesting
+
+If a harvested chunk does not progress the mission:
+
+- Confirm the mission is `Active`.
+- Confirm the objective type is `CollectResourceCount`.
+- Confirm `RequiredResourceTag` matches the pickup's `ResourceTags`.
+- Confirm the pickup actor has actor tag `Tractorable`.
+- Confirm the pickup has a non-empty `ResourceTags` gameplay tag container.
+- Confirm the pickup's owner is the source `BP_ResourceNode` if using `ZoneReference`.
+- Confirm the project has been rebuilt after changing mission/resource C++ fields; Blueprint assets need the reflected `RequiredResourceTag` and `ReportResourceCollectedForPawn` API.
 
 ## Per-player objectives (races, checkpoints)
 
@@ -397,6 +485,8 @@ Mission assets do not automatically detect gameplay events on their own. Your ga
 Use:
 
 - `ReportObjectiveProgress(MissionID, ObjectiveIndex, DeltaCount, ReporterRole)`
+- `ReportObjectiveProgressForPawn(Pawn, MissionID, ObjectiveIndex, DeltaCount, ReporterRole)` for per-player objectives
+- `ReportResourceCollectedForPawn(Pawn, ResourceTags, DeltaCount, SourceActor, ReporterRole)` for resource pickups
 
 Examples:
 
@@ -419,6 +509,8 @@ Examples:
   - `ReporterRole = Engineer`
 
 This call must happen on the server or through a server-authoritative flow.
+
+For resource harvesting, prefer `ReportResourceCollectedForPawn` over hardcoding a mission ID on the pickup. The tractor beam path already does this for `BP_Beamable` chunks by reading their `ResourceTags`.
 
 ## Mission UI (text readout)
 

@@ -3,10 +3,15 @@
 #include "FiringComponent.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/Controller.h"
+#include "GameFramework/Pawn.h"
+#include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
+#include "Engine/GameInstance.h"
 #include "Engine/World.h"
+#include "MissionManagerSubsystem.h"
+#include "UObject/UnrealType.h"
 
 UFiringComponent::UFiringComponent()
 {
@@ -131,6 +136,7 @@ void UFiringComponent::SetFiring(bool bShouldFire)
 			AActor* Target = TractorTarget.Get();
 			OnTractorBeamLost.Broadcast(Target);
 			TractorTarget.Reset();
+			bTractorCollectionReported = false;
 		}
 		else if (CurrentFiringMode == EFiringModeType::Scanner && ScanTarget.IsValid())
 		{
@@ -189,6 +195,7 @@ void UFiringComponent::ResetModeState()
 	{
 		OnTractorBeamLost.Broadcast(TractorTarget.Get());
 		TractorTarget.Reset();
+		bTractorCollectionReported = false;
 	}
 
 	// Cancel scan if switching away from scanner
@@ -446,6 +453,7 @@ void UFiringComponent::ProcessTractorBeamMode(float DeltaTime)
 		{
 			OnTractorBeamLost.Broadcast(Target);
 			TractorTarget.Reset();
+			bTractorCollectionReported = false;
 			return;
 		}
 
@@ -457,7 +465,18 @@ void UFiringComponent::ProcessTractorBeamMode(float DeltaTime)
 		{
 			OnTractorBeamLost.Broadcast(Target);
 			TractorTarget.Reset();
+			bTractorCollectionReported = false;
 			return;
+		}
+
+		// BP_Beamable destroys its chunk when its collection socket is within 37.5 cm.
+		// Report just before that destruction so mission progress does not depend on a
+		// Blueprint event chain being present on the collecting pawn.
+		if (!bTractorCollectionReported && Distance <= 50.0f)
+		{
+			bTractorCollectionReported = true;
+			ReportTractorMissionProgress(Target);
+			OnObjectCollected.Broadcast(Target);
 		}
 
 		// Broadcast pulling event with distance
@@ -480,6 +499,7 @@ void UFiringComponent::ProcessTractorBeamMode(float DeltaTime)
 			if (HitActor && CanTractorActor(HitActor))
 			{
 				TractorTarget = HitActor;
+				bTractorCollectionReported = false;
 				OnTractorBeamStart.Broadcast(HitActor);
 			}
 		}
@@ -491,6 +511,44 @@ void UFiringComponent::ProcessTractorBeamMode(float DeltaTime)
 			FVector TraceEnd = Origin + Direction * TractorBeamConfig.Range;
 			DrawDebugLine(GetWorld(), Origin, TraceEnd, FColor::Blue, false, -1.0f, 1, 1.5f);
 		}
+	}
+}
+
+void UFiringComponent::ReportTractorMissionProgress(AActor* CollectedActor)
+{
+	if (!CollectedActor || !CollectedActor->ActorHasTag(FName(TEXT("Tractorable"))))
+	{
+		return;
+	}
+
+	const FStructProperty* ResourceTagsProperty = FindFProperty<FStructProperty>(CollectedActor->GetClass(), TEXT("ResourceTags"));
+	if (!ResourceTagsProperty || ResourceTagsProperty->Struct != FGameplayTagContainer::StaticStruct())
+	{
+		return;
+	}
+
+	const FGameplayTagContainer* ResourceTags = ResourceTagsProperty->ContainerPtrToValuePtr<FGameplayTagContainer>(CollectedActor);
+	if (!ResourceTags || ResourceTags->IsEmpty())
+	{
+		return;
+	}
+
+	UWorld* World = GetWorld();
+	UGameInstance* GameInstance = World ? World->GetGameInstance() : nullptr;
+	APawn* ReportingPawn = Cast<APawn>(GetOwner());
+	if (!GameInstance || !ReportingPawn)
+	{
+		return;
+	}
+
+	if (UMissionManagerSubsystem* Missions = GameInstance->GetSubsystem<UMissionManagerSubsystem>())
+	{
+		Missions->ReportResourceCollectedForPawn(
+			ReportingPawn,
+			*ResourceTags,
+			1,
+			CollectedActor->GetOwner(),
+			EMissionRole::Any);
 	}
 }
 
@@ -544,6 +602,7 @@ void UFiringComponent::ReleaseTractorTarget()
 	{
 		OnTractorBeamLost.Broadcast(TractorTarget.Get());
 		TractorTarget.Reset();
+		bTractorCollectionReported = false;
 	}
 }
 

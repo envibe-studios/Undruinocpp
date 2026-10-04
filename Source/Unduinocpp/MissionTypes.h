@@ -4,6 +4,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "MissionTypes.generated.h"
 
 /** Faction identifier for per-faction threat and mission variation. Optional. */
@@ -116,6 +117,10 @@ struct FMissionObjectiveDef
 	/** Optional zone/actor name or tag for EnterCollider, RemainInZone, DeliverResourceToZone, DefendTarget */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Objective")
 	FName ZoneReference;
+
+	/** Optional resource tag required for CollectResourceCount, e.g. Gameplay.Resource.Crystal. Empty = any resource. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Objective|Resource", meta = (Categories = "Gameplay.Resource"))
+	FGameplayTag RequiredResourceTag;
 
 	/** Optional: required state threshold (e.g. oxygen above 50). Interpretation depends on ObjectiveType. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Objective", meta = (ClampMin = "0.0", ClampMax = "100.0"))

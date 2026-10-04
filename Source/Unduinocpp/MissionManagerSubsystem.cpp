@@ -3,9 +3,22 @@
 #include "MissionManagerSubsystem.h"
 #include "MissionPlayerState.h"
 #include "Engine/World.h"
+#include "GameFramework/Actor.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerState.h"
 #include "GameFramework/Pawn.h"
+namespace
+{
+	bool MissionActorMatchesReference(const AActor* Actor, FName Reference)
+	{
+		return Actor
+			&& !Reference.IsNone()
+			&& (Actor->ActorHasTag(Reference)
+				|| Actor->GetFName() == Reference
+				|| Actor->GetName() == Reference.ToString());
+	}
+}
+
 
 UMissionManagerSubsystem::UMissionManagerSubsystem()
 {
@@ -302,6 +315,58 @@ void UMissionManagerSubsystem::ReportObjectiveProgressForPawn(APawn* Pawn, FName
 		return;
 	}
 	ReportObjectiveProgressForPlayer(PS, MissionID, ObjectiveIndex, DeltaCount, ReporterRole);
+}
+
+void UMissionManagerSubsystem::ReportResourceCollectedForPawn(APawn* Pawn, const FGameplayTagContainer& ResourceTags, int32 DeltaCount, AActor* SourceActor, EMissionRole ReporterRole)
+{
+	if (!HasAuthority() || DeltaCount == 0 || !Pawn || ResourceTags.IsEmpty())
+	{
+		return;
+	}
+
+	AMissionGameState* GS = GetOrFindMissionGameState();
+	if (!GS)
+	{
+		return;
+	}
+
+	for (const auto& Pair : MissionDataMap)
+	{
+		const FName MissionID = Pair.Key;
+		UMissionDataAsset* Data = Pair.Value;
+		if (!Data || GS->GetMissionState(MissionID) != EMissionState::Active)
+		{
+			continue;
+		}
+
+		for (int32 ObjectiveIndex = 0; ObjectiveIndex < Data->Objectives.Num(); ++ObjectiveIndex)
+		{
+			const FMissionObjectiveDef& ObjDef = Data->Objectives[ObjectiveIndex];
+			if (ObjDef.ObjectiveType != EObjectiveType::CollectResourceCount)
+			{
+				continue;
+			}
+
+			if (ObjDef.RequiredResourceTag.IsValid() && !ResourceTags.HasTag(ObjDef.RequiredResourceTag))
+			{
+				continue;
+			}
+
+			if (!ObjDef.ZoneReference.IsNone() && !MissionActorMatchesReference(SourceActor, ObjDef.ZoneReference))
+			{
+				continue;
+			}
+
+			if (ObjDef.ObjectiveScope == EObjectiveScope::PerPlayer)
+			{
+				ReportObjectiveProgressForPawn(Pawn, MissionID, ObjectiveIndex, DeltaCount, ReporterRole);
+			}
+			else
+			{
+				ReportObjectiveProgress(MissionID, ObjectiveIndex, DeltaCount, ReporterRole);
+			}
+		}
+	}
 }
 
 void UMissionManagerSubsystem::GetPerPlayerObjectiveProgress(APlayerState* PlayerState, FName MissionID, int32 ObjectiveIndex, bool& bFound, FMissionObjectiveProgress& OutProgress) const
