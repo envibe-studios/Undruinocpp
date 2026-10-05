@@ -34,6 +34,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flight|Orbit", meta = (ClampMin = "0.0"))
 	float OrbitHeightVariance = 350.0f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flight|Escort", meta = (ClampMin = "0.1"))
+	float AlongsideHoldSeconds = 5.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flight|Escort", meta = (ClampMin = "0.1"))
+	float ProjectileBurstSeconds = 0.9f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flight|Escort", meta = (ClampMin = "0.05"))
+	float ProjectileIntervalSeconds = 0.3f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flight|Escort", meta = (ClampMin = "100.0"))
+	float CircleRadius = 4200.0f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flight|Sway", meta = (ClampMin = "0.0"))
 	float SwayAmplitudeXY = 450.0f;
 
@@ -89,13 +101,20 @@ protected:
 	FVector ComputeSwayOffset(float TimeSeconds) const;
 	FVector GetFocusLocation() const;
 	bool HasValidFocus() const;
+	bool UsesSidecarAttackCycle() const;
 	void PickDiveTarget();
 	void TryApplyDiveDamage();
 	void ApplySoftDiveNudge(AActor* Ship) const;
 	void FaceVelocity(float DeltaTime, const FVector& Velocity);
 	FVector SteerToward(const FVector& DesiredWorldPoint, float Speed) const;
+	FVector GetSidePosition() const;
+	FVector GetTargetVelocity() const;
+	void MoveAlongside(float DeltaTime, const FVector& DesiredPosition);
 	void TickApproach(float DeltaTime);
 	void TickOrbit(float DeltaTime);
+	void TickEscort(float DeltaTime);
+	void TickProjectileVolley(float DeltaTime);
+	void TickCircle(float DeltaTime);
 	void TickDive(float DeltaTime);
 	void TickPullUp(float DeltaTime);
 	void EnterPhase(EEnemyFlyingCombatPhase NewPhase);
@@ -113,6 +132,10 @@ protected:
 	float OrbitAngle = 0.0f;
 	float OrbitDirection = 1.0f;
 	float DiveCooldownRemaining = 0.0f;
+	float PhaseElapsedSeconds = 0.0f;
+	float TimeUntilNextProjectile = 0.0f;
+	float CircleStartAngle = 0.0f;
+	float CircleAngleTravelled = 0.0f;
 	float ClosestDiveDistance = TNumericLimits<float>::Max();
 	bool bDiveDamageApplied = false;
 	float NoisePhaseA = 0.0f;

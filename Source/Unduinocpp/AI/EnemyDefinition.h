@@ -58,6 +58,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy|Abilities")
 	TObjectPtr<UEnemyAbilityLoadout> AbilityLoadout;
 
+	/** Optional ability to activate automatically while a target is in range. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy|Abilities")
+	FName AutoAttackAbilityId = NAME_None;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy|Perception")
 	FEnemyPerceptionParams PerceptionParams;
 

@@ -1,4 +1,6 @@
 #include "AI/FlyingMovementMode.h"
+#include "AI/EnemyAbilityComponent.h"
+#include "AI/EnemyDefinition.h"
 #include "AI/EnemyPawn.h"
 #include "HoverThrusterComponent.h"
 #include "Components/PrimitiveComponent.h"
@@ -80,7 +82,13 @@ FVector UFlyingMovementMode::GetFocusLocation() const
 
 bool UFlyingMovementMode::HasValidFocus() const
 {
-	return FocusActor.IsValid() || bHasMoveGoal;
+        return FocusActor.IsValid() || bHasMoveGoal;
+}
+
+bool UFlyingMovementMode::UsesSidecarAttackCycle() const
+{
+        const UEnemyDefinition* Definition = OwnerPawn ? OwnerPawn->GetEnemyDefinition() : nullptr;
+        return Definition && !Definition->AutoAttackAbilityId.IsNone();
 }
 
 FVector UFlyingMovementMode::SteerToward(const FVector& DesiredWorldPoint, float Speed) const
@@ -98,8 +106,52 @@ FVector UFlyingMovementMode::SteerToward(const FVector& DesiredWorldPoint, float
 	}
 
 	// Ease near the waypoint so orbit doesn't jitter.
-	const float Ease = FMath::Clamp(Dist / 400.0f, 0.25f, 1.0f);
-	return To.GetSafeNormal() * (Speed * Ease);
+        const float Ease = FMath::Clamp(Dist / 400.0f, 0.25f, 1.0f);
+        return To.GetSafeNormal() * (Speed * Ease);
+}
+
+FVector UFlyingMovementMode::GetTargetVelocity() const
+{
+        if (const AActor* Focus = FocusActor.Get())
+        {
+                return Focus->GetVelocity();
+        }
+        return FVector::ZeroVector;
+}
+
+FVector UFlyingMovementMode::GetSidePosition() const
+{
+        const FVector Focus = GetFocusLocation();
+        FVector Forward = GetTargetVelocity().GetSafeNormal2D();
+        if (Forward.IsNearlyZero())
+        {
+                if (const AActor* Target = FocusActor.Get())
+                {
+                        Forward = Target->GetActorForwardVector().GetSafeNormal2D();
+                }
+        }
+        if (Forward.IsNearlyZero() && OwnerPawn)
+        {
+                Forward = OwnerPawn->GetActorForwardVector().GetSafeNormal2D();
+        }
+
+        const FVector Side = FVector::CrossProduct(FVector::UpVector, Forward).GetSafeNormal();
+        return Focus + Side * OrbitDirection * OrbitRadius + FVector(0.0f, 0.0f, Params.PreferredAltitude);
+}
+
+void UFlyingMovementMode::MoveAlongside(float DeltaTime, const FVector& DesiredPosition)
+{
+        if (!OwnerPawn || DeltaTime <= 0.0f)
+        {
+                return;
+        }
+
+        const FVector PositionError = DesiredPosition - OwnerPawn->GetActorLocation();
+        FVector CorrectionVelocity = PositionError * 2.0f;
+        CorrectionVelocity = CorrectionVelocity.GetClampedToMaxSize(Params.MaxSpeed);
+        const FVector DesiredVelocity = GetTargetVelocity() + CorrectionVelocity;
+        MoveOwnerToward(DeltaTime, DesiredVelocity, false);
+        FaceVelocity(DeltaTime, CurrentVelocity);
 }
 
 void UFlyingMovementMode::FaceVelocity(float DeltaTime, const FVector& Velocity)
@@ -117,8 +169,16 @@ void UFlyingMovementMode::FaceVelocity(float DeltaTime, const FVector& Velocity)
 
 void UFlyingMovementMode::EnterPhase(EEnemyFlyingCombatPhase NewPhase)
 {
-	CombatPhase = NewPhase;
-	if (NewPhase == EEnemyFlyingCombatPhase::Dive)
+        CombatPhase = NewPhase;
+        PhaseElapsedSeconds = 0.0f;
+        TimeUntilNextProjectile = 0.0f;
+        if (NewPhase == EEnemyFlyingCombatPhase::Circle)
+        {
+                const FVector RelativePosition = OwnerPawn ? OwnerPawn->GetActorLocation() - GetFocusLocation() : FVector::ForwardVector;
+                CircleStartAngle = FMath::Atan2(RelativePosition.Y, RelativePosition.X);
+                CircleAngleTravelled = 0.0f;
+        }
+        if (NewPhase == EEnemyFlyingCombatPhase::Dive)
 	{
 		ClosestDiveDistance = TNumericLimits<float>::Max();
 		bDiveDamageApplied = false;
@@ -231,6 +291,17 @@ void UFlyingMovementMode::TickApproach(float DeltaTime)
 	ApproachPoint.Z += Params.PreferredAltitude;
 	ApproachPoint += Sway;
 
+        if (UsesSidecarAttackCycle())
+        {
+                const FVector SidePoint = GetSidePosition();
+                MoveAlongside(DeltaTime, SidePoint);
+                if (FVector::Dist(OwnerPawn->GetActorLocation(), SidePoint) <= 450.0f)
+                {
+                        EnterPhase(EEnemyFlyingCombatPhase::Escort);
+                }
+                return;
+        }
+
 	// Keep a bit of lead so we don't head-on into the ship.
 	const FVector FlatAway = (OwnerPawn->GetActorLocation() - Focus).GetSafeNormal2D();
 	if (!FlatAway.IsNearlyZero())
@@ -257,6 +328,35 @@ void UFlyingMovementMode::TickOrbit(float DeltaTime)
 	const float Time = OwnerPawn->GetWorld() ? OwnerPawn->GetWorld()->GetTimeSeconds() : 0.0f;
 	const FVector Focus = GetFocusLocation();
 	const FVector Sway = ComputeSwayOffset(Time);
+
+        if (UsesSidecarAttackCycle())
+	{
+		FVector Forward = FocusActor.IsValid() ? FocusActor->GetVelocity().GetSafeNormal2D() : FVector::ZeroVector;
+		if (Forward.IsNearlyZero() && FocusActor.IsValid())
+		{
+			Forward = FocusActor->GetActorForwardVector().GetSafeNormal2D();
+		}
+		if (Forward.IsNearlyZero())
+		{
+			Forward = OwnerPawn->GetActorForwardVector().GetSafeNormal2D();
+		}
+		const FVector Side = FVector::CrossProduct(FVector::UpVector, Forward).GetSafeNormal();
+		FVector SidePoint = Focus + Side * OrbitDirection * OrbitRadius;
+		SidePoint.Z += Params.PreferredAltitude + FMath::Sin(Time * SwayFrequencyC + NoisePhaseC) * OrbitHeightVariance;
+		SidePoint += Sway * 0.2f;
+		if (bHasFlockOffset)
+		{
+			SidePoint += FlockOffset;
+		}
+		const FVector DesiredVel = SteerToward(SidePoint, Params.MaxSpeed);
+		MoveOwnerToward(DeltaTime, DesiredVel, false);
+		FaceVelocity(DeltaTime, CurrentVelocity);
+		if (FVector::Dist2D(OwnerPawn->GetActorLocation(), Focus) > OrbitEnterDistance * 1.75f)
+		{
+			EnterPhase(EEnemyFlyingCombatPhase::Approach);
+		}
+		return;
+	}
 
 	const float AngularSpeed = (Params.MaxSpeed / FMath::Max(OrbitRadius, 100.0f)) * OrbitDirection;
 	OrbitAngle += AngularSpeed * DeltaTime;
@@ -289,6 +389,56 @@ void UFlyingMovementMode::TickOrbit(float DeltaTime)
 	{
 		EnterPhase(EEnemyFlyingCombatPhase::Approach);
 	}
+}
+
+void UFlyingMovementMode::TickEscort(float DeltaTime)
+{
+        MoveAlongside(DeltaTime, GetSidePosition());
+        PhaseElapsedSeconds += DeltaTime;
+        if (PhaseElapsedSeconds >= AlongsideHoldSeconds)
+        {
+                EnterPhase(EEnemyFlyingCombatPhase::Fire);
+        }
+}
+
+void UFlyingMovementMode::TickProjectileVolley(float DeltaTime)
+{
+        MoveAlongside(DeltaTime, GetSidePosition());
+        PhaseElapsedSeconds += DeltaTime;
+        TimeUntilNextProjectile -= DeltaTime;
+
+        if (TimeUntilNextProjectile <= 0.0f && OwnerPawn && OwnerPawn->AbilityComponent)
+        {
+                const UEnemyDefinition* Definition = OwnerPawn->GetEnemyDefinition();
+                if (Definition && !Definition->AutoAttackAbilityId.IsNone())
+                {
+                        OwnerPawn->AbilityComponent->ActivateAbility(Definition->AutoAttackAbilityId, FocusActor.Get());
+                }
+                TimeUntilNextProjectile = ProjectileIntervalSeconds;
+        }
+
+        if (PhaseElapsedSeconds >= ProjectileBurstSeconds)
+        {
+                EnterPhase(EEnemyFlyingCombatPhase::Circle);
+        }
+}
+
+void UFlyingMovementMode::TickCircle(float DeltaTime)
+{
+        PhaseElapsedSeconds += DeltaTime;
+        CircleAngleTravelled += (Params.MaxSpeed / FMath::Max(CircleRadius, 100.0f)) * DeltaTime;
+        const float Angle = CircleStartAngle + OrbitDirection * CircleAngleTravelled;
+        FVector CirclePoint = GetFocusLocation();
+        CirclePoint.X += FMath::Cos(Angle) * CircleRadius;
+        CirclePoint.Y += FMath::Sin(Angle) * CircleRadius;
+        CirclePoint.Z += Params.PreferredAltitude;
+        MoveAlongside(DeltaTime, CirclePoint);
+
+        if (CircleAngleTravelled >= TWO_PI)
+        {
+                OrbitDirection *= -1.0f;
+                EnterPhase(EEnemyFlyingCombatPhase::Approach);
+        }
 }
 
 void UFlyingMovementMode::TickDive(float DeltaTime)
@@ -386,10 +536,19 @@ void UFlyingMovementMode::TickMovement(float DeltaTime)
 	case EEnemyFlyingCombatPhase::Dive:
 		TickDive(DeltaTime);
 		break;
-	case EEnemyFlyingCombatPhase::PullUp:
-		TickPullUp(DeltaTime);
-		break;
-	}
+        case EEnemyFlyingCombatPhase::PullUp:
+                TickPullUp(DeltaTime);
+                break;
+        case EEnemyFlyingCombatPhase::Escort:
+                TickEscort(DeltaTime);
+                break;
+        case EEnemyFlyingCombatPhase::Fire:
+                TickProjectileVolley(DeltaTime);
+                break;
+        case EEnemyFlyingCombatPhase::Circle:
+                TickCircle(DeltaTime);
+                break;
+        }
 
 	if (bDrawFlightDebug || (OwnerPawn && OwnerPawn->bDrawDebug))
 	{

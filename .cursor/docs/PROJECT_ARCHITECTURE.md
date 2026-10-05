@@ -181,8 +181,8 @@ Folder: `Source/Unduinocpp/AI/` (+ `AI/BT/`).
 | `AEnemyPawn` | Capsule + mesh + Health / Movement / Ability / Aggro components; `UEnemyDefinition`; squad id/role (replicated) |
 | `AEnemyTurretPawn` | Stationary emplacement subclass of `AEnemyPawn`; preserves `DamageCollider` hit volume; drives `UStationaryTurretComponent` from Enemy AI targets |
 | `AEnemyAIController` | Perception (sight), Behavior Tree, target policy, LOD tick intervals, synergy assignment helpers; `bAutoPursueTarget` from definition (false for turrets) |
-| `UEnemyDefinition` | PrimaryDataAsset: BT, blackboard, movement mode class, `bAutoPursueTarget`, abilities, perception/aggro params, health, squad role |
-| `UEnemyMovementComponent` + modes | Abstract `UEnemyMovementMode`; concrete: Flying (approach/orbit/dive-bomb thrusters), Floating, Crawling, Burrowing, **Stationary** (no translation). Combat focus actor drives flyer pathing (not a beeline). |
+| `UEnemyDefinition` | PrimaryDataAsset: BT, blackboard, movement mode class, `bAutoPursueTarget`, optional `AutoAttackAbilityId`, abilities, perception/aggro params, health, squad role |
+| `UEnemyMovementComponent` + modes | Abstract `UEnemyMovementMode`; concrete: Flying (approach/orbit/dive-bomb thrusters, plus a definition-selected projectile-escort cycle: catch a target's flank, match its velocity for a firing window, volley, then circle once), Floating, Crawling, Burrowing, **Stationary** (no translation). Combat focus actor drives flyer pathing (not a beeline). |
 | `UEnemyAbility` / `UEnemyAbilityLoadout` / `UEnemyAbilityComponent` | Lightweight ability system |
 | `UAggroComponent` / `UEnemyHealthComponent` | Threat table / HP (turret death FX/explosion via health component) |
 | `AEnemySpawner` | Spawn from definition; optional pooling; squad id |
