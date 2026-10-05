@@ -132,6 +132,7 @@ All paths below are under `Source/Unduinocpp/` unless noted.
 | `UHoverThrusterComponent` | SceneComponent | Hover lift via ground traces; runtime `HoverHeightOffset` for attitude shaping; thruster hitpoints / health states; sputter malfunctions; replicated hitpoints |
 | `UHoverMovementComponent` | ActorComponent | Throttle/steering/strafe input; applies physics thrust/yaw torque; turn-bank via differential thruster height bias; hold-to-boost energy pool (`SetBoostInput`); auto-registers thrusters |
 | `UDualJoystickTankInputComponent` | ActorComponent | Optional dual DirectInput sticks (e.g. two Logitech Attack 3) via Windows Joy0/Joy1; tank-drive left/right side thrust + averaged Strafe into `UHoverMovementComponent`; bypasses Gamepad merging for identical USB devices |
+| Flanking raider configuration on `AEnemyPawn` | Enemy Pawn setup | Adds a 2× box physics root matching the player hovercraft body proportions, plus the player hover movement component and four ground-tracing thrusters; flight-mode goals become throttle/steering inputs while the body simulates physics |
 
 Class groups: `Vehicle`. Designed for analog hardware (pedals, wheels, dual joysticks) and digital keyboard input.
 
@@ -181,8 +182,8 @@ Folder: `Source/Unduinocpp/AI/` (+ `AI/BT/`).
 | `AEnemyPawn` | Capsule + mesh + Health / Movement / Ability / Aggro components; `UEnemyDefinition`; squad id/role (replicated) |
 | `AEnemyTurretPawn` | Stationary emplacement subclass of `AEnemyPawn`; preserves `DamageCollider` hit volume; drives `UStationaryTurretComponent` from Enemy AI targets |
 | `AEnemyAIController` | Perception (sight), Behavior Tree, target policy, LOD tick intervals, synergy assignment helpers; `bAutoPursueTarget` from definition (false for turrets) |
-| `UEnemyDefinition` | PrimaryDataAsset: BT, blackboard, movement mode class, `bAutoPursueTarget`, optional `AutoAttackAbilityId`, abilities, perception/aggro params, health, squad role |
-| `UEnemyMovementComponent` + modes | Abstract `UEnemyMovementMode`; concrete: Flying (approach/orbit/dive-bomb thrusters, plus a definition-selected projectile-escort cycle: catch a target's flank, match its velocity for a firing window, volley, then circle once), Floating, Crawling, Burrowing, **Stationary** (no translation). Combat focus actor drives flyer pathing (not a beeline). |
+| `UEnemyDefinition` | PrimaryDataAsset: BT, blackboard, movement mode class, `bAutoPursueTarget`, optional `AutoAttackAbilityId`, abilities, perception/aggro params, health, squad role; optional flanking-raider settings enable alternating flank volleys with tunable side-switch pace and a configurable chance of a predictive ram. |
+| `UEnemyMovementComponent` + modes | Abstract `UEnemyMovementMode`; concrete: Flying (approach/orbit/dive-bomb thrusters, plus a definition-selected projectile-escort cycle: catch a target's flank, match its velocity for a firing window, then either catch up to the opposite flank or ram and return for another volley), Floating, Crawling, Burrowing, **Stationary** (no translation). Combat focus actor drives flyer pathing (not a beeline). |
 | `UEnemyAbility` / `UEnemyAbilityLoadout` / `UEnemyAbilityComponent` | Lightweight ability system |
 | `UAggroComponent` / `UEnemyHealthComponent` | Threat table / HP (turret death FX/explosion via health component) |
 | `AEnemySpawner` | Spawn from definition; optional pooling; squad id |

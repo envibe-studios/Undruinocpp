@@ -6,12 +6,15 @@
 #include "EnemyPawn.generated.h"
 
 class UCapsuleComponent;
+class UBoxComponent;
 class USkeletalMeshComponent;
 class UEnemyHealthComponent;
 class UEnemyMovementComponent;
 class UEnemyAbilityComponent;
 class UAggroComponent;
 class UEnemyDefinition;
+class UHoverMovementComponent;
+class UHoverThrusterComponent;
 
 UCLASS(Blueprintable)
 class UNDUINOCPP_API AEnemyPawn : public APawn
@@ -84,6 +87,15 @@ protected:
 
 	void ApplyDefaultTags();
 	virtual void ConfigureNonPhysicalCollision();
+	void ConfigureHoverRaiderPhysics();
+	UPROPERTY(Transient)
+	bool bHoverRaiderPhysicsConfigured = false;
+	UPROPERTY(Transient)
+	TObjectPtr<UHoverMovementComponent> HoverRaiderMovement;
+	UPROPERTY(Transient)
+	TObjectPtr<UBoxComponent> HoverRaiderPhysicsRoot;
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UHoverThrusterComponent>> HoverRaiderThrusters;
 
 	FVector HomeLocation = FVector::ZeroVector;
 

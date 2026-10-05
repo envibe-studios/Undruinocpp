@@ -6,7 +6,10 @@
 #include "AI/AggroComponent.h"
 #include "AI/EnemyAIController.h"
 #include "AI/FlyingMovementMode.h"
+#include "HoverMovementComponent.h"
+#include "HoverThrusterComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/BoxComponent.h"
 #include "Components/PrimitiveComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/World.h"
@@ -67,6 +70,11 @@ void AEnemyPawn::BeginPlay()
 
 void AEnemyPawn::ConfigureNonPhysicalCollision()
 {
+	if (bHoverRaiderPhysicsConfigured)
+	{
+		return;
+	}
+
 	if (!bDisablePhysicalShipCollision)
 	{
 		return;
@@ -125,6 +133,10 @@ void AEnemyPawn::ApplyDefinition(UEnemyDefinition* Definition)
 	}
 
 	EnemyDefinition = Definition;
+	if (Definition->bEnableFlankingRaiderBehavior)
+	{
+		ConfigureHoverRaiderPhysics();
+	}
 
 	if (HealthComponent)
 	{
@@ -161,6 +173,75 @@ void AEnemyPawn::ApplyDefinition(UEnemyDefinition* Definition)
 	{
 		AIC->InitializeFromDefinition(Definition);
 	}
+}
+
+void AEnemyPawn::ConfigureHoverRaiderPhysics()
+{
+	if (bHoverRaiderPhysicsConfigured || !CapsuleComponent || !RootComponent)
+	{
+		return;
+	}
+
+	// Keep the hover supports under the hull, matching BP_Hovercraft's PhysicsRoot box.
+	SetActorScale3D(GetActorScale3D() * 2.0f);
+	const FTransform PreviousRootTransform = RootComponent->GetComponentTransform();
+	HoverRaiderPhysicsRoot = NewObject<UBoxComponent>(this, TEXT("RaiderPhysicsRoot"));
+	AddInstanceComponent(HoverRaiderPhysicsRoot);
+	HoverRaiderPhysicsRoot->SetBoxExtent(FVector(137.5f, 50.0f, 50.0f));
+	HoverRaiderPhysicsRoot->SetCollisionProfileName(TEXT("PhysicsActor"));
+	HoverRaiderPhysicsRoot->SetWorldTransform(PreviousRootTransform);
+	SetRootComponent(HoverRaiderPhysicsRoot);
+	HoverRaiderPhysicsRoot->RegisterComponent();
+	CapsuleComponent->AttachToComponent(HoverRaiderPhysicsRoot, FAttachmentTransformRules::KeepWorldTransform);
+	CapsuleComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	// The flanking raider uses the same four ground-tracing hover springs as BP_Hovercraft.
+	HoverRaiderMovement = NewObject<UHoverMovementComponent>(this, TEXT("RaiderHoverMovement"));
+	AddInstanceComponent(HoverRaiderMovement);
+	HoverRaiderMovement->MaxForwardThrust = 1200000.0f;
+	HoverRaiderMovement->MaxBackwardThrust = 600000.0f;
+	HoverRaiderMovement->ThrustAcceleration = 12000.0f;
+	HoverRaiderMovement->ThrustDeceleration = 10000.0f;
+	HoverRaiderMovement->LinearDrag = 800.0f;
+	HoverRaiderMovement->MaxTurnTorque = 15000000.0f;
+	HoverRaiderMovement->bEnableStrafe = false;
+	HoverRaiderMovement->bEnableBoost = false;
+
+	const TCHAR* ThrusterNames[] = { TEXT("Thruster_FL"), TEXT("Thruster_FR"), TEXT("Thruster_RL"), TEXT("Thruster_RR") };
+	const FVector ThrusterLocations[] = {
+		FVector(135.0f, -50.0f, -50.0f), FVector(135.0f, 50.0f, -50.0f),
+		FVector(-135.0f, -50.0f, -50.0f), FVector(-135.0f, 50.0f, -50.0f)
+	};
+	for (int32 Index = 0; Index < UE_ARRAY_COUNT(ThrusterNames); ++Index)
+	{
+		UHoverThrusterComponent* Thruster = NewObject<UHoverThrusterComponent>(this, ThrusterNames[Index]);
+		AddInstanceComponent(Thruster);
+		Thruster->SetupAttachment(RootComponent);
+		Thruster->SetRelativeLocation(ThrusterLocations[Index]);
+		Thruster->HoverHeight = 75.0f;
+		Thruster->MaxHoverForce = 500000.0f;
+		Thruster->HoverStiffness = 5000.0f;
+		Thruster->HoverDamping = 1000.0f;
+		Thruster->RegisterComponent();
+		HoverRaiderMovement->RegisterThruster(Thruster);
+		HoverRaiderThrusters.Add(Thruster);
+	}
+	// Register the movement component after its supports are configured.
+	HoverRaiderMovement->RegisterComponent();
+
+	HoverRaiderPhysicsRoot->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	HoverRaiderPhysicsRoot->SetNotifyRigidBodyCollision(true);
+	HoverRaiderPhysicsRoot->SetSimulatePhysics(true);
+	HoverRaiderPhysicsRoot->SetEnableGravity(true);
+	HoverRaiderPhysicsRoot->SetLinearDamping(0.5f);
+	HoverRaiderPhysicsRoot->SetAngularDamping(2.0f);
+	HoverRaiderPhysicsRoot->SetMassOverrideInKg(NAME_None, 800.0f, true);
+	HoverRaiderPhysicsRoot->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
+	HoverRaiderPhysicsRoot->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Block);
+	HoverRaiderPhysicsRoot->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	HoverRaiderPhysicsRoot->SetCollisionResponseToChannel(ECC_Vehicle, ECR_Block);
+	HoverRaiderPhysicsRoot->SetCollisionResponseToChannel(ECC_PhysicsBody, ECR_Block);
+	bHoverRaiderPhysicsConfigured = true;
 }
 
 AActor* AEnemyPawn::FindNearestAlly(float MaxRange) const

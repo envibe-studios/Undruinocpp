@@ -62,6 +62,25 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy|Abilities")
 	FName AutoAttackAbilityId = NAME_None;
 
+	/** Enables the flyer flank / volley loop with a chance to ram after each volley. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy|Behavior|Raider")
+	bool bEnableFlankingRaiderBehavior = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy|Behavior|Raider", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float FlankingRamChance = 0.3f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy|Behavior|Raider", meta = (ClampMin = "0.0"))
+	float FlankingRamDamage = 35.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy|Behavior|Raider", meta = (ClampMin = "50.0"))
+	float FlankingRamHitRadius = 300.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy|Behavior|Raider", meta = (ClampMin = "1.0"))
+	float FlankingRamSpeedMultiplier = 1.8f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy|Behavior|Raider", meta = (ClampMin = "0.1", ClampMax = "1.0"))
+	float FlankingRepositionSpeedMultiplier = 0.7f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy|Perception")
 	FEnemyPerceptionParams PerceptionParams;
 

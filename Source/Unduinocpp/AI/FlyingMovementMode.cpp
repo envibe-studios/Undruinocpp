@@ -3,6 +3,7 @@
 #include "AI/EnemyDefinition.h"
 #include "AI/EnemyPawn.h"
 #include "HoverThrusterComponent.h"
+#include "HoverMovementComponent.h"
 #include "Components/PrimitiveComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/World.h"
@@ -91,6 +92,12 @@ bool UFlyingMovementMode::UsesSidecarAttackCycle() const
         return Definition && !Definition->AutoAttackAbilityId.IsNone();
 }
 
+bool UFlyingMovementMode::UsesFlankingRaiderBehavior() const
+{
+	const UEnemyDefinition* Definition = OwnerPawn ? OwnerPawn->GetEnemyDefinition() : nullptr;
+	return Definition && Definition->bEnableFlankingRaiderBehavior;
+}
+
 FVector UFlyingMovementMode::SteerToward(const FVector& DesiredWorldPoint, float Speed) const
 {
 	if (!OwnerPawn)
@@ -163,6 +170,11 @@ void UFlyingMovementMode::FaceVelocity(float DeltaTime, const FVector& Velocity)
 
 	const FRotator Current = OwnerPawn->GetActorRotation();
 	const FRotator Desired = Velocity.GetSafeNormal().Rotation();
+	if (OwnerPawn->FindComponentByClass<UHoverMovementComponent>())
+	{
+		// MoveOwnerToward already steers the physics craft toward its requested heading.
+		return;
+	}
 	const FRotator NewRot = FMath::RInterpConstantTo(Current, Desired, DeltaTime, Params.TurnRateDegPerSec);
 	OwnerPawn->SetActorRotation(NewRot);
 }
@@ -419,8 +431,74 @@ void UFlyingMovementMode::TickProjectileVolley(float DeltaTime)
 
         if (PhaseElapsedSeconds >= ProjectileBurstSeconds)
         {
-                EnterPhase(EEnemyFlyingCombatPhase::Circle);
+                if (UsesFlankingRaiderBehavior())
+                {
+			const UEnemyDefinition* Definition = OwnerPawn->GetEnemyDefinition();
+			if (FMath::FRand() < Definition->FlankingRamChance)
+			{
+				EnterPhase(EEnemyFlyingCombatPhase::Ram);
+			}
+			else
+			{
+				OrbitDirection *= -1.0f;
+				EnterPhase(EEnemyFlyingCombatPhase::Reposition);
+			}
+                }
+                else
+                {
+                        EnterPhase(EEnemyFlyingCombatPhase::Circle);
+                }
         }
+}
+
+void UFlyingMovementMode::TickReposition(float DeltaTime)
+{
+	const FVector SidePoint = GetSidePosition();
+	const UEnemyDefinition* Definition = OwnerPawn ? OwnerPawn->GetEnemyDefinition() : nullptr;
+	const float PaceMultiplier = Definition ? Definition->FlankingRepositionSpeedMultiplier : 0.7f;
+	FVector CorrectionVelocity = (SidePoint - OwnerPawn->GetActorLocation()) * 2.0f;
+	CorrectionVelocity = CorrectionVelocity.GetClampedToMaxSize(Params.MaxSpeed * 0.8f);
+	const FVector DesiredVelocity = GetTargetVelocity() * PaceMultiplier + CorrectionVelocity;
+	MoveOwnerToward(DeltaTime, DesiredVelocity, false);
+	FaceVelocity(DeltaTime, CurrentVelocity);
+	PhaseElapsedSeconds += DeltaTime;
+	if (FVector::Dist(OwnerPawn->GetActorLocation(), SidePoint) <= 500.0f && PhaseElapsedSeconds >= 0.5f)
+	{
+		EnterPhase(EEnemyFlyingCombatPhase::Escort);
+	}
+}
+
+void UFlyingMovementMode::TickRam(float DeltaTime)
+{
+	AActor* Target = FocusActor.Get();
+	const UEnemyDefinition* Definition = OwnerPawn ? OwnerPawn->GetEnemyDefinition() : nullptr;
+	if (!OwnerPawn || !Target || !Definition)
+	{
+		EnterPhase(EEnemyFlyingCombatPhase::Approach);
+		return;
+	}
+
+	PhaseElapsedSeconds += DeltaTime;
+	const FVector AimPoint = Target->GetActorLocation() + Target->GetVelocity() * 0.35f + FVector(0.0f, 0.0f, Params.PreferredAltitude * 0.35f);
+	const FVector ToTarget = AimPoint - OwnerPawn->GetActorLocation();
+	const float Distance = ToTarget.Size();
+	const float RamSpeed = Params.MaxSpeed * Definition->FlankingRamSpeedMultiplier;
+	MoveOwnerToward(DeltaTime, SteerToward(AimPoint, RamSpeed), false);
+	FaceVelocity(DeltaTime, CurrentVelocity);
+
+	const bool bPassedTarget = FVector::DotProduct(CurrentVelocity.GetSafeNormal(), ToTarget.GetSafeNormal()) < 0.0f;
+	const bool bReachedTarget = Distance <= Definition->FlankingRamHitRadius;
+	if (bReachedTarget)
+	{
+		UGameplayStatics::ApplyDamage(Target, Definition->FlankingRamDamage, OwnerPawn->GetController(), OwnerPawn, nullptr);
+		ApplySoftDiveNudge(Target);
+	}
+
+	if (bReachedTarget || (bPassedTarget && Distance <= Definition->FlankingRamHitRadius * 2.0f) || PhaseElapsedSeconds >= 3.0f)
+	{
+		OrbitDirection *= -1.0f;
+		EnterPhase(EEnemyFlyingCombatPhase::Reposition);
+	}
 }
 
 void UFlyingMovementMode::TickCircle(float DeltaTime)
@@ -548,6 +626,12 @@ void UFlyingMovementMode::TickMovement(float DeltaTime)
         case EEnemyFlyingCombatPhase::Circle:
                 TickCircle(DeltaTime);
                 break;
+	case EEnemyFlyingCombatPhase::Reposition:
+		TickReposition(DeltaTime);
+		break;
+	case EEnemyFlyingCombatPhase::Ram:
+		TickRam(DeltaTime);
+		break;
         }
 
 	if (bDrawFlightDebug || (OwnerPawn && OwnerPawn->bDrawDebug))

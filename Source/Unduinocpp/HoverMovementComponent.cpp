@@ -98,9 +98,20 @@ void UHoverMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType
 	// Update smoothed input values
 	UpdateInputSmoothing(DeltaTime);
 
-	UpdateBoost(DeltaTime);
+        UpdateBoost(DeltaTime);
 
-	// Apply forces
+        // Thrusters only calculate hover force when explicitly asked. Their own
+        // component tick handles health/malfunctions, so apply each spring here
+        // every frame before movement torque is computed.
+        for (UHoverThrusterComponent* Thruster : RegisteredThrusters)
+        {
+                if (Thruster)
+                {
+                        Thruster->ApplyHoverForce(DeltaTime);
+                }
+        }
+
+        // Apply forces
 	if (bExternalTankActive)
 	{
 		ApplyDifferentialTankThrust(DeltaTime);

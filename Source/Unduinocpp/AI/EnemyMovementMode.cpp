@@ -1,6 +1,8 @@
 #include "AI/EnemyMovementMode.h"
 #include "AI/EnemyPawn.h"
 #include "AI/EnemyMovementComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "HoverMovementComponent.h"
 
 void UEnemyMovementMode::Initialize(AEnemyPawn* InOwner, UEnemyMovementComponent* InMovement)
 {
@@ -34,6 +36,14 @@ void UEnemyMovementMode::StopMovement()
 	bHasFlockOffset = false;
 	FlockOffset = FVector::ZeroVector;
 	CurrentVelocity = FVector::ZeroVector;
+	if (OwnerPawn)
+	{
+		if (UHoverMovementComponent* HoverMovement = OwnerPawn->FindComponentByClass<UHoverMovementComponent>())
+		{
+			HoverMovement->SetThrottleInput(0.0f);
+			HoverMovement->SetSteeringInput(0.0f);
+		}
+	}
 }
 
 bool UEnemyMovementMode::MoveToLocation(const FVector& WorldLocation, float AcceptanceRadiusOverride)
@@ -113,6 +123,12 @@ void UEnemyMovementMode::FaceDirection(float DeltaTime, const FVector& WorldDire
 
 	const FRotator Current = OwnerPawn->GetActorRotation();
 	const FRotator Desired = FlatDir.Rotation();
+	if (UHoverMovementComponent* HoverMovement = OwnerPawn->FindComponentByClass<UHoverMovementComponent>())
+	{
+		const float YawError = FMath::FindDeltaAngleDegrees(Current.Yaw, Desired.Yaw);
+		HoverMovement->SetSteeringInput(FMath::Clamp(YawError / 45.0f, -1.0f, 1.0f));
+		return;
+	}
 	const FRotator NewRot = FMath::RInterpConstantTo(Current, Desired, DeltaTime, Params.TurnRateDegPerSec);
 	OwnerPawn->SetActorRotation(NewRot);
 }
@@ -125,6 +141,24 @@ void UEnemyMovementMode::MoveOwnerToward(float DeltaTime, const FVector& Desired
 	}
 
 	CurrentVelocity = FMath::VInterpConstantTo(CurrentVelocity, DesiredVelocity, DeltaTime, Params.Acceleration);
+	if (UHoverMovementComponent* HoverMovement = OwnerPawn->FindComponentByClass<UHoverMovementComponent>())
+	{
+		const FVector Forward = OwnerPawn->GetActorForwardVector().GetSafeNormal2D();
+		const FVector DesiredDirection = DesiredVelocity.GetSafeNormal2D();
+		const float Alignment = FVector::DotProduct(Forward, DesiredDirection);
+		const float RequestedSpeed = DesiredVelocity.Size2D();
+		const float Throttle = RequestedSpeed < 5.0f
+			? 0.0f
+			: FMath::Clamp(RequestedSpeed / FMath::Max(Params.MaxSpeed, 1.0f), 0.0f, 1.0f)
+				* (Alignment < -0.5f ? -1.0f : FMath::Max(0.0f, Alignment));
+		HoverMovement->SetThrottleInput(Throttle);
+		CurrentVelocity = OwnerPawn->GetVelocity();
+		if (!DesiredDirection.IsNearlyZero())
+		{
+			FaceDirection(DeltaTime, DesiredDirection);
+		}
+		return;
+	}
 
 	const FVector NewLoc = OwnerPawn->GetActorLocation() + CurrentVelocity * DeltaTime;
 

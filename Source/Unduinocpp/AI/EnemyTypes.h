@@ -46,7 +46,9 @@ enum class EEnemyFlyingCombatPhase : uint8
 	PullUp		UMETA(DisplayName = "Pull Up"),
 	Escort		UMETA(DisplayName = "Escort Alongside"),
 	Fire		UMETA(DisplayName = "Fire Projectile Volley"),
-	Circle		UMETA(DisplayName = "Circle Target")
+	Circle		UMETA(DisplayName = "Circle Target"),
+	Reposition	UMETA(DisplayName = "Switch Flanking Side"),
+	Ram			UMETA(DisplayName = "Ram Target")
 };
 
 /** Squad / synergy role tags used by the future coordinator. */

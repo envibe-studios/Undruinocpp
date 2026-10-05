@@ -102,6 +102,7 @@ protected:
 	FVector GetFocusLocation() const;
 	bool HasValidFocus() const;
 	bool UsesSidecarAttackCycle() const;
+	bool UsesFlankingRaiderBehavior() const;
 	void PickDiveTarget();
 	void TryApplyDiveDamage();
 	void ApplySoftDiveNudge(AActor* Ship) const;
@@ -115,6 +116,8 @@ protected:
 	void TickEscort(float DeltaTime);
 	void TickProjectileVolley(float DeltaTime);
 	void TickCircle(float DeltaTime);
+	void TickReposition(float DeltaTime);
+	void TickRam(float DeltaTime);
 	void TickDive(float DeltaTime);
 	void TickPullUp(float DeltaTime);
 	void EnterPhase(EEnemyFlyingCombatPhase NewPhase);
