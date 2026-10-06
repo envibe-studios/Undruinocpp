@@ -88,7 +88,7 @@ Meaningful architectural debt only.
 | **Stale root docs** | `CLAUDE.md` / `README` still mention UE 5.7; project targets **5.8**. Prefer `.uproject` + `PROJECT_ARCHITECTURE.md`. *(verified)* |
 | **Asset Manager path mismatch** | `DefaultGame.ini` still scans `/Game/Maps` while levels live under `/Game/Level`. Do not assume auto-discovery of mission/enemy Primary Data Assets from INI alone. *(verified)* |
 | **Placeholder C++ stubs** | `MyClass` / `MyClass2` are unused stubs. Safe to ignore or delete when convenient. *(verified)* |
-| **ScreenBridge plugin stub** | Marketplace multi-window plugin present; module startup is empty in checkout; 5.8 upgrade historically painful. Prefer project `UMultiDisplayCameraComponent` for bridge monitors unless ScreenBridge is intentionally revived. *(verified architecture + inferred preference)* |
+| **ScreenBridge plugin** | Marketplace multi-window plugin source tracks created windows by world, closes them during world cleanup/shutdown, and exposes Blueprint placement by monitor index. Compile/runtime verification is pending. |
 | **BP enum mirrors of C++ AI enums** | Content `E_*` assets can drift from `EEnemy*` sources of truth. Revisit when AI Content stabilizes. *(verified risk)* |
 
 ---

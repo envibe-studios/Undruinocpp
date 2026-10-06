@@ -89,7 +89,7 @@ Implication for agents: changes to weapon/firing types in the game module can af
 |--------|------|----------------------------------|
 | **ArduinoCommunication** | Runtime | Serial/TCP Arduino/ESP communication; Andy serial hub; ship hardware input; diagnostics UI helpers; multi-display camera component |
 | **UnrealMCP** | Editor | Model Context Protocol bridge for Unreal Editor (TCP JSON commands). Depends on EditorScriptingUtilities |
-| **ScreenBridge** | Runtime (Win64) | Multi-window / multi-screen experiences (Fab product). Module startup/shutdown is empty in the checked-in stub |
+| **ScreenBridge** | Runtime (Win64) | Multi-window / multi-screen experiences (Fab product). Provides Blueprint monitor-index placement for created windows and closes windows by creating world during world cleanup and module shutdown. |
 
 ### 5.2 Other plugins listed in `.uproject`
 
