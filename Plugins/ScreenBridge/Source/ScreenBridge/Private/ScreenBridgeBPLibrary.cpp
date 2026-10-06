@@ -97,6 +97,43 @@ void UScreenBridgeBPLibrary::SetWindowSize(int32 WindowId, FVector2D NewSize)
 	}
 }
 
+bool UScreenBridgeBPLibrary::MoveWindowToDisplay(int32 WindowId, int32 DisplayIndex, bool bFillDisplay)
+{
+	if (!FSlateApplication::IsInitialized())
+	{
+		return false;
+	}
+
+	FScreenBridgeWindow* Entry = GScreenBridgeWindows.Find(WindowId);
+	if (!Entry || !Entry->Window.IsValid())
+	{
+		return false;
+	}
+
+	FDisplayMetrics DisplayMetrics;
+	FSlateApplication::Get().GetDisplayMetrics(DisplayMetrics);
+	if (!DisplayMetrics.MonitorInfo.IsValidIndex(DisplayIndex))
+	{
+		return false;
+	}
+
+	const FMonitorInfo& Monitor = DisplayMetrics.MonitorInfo[DisplayIndex];
+	Entry->Window->MoveWindowTo(FVector2D(Monitor.DisplayRect.Left, Monitor.DisplayRect.Top));
+
+	if (bFillDisplay)
+	{
+		const int32 Width = Monitor.DisplayRect.Right - Monitor.DisplayRect.Left;
+		const int32 Height = Monitor.DisplayRect.Bottom - Monitor.DisplayRect.Top;
+		if (Width <= 0 || Height <= 0)
+		{
+			return false;
+		}
+		Entry->Window->Resize(FVector2D(Width, Height));
+	}
+
+	return true;
+}
+
 void UScreenBridgeBPLibrary::CloseWindowsForWorld(const UWorld* World)
 {
 	if (!World) return;

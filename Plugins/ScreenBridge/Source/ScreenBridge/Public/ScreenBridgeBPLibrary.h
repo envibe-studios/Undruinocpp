@@ -26,6 +26,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ScreenBridge")
 	static void SetWindowSize(int32 WindowId, FVector2D NewSize);
 
+	/** Moves a created window to a monitor by its Slate display index. */
+	UFUNCTION(BlueprintCallable, Category = "ScreenBridge")
+	static bool MoveWindowToDisplay(int32 WindowId, int32 DisplayIndex, bool bFillDisplay);
+
 	/** Closes windows created by this library for the specified world. */
 	static void CloseWindowsForWorld(const UWorld* World);
 
