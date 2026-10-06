@@ -8,6 +8,7 @@
 class UEnemyAbility;
 class UEnemyAbilityLoadout;
 class AEnemyPawn;
+class UHoverThrusterComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEnemyAbilityActivated, FName, AbilityId, AActor*, Target);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEnemyAbilityFailed, FName, AbilityId);
@@ -56,6 +57,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Enemy|Abilities")
 	bool ActivateAbility(FName AbilityId, AActor* OptionalTarget = nullptr);
 
+	/** Keep one living target part selected per actor until it is destroyed. */
+	UFUNCTION(BlueprintCallable, Category = "Enemy|Abilities|Targeting")
+	UHoverThrusterComponent* GetOrChooseDamageTarget(AActor* Target);
+
+	UFUNCTION(BlueprintPure, Category = "Enemy|Abilities|Targeting")
+	UHoverThrusterComponent* GetSelectedDamageTarget(AActor* Target) const;
+
 	UFUNCTION(BlueprintPure, Category = "Enemy|Abilities")
 	float GetCooldownRemaining(FName AbilityId) const;
 
@@ -77,6 +85,12 @@ protected:
 
 	UPROPERTY(Transient)
 	TObjectPtr<AEnemyPawn> OwnerEnemy = nullptr;
+
+	UPROPERTY(Transient)
+	TWeakObjectPtr<AActor> DamageTargetActor;
+
+	UPROPERTY(Transient)
+	TWeakObjectPtr<UHoverThrusterComponent> DamageTargetComponent;
 
 	float CooldownScale = 1.0f;
 };

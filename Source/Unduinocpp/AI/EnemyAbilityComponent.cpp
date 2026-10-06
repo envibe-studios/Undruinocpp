@@ -1,10 +1,12 @@
 #include "AI/EnemyAbilityComponent.h"
 #include "AI/EnemyAbility.h"
+#include "HoverThrusterComponent.h"
 #include "AI/EnemyPawn.h"
 #include "AI/EnemyHealthComponent.h"
 #include "AI/EnemyAIController.h"
 #include "AI/EnemyMovementComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Components/PrimitiveComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
@@ -182,6 +184,51 @@ bool UEnemyAbilityComponent::CanActivateAbility(FName AbilityId, AActor* Optiona
 	return Dist >= Rt->Definition->MinRange && Dist <= Rt->Definition->MaxRange;
 }
 
+UHoverThrusterComponent* UEnemyAbilityComponent::GetOrChooseDamageTarget(AActor* Target)
+{
+	if (!Target)
+	{
+		DamageTargetActor.Reset();
+		DamageTargetComponent.Reset();
+		return nullptr;
+	}
+
+	if (DamageTargetActor.Get() != Target)
+	{
+		DamageTargetActor = Target;
+		DamageTargetComponent.Reset();
+	}
+
+	if (UHoverThrusterComponent* Existing = DamageTargetComponent.Get())
+	{
+		if (Existing->GetOwner() == Target && Existing->IsThrusterEnabled() && !Existing->IsDestroyed())
+		{
+			return Existing;
+		}
+	}
+
+	DamageTargetComponent.Reset();
+	TArray<UHoverThrusterComponent*> Thrusters;
+	Target->GetComponents<UHoverThrusterComponent>(Thrusters);
+	Thrusters.RemoveAll([](const UHoverThrusterComponent* Thruster)
+	{
+		return !Thruster || !Thruster->IsThrusterEnabled() || Thruster->IsDestroyed();
+	});
+
+	if (Thrusters.IsEmpty())
+	{
+		return nullptr;
+	}
+
+	DamageTargetComponent = Thrusters[FMath::RandRange(0, Thrusters.Num() - 1)];
+	return DamageTargetComponent.Get();
+}
+
+UHoverThrusterComponent* UEnemyAbilityComponent::GetSelectedDamageTarget(AActor* Target) const
+{
+	return DamageTargetActor.Get() == Target ? DamageTargetComponent.Get() : nullptr;
+}
+
 bool UEnemyAbilityComponent::ApplyEffect(const UEnemyAbility* Ability, AActor* Target)
 {
 	if (!Ability || !OwnerEnemy)
@@ -195,25 +242,45 @@ bool UEnemyAbilityComponent::ApplyEffect(const UEnemyAbility* Ability, AActor* T
 		return false;
 	}
 
+	UHoverThrusterComponent* PartTarget = nullptr;
+	if (Ability->EffectType == EEnemyAbilityEffectType::SpawnProjectile ||
+		Ability->EffectType == EEnemyAbilityEffectType::Damage)
+	{
+		PartTarget = GetOrChooseDamageTarget(Target);
+	}
+
 	switch (Ability->EffectType)
 	{
 	case EEnemyAbilityEffectType::SpawnProjectile:
 	{
 		if (!Ability->ProjectileClass)
 		{
-			// Hitscan fallback damage
-			if (Target)
-			{
-				UGameplayStatics::ApplyDamage(Target, Ability->Magnitude, OwnerEnemy->GetController(), OwnerEnemy, nullptr);
-			}
+				// Hitscan fallback damages the selected part when the target has one.
+				if (Target)
+				{
+					if (PartTarget)
+					{
+						PartTarget->ApplyDamage(Ability->Magnitude);
+					}
+					else
+					{
+						UGameplayStatics::ApplyDamage(Target, Ability->Magnitude, OwnerEnemy->GetController(), OwnerEnemy, nullptr);
+					}
+				}
 			return true;
 		}
 
 		const FVector SpawnLoc = OwnerEnemy->GetActorLocation() + OwnerEnemy->GetActorForwardVector() * 80.0f;
 		FVector Aim = OwnerEnemy->GetActorForwardVector();
-		if (Target)
+		if (PartTarget)
 		{
-			Aim = (Target->GetActorLocation() - SpawnLoc).GetSafeNormal();
+			const FVector PartLocation = PartTarget->GetComponentLocation();
+			const float FlightTime = FVector::Dist(SpawnLoc, PartLocation) / FMath::Max(Ability->ProjectileSpeed, 1.0f);
+			Aim = (PartLocation + Target->GetVelocity() * FlightTime - SpawnLoc).GetSafeNormal();
+			}
+			else if (Target)
+			{
+				Aim = (Target->GetActorLocation() - SpawnLoc).GetSafeNormal();
 		}
 		const FRotator SpawnRot = Aim.Rotation();
 		FActorSpawnParameters SpawnParams;
@@ -225,6 +292,12 @@ bool UEnemyAbilityComponent::ApplyEffect(const UEnemyAbility* Ability, AActor* T
 		{
 			if (UProjectileMovementComponent* PMC = Proj->FindComponentByClass<UProjectileMovementComponent>())
 			{
+				// Explicitly use the projectile's collision root so swept movement can
+				// generate overlaps against the hovercraft's damage hitboxes.
+				if (UPrimitiveComponent* CollisionRoot = Cast<UPrimitiveComponent>(Proj->GetRootComponent()))
+				{
+					PMC->SetUpdatedComponent(CollisionRoot);
+				}
 				PMC->Velocity = Aim * Ability->ProjectileSpeed;
 				PMC->InitialSpeed = Ability->ProjectileSpeed;
 			}
@@ -235,7 +308,14 @@ bool UEnemyAbilityComponent::ApplyEffect(const UEnemyAbility* Ability, AActor* T
 	case EEnemyAbilityEffectType::Damage:
 		if (Target)
 		{
-			UGameplayStatics::ApplyDamage(Target, Ability->Magnitude, OwnerEnemy->GetController(), OwnerEnemy, nullptr);
+			if (PartTarget)
+			{
+				PartTarget->ApplyDamage(Ability->Magnitude);
+			}
+			else
+			{
+				UGameplayStatics::ApplyDamage(Target, Ability->Magnitude, OwnerEnemy->GetController(), OwnerEnemy, nullptr);
+			}
 			return true;
 		}
 		return false;

@@ -191,10 +191,14 @@ void UFlyingMovementMode::EnterPhase(EEnemyFlyingCombatPhase NewPhase)
                 CircleAngleTravelled = 0.0f;
         }
         if (NewPhase == EEnemyFlyingCombatPhase::Dive)
-	{
-		ClosestDiveDistance = TNumericLimits<float>::Max();
-		bDiveDamageApplied = false;
-	}
+        {
+                ClosestDiveDistance = TNumericLimits<float>::Max();
+                bDiveDamageApplied = false;
+        }
+        if (NewPhase == EEnemyFlyingCombatPhase::Fire && OwnerPawn && OwnerPawn->AbilityComponent)
+        {
+                OwnerPawn->AbilityComponent->GetOrChooseDamageTarget(FocusActor.Get());
+        }
 }
 
 void UFlyingMovementMode::PickDiveTarget()
@@ -202,20 +206,30 @@ void UFlyingMovementMode::PickDiveTarget()
 	DiveThruster.Reset();
 	DiveAimPoint = GetFocusLocation();
 
-	AActor* Focus = FocusActor.Get();
-	if (!Focus)
-	{
-		return;
-	}
+        AActor* Focus = FocusActor.Get();
+        if (!Focus)
+        {
+                return;
+        }
 
-	TArray<UHoverThrusterComponent*> Thrusters;
+        if (OwnerPawn && OwnerPawn->AbilityComponent)
+        {
+                if (UHoverThrusterComponent* Selected = OwnerPawn->AbilityComponent->GetOrChooseDamageTarget(Focus))
+                {
+                        DiveThruster = Selected;
+                        DiveAimPoint = Selected->GetComponentLocation();
+                        return;
+                }
+        }
+
+        TArray<UHoverThrusterComponent*> Thrusters;
 	Focus->GetComponents<UHoverThrusterComponent>(Thrusters);
 
 	TArray<UHoverThrusterComponent*> Candidates;
 	Candidates.Reserve(Thrusters.Num());
 	for (UHoverThrusterComponent* Thruster : Thrusters)
 	{
-		if (Thruster && !Thruster->IsDestroyed())
+                if (Thruster && Thruster->IsThrusterEnabled() && !Thruster->IsDestroyed())
 		{
 			Candidates.Add(Thruster);
 		}
@@ -415,6 +429,24 @@ void UFlyingMovementMode::TickEscort(float DeltaTime)
 
 void UFlyingMovementMode::TickProjectileVolley(float DeltaTime)
 {
+        AActor* Focus = FocusActor.Get();
+        TArray<UHoverThrusterComponent*> FocusThrusters;
+        if (Focus)
+        {
+                Focus->GetComponents<UHoverThrusterComponent>(FocusThrusters);
+        }
+        UHoverThrusterComponent* TargetThruster = OwnerPawn && OwnerPawn->AbilityComponent
+                ? OwnerPawn->AbilityComponent->GetSelectedDamageTarget(Focus)
+                : nullptr;
+        if (!FocusThrusters.IsEmpty() &&
+                (!TargetThruster || !TargetThruster->IsThrusterEnabled() || TargetThruster->IsDestroyed()))
+        {
+                // A volley ends as soon as its selected part is destroyed.
+                // The next fire phase will choose another active part.
+                FinishProjectileVolley();
+                return;
+        }
+
         MoveAlongside(DeltaTime, GetSidePosition());
         PhaseElapsedSeconds += DeltaTime;
         TimeUntilNextProjectile -= DeltaTime;
@@ -431,23 +463,28 @@ void UFlyingMovementMode::TickProjectileVolley(float DeltaTime)
 
         if (PhaseElapsedSeconds >= ProjectileBurstSeconds)
         {
-                if (UsesFlankingRaiderBehavior())
+                FinishProjectileVolley();
+        }
+}
+
+void UFlyingMovementMode::FinishProjectileVolley()
+{
+        if (UsesFlankingRaiderBehavior())
+        {
+                const UEnemyDefinition* Definition = OwnerPawn ? OwnerPawn->GetEnemyDefinition() : nullptr;
+                if (Definition && FMath::FRand() < Definition->FlankingRamChance)
                 {
-			const UEnemyDefinition* Definition = OwnerPawn->GetEnemyDefinition();
-			if (FMath::FRand() < Definition->FlankingRamChance)
-			{
-				EnterPhase(EEnemyFlyingCombatPhase::Ram);
-			}
-			else
-			{
-				OrbitDirection *= -1.0f;
-				EnterPhase(EEnemyFlyingCombatPhase::Reposition);
-			}
+                        EnterPhase(EEnemyFlyingCombatPhase::Ram);
                 }
                 else
                 {
-                        EnterPhase(EEnemyFlyingCombatPhase::Circle);
+                        OrbitDirection *= -1.0f;
+                        EnterPhase(EEnemyFlyingCombatPhase::Reposition);
                 }
+        }
+        else
+        {
+                EnterPhase(EEnemyFlyingCombatPhase::Circle);
         }
 }
 
@@ -488,10 +525,20 @@ void UFlyingMovementMode::TickRam(float DeltaTime)
 
 	const bool bPassedTarget = FVector::DotProduct(CurrentVelocity.GetSafeNormal(), ToTarget.GetSafeNormal()) < 0.0f;
 	const bool bReachedTarget = Distance <= Definition->FlankingRamHitRadius;
-	if (bReachedTarget)
-	{
-		UGameplayStatics::ApplyDamage(Target, Definition->FlankingRamDamage, OwnerPawn->GetController(), OwnerPawn, nullptr);
-		ApplySoftDiveNudge(Target);
+        if (bReachedTarget)
+        {
+                UHoverThrusterComponent* RamTarget = OwnerPawn->AbilityComponent
+                        ? OwnerPawn->AbilityComponent->GetOrChooseDamageTarget(Target)
+                        : nullptr;
+                if (RamTarget)
+                {
+                        RamTarget->ApplyDamage(Definition->FlankingRamDamage);
+                }
+                else
+                {
+                        UGameplayStatics::ApplyDamage(Target, Definition->FlankingRamDamage, OwnerPawn->GetController(), OwnerPawn, nullptr);
+                }
+                ApplySoftDiveNudge(Target);
 	}
 
 	if (bReachedTarget || (bPassedTarget && Distance <= Definition->FlankingRamHitRadius * 2.0f) || PhaseElapsedSeconds >= 3.0f)

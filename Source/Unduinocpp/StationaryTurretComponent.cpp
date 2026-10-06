@@ -206,27 +206,22 @@ void UStationaryTurretComponent::TickComponent(float DeltaTime, ELevelTick TickT
 		CurrentTarget.Reset();
 	}
 
-	AActor* Target = CurrentTarget.Get();
-	FVector SmoothedAimWorld = FVector::ZeroVector;
-	if (Target)
-	{
-		TimeSincePartReselect += DeltaTime;
-		const bool bForcePartPick = TimeSincePartReselect >= ShipPartReselectInterval;
-		if (bForcePartPick)
-		{
-			TimeSincePartReselect = 0.0f;
-		}
+        AActor* Target = CurrentTarget.Get();
+        FVector SmoothedAimWorld = FVector::ZeroVector;
+        if (Target)
+        {
+                TimeSincePartReselect += DeltaTime;
 
-		// Drop 0-HP thrusters immediately — do not keep aiming until the reselect interval.
-		if (CurrentAimPart.IsValid() && !IsShipPartViable(CurrentAimPart.Get()))
-		{
-			CurrentAimPart.Reset();
+                // Hold the selected ship component until it is destroyed or disabled.
+                if (CurrentAimPart.IsValid() && !IsShipPartViable(CurrentAimPart.Get()))
+                {
+                        CurrentAimPart.Reset();
 			TimeSincePartReselect = 0.0f;
 			bHasSmoothedAimPoint = false;
 		}
 
-		const USceneComponent* AimPartBefore = CurrentAimPart.Get();
-		RefreshShipPartAim(Target, bForcePartPick || !CurrentAimPart.IsValid());
+                const USceneComponent* AimPartBefore = CurrentAimPart.Get();
+                RefreshShipPartAim(Target, !CurrentAimPart.IsValid());
 		if (CurrentAimPart.Get() != AimPartBefore)
 		{
 			bHasSmoothedAimPoint = false;
@@ -534,10 +529,9 @@ bool UStationaryTurretComponent::IsShipPartViable(const USceneComponent* Part)
 		return false;
 	}
 
-	if (const UHoverThrusterComponent* Thruster = Cast<UHoverThrusterComponent>(Part))
-	{
-		// CurrentHitpoints <= 0
-		return !Thruster->IsDestroyed();
+        if (const UHoverThrusterComponent* Thruster = Cast<UHoverThrusterComponent>(Part))
+        {
+                return Thruster->IsThrusterEnabled() && !Thruster->IsDestroyed();
 	}
 
 	return true;
@@ -954,10 +948,14 @@ void UStationaryTurretComponent::FireOnce(const USceneComponent* SpawnFrom, cons
 		NextMuzzleIndex = (NextMuzzleIndex + 1) % ResolvedMuzzleComponents.Num();
 	}
 
-	// If the projectile has a ProjectileMovementComponent, drive it.
-	if (UProjectileMovementComponent* PMC = Projectile->FindComponentByClass<UProjectileMovementComponent>())
-	{
-		if (ProjectileSpeed > 0.0f)
+        // If the projectile has a ProjectileMovementComponent, drive it.
+        if (UProjectileMovementComponent* PMC = Projectile->FindComponentByClass<UProjectileMovementComponent>())
+        {
+                if (UPrimitiveComponent* CollisionRoot = Cast<UPrimitiveComponent>(Projectile->GetRootComponent()))
+                {
+                        PMC->SetUpdatedComponent(CollisionRoot);
+                }
+                if (ProjectileSpeed > 0.0f)
 		{
 			PMC->InitialSpeed = ProjectileSpeed;
 			PMC->MaxSpeed = FMath::Max(PMC->MaxSpeed, ProjectileSpeed);

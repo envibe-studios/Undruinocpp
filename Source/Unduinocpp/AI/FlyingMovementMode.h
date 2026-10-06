@@ -115,6 +115,7 @@ protected:
 	void TickOrbit(float DeltaTime);
 	void TickEscort(float DeltaTime);
 	void TickProjectileVolley(float DeltaTime);
+	void FinishProjectileVolley();
 	void TickCircle(float DeltaTime);
 	void TickReposition(float DeltaTime);
 	void TickRam(float DeltaTime);
