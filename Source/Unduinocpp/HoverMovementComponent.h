@@ -507,6 +507,9 @@ protected:
 	/** Update boost active state and energy drain/recharge */
 	void UpdateBoost(float DeltaTime);
 
+	/** Return true when any registered thruster is in a red-level health state. */
+	bool IsBoostBlockedByThrusterHealth() const;
+
 	/** Set boost active state and broadcast if changed */
 	void SetBoostActive(bool bNewActive);
 

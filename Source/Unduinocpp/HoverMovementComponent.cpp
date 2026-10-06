@@ -532,10 +532,18 @@ void UHoverMovementComponent::UpdateBoost(float DeltaTime)
 		return;
 	}
 
+	// A failing or destroyed thruster is a red-level fault. Keep boost disabled
+	// until every thruster has recovered, even if the boost input remains held.
+	const bool bBoostBlockedByThrusterHealth = IsBoostBlockedByThrusterHealth();
+	if (bBoostBlockedByThrusterHealth && bBoostActive)
+	{
+		SetBoostActive(false);
+	}
+
 	const float ClampedMax = FMath::Max(MaxBoostEnergy, KINDA_SMALL_NUMBER);
 	const float PreviousEnergy = BoostEnergy;
 
-	bool bWantsBoost = bBoostInputHeld;
+	bool bWantsBoost = bBoostInputHeld && !bBoostBlockedByThrusterHealth;
 	if (bWantsBoost)
 	{
 		if (!bBoostActive)
@@ -568,6 +576,26 @@ void UHoverMovementComponent::UpdateBoost(float DeltaTime)
 	{
 		OnBoostEnergyChanged.Broadcast(BoostEnergy);
 	}
+}
+
+bool UHoverMovementComponent::IsBoostBlockedByThrusterHealth() const
+{
+	for (const UHoverThrusterComponent* Thruster : RegisteredThrusters)
+	{
+		if (!Thruster)
+		{
+			continue;
+		}
+
+		const EThrusterHealthState HealthState = Thruster->GetHealthState();
+		if (HealthState == EThrusterHealthState::Failing ||
+			HealthState == EThrusterHealthState::Destroyed)
+		{
+			return true;
+		}
+	}
+
+	return false;
 }
 
 void UHoverMovementComponent::SetBoostActive(bool bNewActive)
