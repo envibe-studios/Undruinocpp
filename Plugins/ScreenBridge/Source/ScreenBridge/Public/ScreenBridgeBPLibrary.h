@@ -25,4 +25,13 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "ScreenBridge")
 	static void SetWindowSize(int32 WindowId, FVector2D NewSize);
+
+	/** Closes windows created by this library for the specified world. */
+	static void CloseWindowsForWorld(const UWorld* World);
+
+	/** Closes all windows created by this library. */
+	static void CloseAllWindows();
+
+
+
 };

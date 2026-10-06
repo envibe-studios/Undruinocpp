@@ -8,7 +8,13 @@
 #include "Widgets/Layout/SBox.h"
 #include "Engine/GameInstance.h"
 
-static TMap<int32, TSharedPtr<SWindow>> GScreenBridgeWindows;
+struct FScreenBridgeWindow
+{
+	TSharedPtr<SWindow> Window;
+	TWeakObjectPtr<UWorld> World;
+};
+
+static TMap<int32, FScreenBridgeWindow> GScreenBridgeWindows;
 static int32 GNextWindowId = 1;
 
 bool UScreenBridgeBPLibrary::CreateExternalWindow(UObject* WorldContextObject,
@@ -62,7 +68,7 @@ bool UScreenBridgeBPLibrary::CreateExternalWindow(UObject* WorldContextObject,
 	}
 
 	const int32 NewId = GNextWindowId++;
-	GScreenBridgeWindows.Add(NewId, NewWindow);
+	GScreenBridgeWindows.Add(NewId, { NewWindow, World });
 	OutWindowId = NewId;
 
 	return true;
@@ -71,22 +77,54 @@ bool UScreenBridgeBPLibrary::CreateExternalWindow(UObject* WorldContextObject,
 
 void UScreenBridgeBPLibrary::SetWindowPosition(int32 WindowId, FVector2D NewPosition)
 {
-	if (TSharedPtr<SWindow>* WindowPtr = GScreenBridgeWindows.Find(WindowId))
+	if (FScreenBridgeWindow* Entry = GScreenBridgeWindows.Find(WindowId))
 	{
-		if (*WindowPtr)
+		if (Entry->Window)
 		{
-			(*WindowPtr)->MoveWindowTo(NewPosition);
+			Entry->Window->MoveWindowTo(NewPosition);
 		}
 	}
 }
 
 void UScreenBridgeBPLibrary::SetWindowSize(int32 WindowId, FVector2D NewSize)
 {
-	if (TSharedPtr<SWindow>* WindowPtr = GScreenBridgeWindows.Find(WindowId))
+	if (FScreenBridgeWindow* Entry = GScreenBridgeWindows.Find(WindowId))
 	{
-		if (*WindowPtr)
+		if (Entry->Window)
 		{
-			(*WindowPtr)->Resize(NewSize);
+			Entry->Window->Resize(NewSize);
 		}
 	}
+}
+
+void UScreenBridgeBPLibrary::CloseWindowsForWorld(const UWorld* World)
+{
+	if (!World) return;
+	for (auto It = GScreenBridgeWindows.CreateIterator(); It; ++It)
+	{
+		FScreenBridgeWindow& Entry = It.Value();
+		if (Entry.World.Get() == World)
+		{
+			if (Entry.Window.IsValid() && FSlateApplication::IsInitialized())
+			{
+				FSlateApplication::Get().RequestDestroyWindow(Entry.Window.ToSharedRef());
+			}
+			It.RemoveCurrent();
+		}
+	}
+}
+
+void UScreenBridgeBPLibrary::CloseAllWindows()
+{
+	if (FSlateApplication::IsInitialized())
+	{
+		for (const TPair<int32, FScreenBridgeWindow>& Entry : GScreenBridgeWindows)
+		{
+			if (Entry.Value.Window.IsValid())
+			{
+				FSlateApplication::Get().RequestDestroyWindow(Entry.Value.Window.ToSharedRef());
+			}
+		}
+	}
+	GScreenBridgeWindows.Empty();
 }
