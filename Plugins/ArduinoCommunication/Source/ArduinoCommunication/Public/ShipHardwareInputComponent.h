@@ -12,6 +12,7 @@
 // Forward declarations
 class UAndySerialSubsystem;
 class UFiringComponent;
+class UMiniCRTWeaponDisplayComponent;
 
 // ============================================================================
 // Event Delegates - Friendly Blueprint events for ship hardware input
@@ -223,6 +224,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship Hardware|Weapon Mags")
 	bool bAutoApplyWeaponMag = true;
 
+	/** Optional Port MiniCRT component. If unset, the primary handler finds it on the weapon actor. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship Hardware|MiniCRT")
+	TObjectPtr<UMiniCRTWeaponDisplayComponent> PortMiniCRT;
+
+	/** Automatically discover the Port CRT component on the resolved weapon actor. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship Hardware|MiniCRT")
+	bool bAutoResolvePortMiniCRT = true;
+
 	// === Events ===
 
 	/** Event fired when weapon IMU data is received (orientation + euler angles + trigger) */
@@ -293,8 +302,8 @@ public:
 	 * @param TagId - The RFID tag ID to look up and apply
 	 * @return True if a matching weapon mag was found and applied
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Ship Hardware|Weapon Mags")
-	bool ApplyWeaponMagByTagId(int64 TagId);
+        UFUNCTION(BlueprintCallable, Category = "Ship Hardware|Weapon Mags")
+        bool ApplyWeaponMagByTagId(int64 TagId);
 
 protected:
 	// === UActorComponent Interface ===
@@ -320,8 +329,14 @@ private:
 	/** Whether we are currently bound to subsystem events */
 	bool bIsBound = false;
 
-	/** Track previous weapon tag inserted state for change detection (keyed by TagId) */
-	TMap<int64, bool> WeaponTagInsertedState;
+        /** Track previous weapon tag inserted state for change detection (keyed by TagId) */
+        TMap<int64, bool> WeaponTagInsertedState;
+
+        /** Live ammo preserved per physical weapon-mag RFID tag. */
+        TMap<int64, int32> LiveWeaponAmmoByTagId;
+
+        /** UID of the currently inserted Port magazine, or zero when empty. */
+        int64 ActivePortWeaponTagId = 0;
 
 	/** Per-gun RFID occupancy (ReaderIndex/Side: 0=Port, 1=Starboard). Trigger must not fire without a mag. */
 	bool bPortWeaponTagPresent = false;
@@ -344,6 +359,16 @@ private:
 
 	/** Auto-wire FiringComponentPort/Starboard from owner child components when unset. */
 	void ResolveFiringComponentRefs();
+
+        /** Resolve the Port MiniCRT on the weapon actor when not explicitly assigned. */
+        void ResolvePortMiniCRT();
+
+        /** Track live ammo on the currently inserted Port magazine. */
+        UFUNCTION()
+        void OnPortAmmoChanged(int32 CurrentAmmo, int32 MaxAmmo);
+
+	/** Apply a magazine configuration to the firing component for a specific gun side. */
+	bool ApplyWeaponMagToComponent(const FWeaponMag& WeaponMag, UFiringComponent* TargetFiring);
 
 	/** Resolve weapon side from payload byte, with Src device-id fallback (3=Port, 6=Starboard). */
 	static uint8 ResolveImuSide(uint8 PayloadSide, uint8 Src);

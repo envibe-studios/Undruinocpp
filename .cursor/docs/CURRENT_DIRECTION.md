@@ -67,7 +67,7 @@ Expected to change significantly.
 |--------|--------|
 | **Enemy AI Content + BT wiring** | Large C++ tree landed; Content still includes example/test names and BP tasks alongside C++ nodes. *(verified)* |
 | **Squad synergy / teamwork** | `ASquadCoordinator` header explicitly marks “Future teamwork / synergy layer.” *(verified)* |
-| **MiniCRT + diag UI Content** | `UMiniCRTWeaponDisplayComponent` + BP; `WBP_AndyDiagPanel`; MiniCRT log category noted “used while testing.” *(verified)* |
+| **MiniCRT + diag UI Content** | `UMiniCRTWeaponDisplayComponent` + BP; `WBP_AndyDiagPanel`; Port ammo display is integrated with the authoritative firing/magazine path. *(verified)* |
 | **Mission content / session integration** | Test mission DAs exist; whether `GameMode_ShipPorts` fully wires the mission registry in every session is **not verified** here — treat as open. *(inferred gap)* |
 | **Threat / AI director tuning** | Director-lite scales aggression/cooldowns from mission threat. *(verified code; tuning inferred as unfinished)* |
 | **Environment / art tech** | Fractals showcase, rock packs, Gaea/mesh-partition maps. *(verified presence; role inferred as look-dev)* |
@@ -99,7 +99,7 @@ Intentionally unstable. Do not treat as production contracts.
 
 - **EnemyTest map + example AI Blueprints** (`BP_AIEXample`, `AI_TestController`, `NewBlueprint`, BP chase/roam tasks). *(verified)*
 - **Squad Carry/Drop synergy** — code exists; header frames it as future layer. *(verified)*
-- **MiniCRT bring-up instrumentation** — dedicated log category while testing. *(verified)*
+- **MiniCRT recovery resend** — low-frequency state resend remains part of the production hardware path so a CRT rebooting into `WAIT` recovers automatically. *(verified)*
 - **Art / world look-dev** — Fractals Showcase, CliffRockPack, Fab low-poly packs, `GaeaCanyons`, `TestMeshTerrain`, mesh-partition plugins. *(verified)*
 - **External minimap UDP** (`UMinimapUDPSenderComponent`) — side channel separate from Andy. *(verified)*
 - **Tractor/scanner presentation** — still content-side. Target reactions use `BPI_Beamable` / `BPI_Scannable`. *(verified)*

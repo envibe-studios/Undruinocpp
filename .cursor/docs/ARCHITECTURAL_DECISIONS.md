@@ -291,6 +291,8 @@ MiniCRT weapon displays are **separate nodes** (`DISP_PORT` / `DISP_STBD` in rol
 
 Add physical secondary displays the same way: command through Andy, identify by Side/node ID, register in diagnostics. Do not attach a new `UArduinoSerialPort` to the weapon actor for CRT traffic.
 
+The Port CRT component is wired to the existing Port `UFiringComponent` and `UShipHardwareInputComponent` path. Ammo and firing-mode delegates drive change-based updates; Port magazine occupancy, reload-bay transitions, and Andy reconnects update the display state. A low-frequency resend recovers a CRT that rebooted into `WAIT` without introducing per-Tick serial traffic.
+
 ---
 
 ## 10. Generic Arduino component retained alongside the Andy ship path

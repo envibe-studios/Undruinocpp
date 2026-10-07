@@ -1071,6 +1071,7 @@ void UFiringComponent::ApplyWeaponMagConfig(
 	SetFiringMode(NewMode);
 
 	// Apply bullet mode config
+	BulletConfig.bUseAmmo = (NewMode == EFiringModeType::Bullet);
 	BulletConfig.Damage = Damage;
 	BulletConfig.RateOfFire = FMath::Max(0.1f, RateOfFire);
 	BulletConfig.SpreadAngle = FMath::Clamp(SpreadAngle, 0.0f, 45.0f);

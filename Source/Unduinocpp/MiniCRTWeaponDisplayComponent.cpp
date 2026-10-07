@@ -1,6 +1,7 @@
 // Mini CRT Weapon Display Component Implementation
 
 #include "MiniCRTWeaponDisplayComponent.h"
+#include "FiringComponent.h"
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
 #include "Subsystems/GameInstanceSubsystem.h"
@@ -95,10 +96,44 @@ void UMiniCRTWeaponDisplayComponent::BeginPlay()
 	// Cache the subsystem up front so sends are cheap.
 	CachedSubsystem = GetSerialSubsystem();
 
+	if (bAutoBindToFiringComponent && !SourceFiringComponent)
+	{
+		if (AActor* Owner = GetOwner())
+		{
+			TArray<UFiringComponent*> FiringComponents;
+			Owner->GetComponents<UFiringComponent>(FiringComponents);
+			for (UFiringComponent* Candidate : FiringComponents)
+			{
+				if (Candidate && (Candidate->GetName().Contains(TEXT("Port"), ESearchCase::IgnoreCase)
+					|| Candidate->GetName().Contains(TEXT("Left"), ESearchCase::IgnoreCase)))
+				{
+					SourceFiringComponent = Candidate;
+					break;
+				}
+			}
+			if (!SourceFiringComponent && FiringComponents.Num() == 1)
+			{
+				SourceFiringComponent = FiringComponents[0];
+			}
+		}
+	}
+	BindToFiringComponent();
+
 	if (bSendOnBeginPlay)
 	{
 		// Initialization frame (reflects whatever default/cached state is configured).
 		UpdateMiniCRTDisplay();
+	}
+
+	if (RefreshIntervalSeconds > 0.0f)
+	{
+		if (UWorld* World = GetWorld())
+		{
+			World->GetTimerManager().SetTimer(
+				RefreshTimerHandle, this,
+				&UMiniCRTWeaponDisplayComponent::RefreshMiniCRTDisplay,
+				RefreshIntervalSeconds, true);
+		}
 	}
 }
 
@@ -107,7 +142,9 @@ void UMiniCRTWeaponDisplayComponent::EndPlay(const EEndPlayReason::Type EndPlayR
 	if (UWorld* World = GetWorld())
 	{
 		World->GetTimerManager().ClearTimer(DebounceTimerHandle);
+		World->GetTimerManager().ClearTimer(RefreshTimerHandle);
 	}
+	UnbindFromFiringComponent();
 
 	Super::EndPlay(EndPlayReason);
 }
@@ -219,6 +256,24 @@ void UMiniCRTWeaponDisplayComponent::SetMiniCRTState(int32 InCurrentAmmo, int32 
 	UpdateMiniCRTDisplay();
 }
 
+void UMiniCRTWeaponDisplayComponent::SetReloading(bool bInReloading)
+{
+	bReloading = bInReloading;
+	UpdateMiniCRTDisplay();
+}
+
+void UMiniCRTWeaponDisplayComponent::SetSourceFiringComponent(UFiringComponent* InSourceFiringComponent)
+{
+	if (SourceFiringComponent == InSourceFiringComponent)
+	{
+		return;
+	}
+
+	UnbindFromFiringComponent();
+	SourceFiringComponent = InSourceFiringComponent;
+	BindToFiringComponent();
+}
+
 void UMiniCRTWeaponDisplayComponent::SetMagazineLoaded(bool bLoaded)
 {
 	bMagazineLoaded = bLoaded;
@@ -311,6 +366,82 @@ void UMiniCRTWeaponDisplayComponent::UpdateMiniCRTDisplay()
 	}
 }
 
+void UMiniCRTWeaponDisplayComponent::ForceRefreshMiniCRTDisplay()
+{
+	if (!ShouldOperate())
+	{
+		return;
+	}
+
+	// Do not mutate LastSentLine: this is intentionally a periodic recovery resend.
+	SendNow();
+}
+
+void UMiniCRTWeaponDisplayComponent::RefreshMiniCRTDisplay()
+{
+	ForceRefreshMiniCRTDisplay();
+}
+
+void UMiniCRTWeaponDisplayComponent::BindToFiringComponent()
+{
+	if (!SourceFiringComponent)
+	{
+		return;
+	}
+
+	SourceFiringComponent->OnAmmoChanged.AddDynamic(this, &UMiniCRTWeaponDisplayComponent::HandleAmmoChanged);
+	SourceFiringComponent->OnFiringModeChanged.AddDynamic(this, &UMiniCRTWeaponDisplayComponent::HandleFiringModeChanged);
+	SourceFiringComponent->OnBulletFired.AddDynamic(this, &UMiniCRTWeaponDisplayComponent::HandleBulletFired);
+
+	// Cache the current weapon values without asserting that a magazine is loaded.
+	// Magazine presence belongs to ShipHardwareInput's Port RFID state; the firing
+	// component's default ammo values must not make an empty gun display 100.
+	FireMode = FiringModeToWire(SourceFiringComponent->GetFiringMode());
+	MaxAmmo = FMath::Max(1, SourceFiringComponent->GetMaxAmmo());
+	CurrentAmmo = FMath::Clamp(SourceFiringComponent->GetCurrentAmmo(), 0, MaxAmmo);
+}
+
+void UMiniCRTWeaponDisplayComponent::UnbindFromFiringComponent()
+{
+	if (!SourceFiringComponent)
+	{
+		return;
+	}
+
+	SourceFiringComponent->OnAmmoChanged.RemoveDynamic(this, &UMiniCRTWeaponDisplayComponent::HandleAmmoChanged);
+	SourceFiringComponent->OnFiringModeChanged.RemoveDynamic(this, &UMiniCRTWeaponDisplayComponent::HandleFiringModeChanged);
+	SourceFiringComponent->OnBulletFired.RemoveDynamic(this, &UMiniCRTWeaponDisplayComponent::HandleBulletFired);
+}
+
+void UMiniCRTWeaponDisplayComponent::HandleAmmoChanged(int32 InCurrentAmmo, int32 InMaxAmmo)
+{
+	MaxAmmo = FMath::Max(1, InMaxAmmo);
+	CurrentAmmo = FMath::Clamp(InCurrentAmmo, 0, MaxAmmo);
+	UpdateMiniCRTDisplay();
+}
+
+void UMiniCRTWeaponDisplayComponent::HandleFiringModeChanged(EFiringModeType NewMode)
+{
+	FireMode = FiringModeToWire(NewMode);
+	UpdateMiniCRTDisplay();
+}
+
+void UMiniCRTWeaponDisplayComponent::HandleBulletFired(FVector Origin, FVector Direction, float Damage, int32 BulletIndex)
+{
+	// UFiringComponent broadcasts once per projectile in a burst, while ammo is
+	// consumed once per shot. Refresh on the first projectile only.
+	if (!bMagazineLoaded || !SourceFiringComponent || BulletIndex != 0)
+	{
+		return;
+	}
+
+	// The firing component is authoritative. This event only mirrors its current
+	// value; it never invents or decrements gameplay ammo.
+	MaxAmmo = FMath::Max(1, SourceFiringComponent->GetMaxAmmo());
+	CurrentAmmo = FMath::Clamp(SourceFiringComponent->GetCurrentAmmo(), 0, MaxAmmo);
+	UpdateMiniCRTDisplay();
+}
+
 void UMiniCRTWeaponDisplayComponent::FlushPendingUpdate()
 {
 	if (bHasPendingUpdate)
@@ -334,9 +465,6 @@ void UMiniCRTWeaponDisplayComponent::SendNow()
 
 	LastSendSeconds = FPlatformTime::Seconds();
 	LastSentLine = Line;
-
-	// Log the exact outgoing command (with the trailing \n shown explicitly) while testing.
-	UE_LOG(LogMiniCRT, Log, TEXT("MiniCRT[%s] -> %s\\n"), *ShipId.ToString(), *Line);
 
 	UGameInstanceSubsystem* Subsystem = GetSerialSubsystem();
 	if (!Subsystem)

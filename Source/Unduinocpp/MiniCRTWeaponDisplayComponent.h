@@ -19,8 +19,9 @@
 
 // Forward declarations
 class UGameInstanceSubsystem;
+class UFiringComponent;
 
-/** Dedicated log category for MiniCRT outgoing commands (used while testing). */
+/** Dedicated log category for MiniCRT transport and configuration warnings. */
 DECLARE_LOG_CATEGORY_EXTERN(LogMiniCRT, Log, All);
 
 /** Which gun side this display represents. The numeric value is sent verbatim in the command. */
@@ -84,6 +85,18 @@ public:
 	/** If true, send an initial frame on BeginPlay. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MiniCRT|Config")
 	bool bSendOnBeginPlay = true;
+
+	/** Optional Port firing component used as the authoritative ammo/mode source. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MiniCRT|Config")
+	TObjectPtr<UFiringComponent> SourceFiringComponent;
+
+	/** Automatically find a UFiringComponent on the owning weapon/ship actor when unset. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MiniCRT|Config")
+	bool bAutoBindToFiringComponent = true;
+
+	/** Low-frequency recovery refresh. A rebooted CRT returns to WAIT until this resend arrives. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MiniCRT|Config", meta = (ClampMin = "0.0"))
+	float RefreshIntervalSeconds = 1.5f;
 
 	// === Cached weapon state (exposed for inspection / Blueprint reads) ===
 
@@ -170,12 +183,24 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "MiniCRT")
 	void SetMiniCRTState(int32 InCurrentAmmo, int32 InMaxAmmo, const FString& InFireMode, bool bInReloading);
 
+	/** Update the reload flag without changing the cached ammo/mode state. */
+	UFUNCTION(BlueprintCallable, Category = "MiniCRT")
+	void SetReloading(bool bInReloading);
+
+	/** Assign the authoritative firing component and bind its existing state delegates. */
+	UFUNCTION(BlueprintCallable, Category = "MiniCRT")
+	void SetSourceFiringComponent(UFiringComponent* InSourceFiringComponent);
+
 	/**
 	 * Build the command from the current cached state and send it (rate-limited).
 	 * Call this after mutating the cached state directly, or to force a refresh.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "MiniCRT")
 	void UpdateMiniCRTDisplay();
+
+	/** Force the current state onto Andy, even if it matches the last sent command. */
+	UFUNCTION(BlueprintCallable, Category = "MiniCRT")
+	void ForceRefreshMiniCRTDisplay();
 
 	/**
 	 * Mark whether a magazine is loaded. When set to false, the next send is an EMPTY frame.
@@ -207,6 +232,22 @@ private:
 	/** Timer callback that flushes the latest pending state after the debounce window. */
 	void FlushPendingUpdate();
 
+	/** Refresh callback used only for low-frequency CRT recovery. */
+	void RefreshMiniCRTDisplay();
+
+	/** Bind the Port firing component's existing state delegates. */
+	void BindToFiringComponent();
+	void UnbindFromFiringComponent();
+
+	UFUNCTION()
+	void HandleAmmoChanged(int32 InCurrentAmmo, int32 InMaxAmmo);
+
+	UFUNCTION()
+	void HandleFiringModeChanged(EFiringModeType NewMode);
+
+	UFUNCTION()
+	void HandleBulletFired(FVector Origin, FVector Direction, float Damage, int32 BulletIndex);
+
 	/** Returns true if this component is allowed to operate (authority check). */
 	bool ShouldOperate() const;
 
@@ -225,4 +266,8 @@ private:
 
 	/** Timer used to flush the pending update once the debounce window elapses. */
 	FTimerHandle DebounceTimerHandle;
+
+	/** Timer for the low-frequency recovery resend. */
+	FTimerHandle RefreshTimerHandle;
+
 };

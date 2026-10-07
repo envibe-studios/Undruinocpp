@@ -295,6 +295,17 @@ From `MiniCRTWeaponDisplayComponent.h`:
 
 Side: `0` = Port, `1` = Starboard. Routed through existing Andy serial (`ShipId` must match `AddPort`).
 
+The Port display is authoritative from the active `UFiringComponent`, not the
+Blueprint `MagLeft` bookkeeping variable. `UShipHardwareInputComponent` resolves
+the Port component, applies the inserted RFID magazine configuration to that
+same component, tracks live ammo by physical magazine UID, and binds the CRT to
+its ammo/firing-mode delegates. Magazine insertion/removal, reload-bay
+transitions, Andy reconnects, and firing changes therefore share one state path.
+The firing component consumes one round per shot and refuses to emit bullet
+events when finite ammo reaches zero. The Port CRT also resends its current
+state periodically so a display rebooted into `WAIT` recovers without a second
+serial connection or per-frame writes.
+
 ### 8.7 Arduino sketches
 
 Under `Plugins/ArduinoCommunication/ArduinoSketches/`:

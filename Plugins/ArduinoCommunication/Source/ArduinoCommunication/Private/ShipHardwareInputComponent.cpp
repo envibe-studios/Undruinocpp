@@ -4,6 +4,7 @@
 #include "AndySerialSubsystem.h"
 #include "EspPacketBP.h"
 #include "FiringComponent.h"
+#include "MiniCRTWeaponDisplayComponent.h"
 #include "WeaponImuLog.h"
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
@@ -52,6 +53,7 @@ void UShipHardwareInputComponent::BeginPlay()
 	}
 
 	ResolveFiringComponentRefs();
+	ResolvePortMiniCRT();
 	BindToSubsystem();
 
 	UE_LOG(LogWeaponImu, Warning, TEXT("ShipHardwareInput[%s] ShipId='%s' ACTIVE (autoApply=%s autoTriggerFire=%s forwardSendWeaponAim=%s forwardSendFire=%s) — filter Output Log: LogWeaponImu"),
@@ -65,6 +67,11 @@ void UShipHardwareInputComponent::BeginPlay()
 
 void UShipHardwareInputComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	UFiringComponent* PortFiring = FiringComponentPort ? FiringComponentPort.Get() : FiringComponent.Get();
+	if (PortFiring)
+	{
+		PortFiring->OnAmmoChanged.RemoveDynamic(this, &UShipHardwareInputComponent::OnPortAmmoChanged);
+	}
 	UnregisterPrimaryHandler();
 	UnbindFromSubsystem();
 
@@ -291,6 +298,11 @@ void UShipHardwareInputComponent::OnFrameParsedHandler(FName InShipId, uint8 Src
 					if (TagData.Side == 0)
 					{
 						bPortWeaponTagPresent = TagData.bPresent;
+						ActivePortWeaponTagId = TagData.bPresent ? TagData.UID : 0;
+						if (PortMiniCRT)
+						{
+							PortMiniCRT->SetMagazineLoaded(TagData.bPresent);
+						}
 					}
 					else if (TagData.Side == 1)
 					{
@@ -310,10 +322,39 @@ void UShipHardwareInputComponent::OnFrameParsedHandler(FName InShipId, uint8 Src
 						}
 					}
 
-					// Auto-apply weapon mag configuration when tag is inserted
+					// Auto-apply weapon mag configuration when tag is inserted.
 					if (bAutoApplyWeaponMag && TagData.bPresent)
 					{
-						ApplyWeaponMagByTagId(TagData.UID);
+						// Resolve lazily here as well: on a PlayerController owner the pawn
+						// may not have been possessed when BeginPlay ran.
+						if (!FiringComponentPort && !FiringComponent)
+						{
+							ResolveFiringComponentRefs();
+						}
+
+						FWeaponMag FoundMag;
+						if (FindWeaponMagByTagId(TagData.UID, FoundMag))
+						{
+							if (const int32* LiveAmmo = LiveWeaponAmmoByTagId.Find(TagData.UID))
+							{
+								FoundMag.CurrentAmmo = *LiveAmmo;
+							}
+
+							// Use the same side resolver as live IMU/trigger input so the
+							// magazine and firing paths cannot target different components.
+							const uint8 ResolvedSide = ResolveImuSide(TagData.Side, Src);
+							UFiringComponent* SideFiring = ResolveFiringComponentForImu(ResolvedSide, Src);
+							if (TagData.Side == 0 && PortMiniCRT && SideFiring)
+							{
+								// Bind to the exact component receiving this magazine config.
+								PortMiniCRT->SetSourceFiringComponent(SideFiring);
+							}
+							ApplyWeaponMagToComponent(FoundMag, SideFiring);
+						}
+						else
+						{
+							UE_LOG(LogTemp, Warning, TEXT("ShipHardwareInputComponent: No WeaponMag found for TagId: %lld"), TagData.UID);
+						}
 					}
 				}
 			}
@@ -350,22 +391,34 @@ void UShipHardwareInputComponent::OnFrameParsedHandler(FName InShipId, uint8 Src
 						EvtTagChanged.Broadcast(PreviousUID, false, 2);
 					}
 
-					if (TagData.bPresent)
-					{
-						bReloadBayOccupied = true;
+						if (TagData.bPresent)
+						{
+							if (PortMiniCRT)
+							{
+								PortMiniCRT->SetReloading(true);
+							}
+							bReloadBayOccupied = true;
 						LastReloadBayUID = EffectiveUID;
 						ReloadTagInsertedState.Add(EffectiveUID, true);
 						// ReaderIndex: 2=Reload Box. Do NOT auto-apply weapon mag here —
 						// reload bay only tops off ammo; weapon bay (Type 4) owns equip.
 						EvtTagChanged.Broadcast(EffectiveUID, true, 2);
 					}
-					else
-					{
-						bReloadBayOccupied = false;
-						if (EffectiveUID != 0)
+						else
 						{
-							ReloadTagInsertedState.Add(EffectiveUID, false);
-						}
+							if (PortMiniCRT)
+							{
+								PortMiniCRT->SetReloading(false);
+							}
+							bReloadBayOccupied = false;
+										if (EffectiveUID != 0)
+										{
+											ReloadTagInsertedState.Add(EffectiveUID, false);
+											if (FWeaponMag ReloadedMag; FindWeaponMagByTagId(EffectiveUID, ReloadedMag))
+											{
+												LiveWeaponAmmoByTagId.Add(EffectiveUID, ReloadedMag.MaxAmmo);
+											}
+										}
 						EvtTagChanged.Broadcast(EffectiveUID, false, 2);
 						LastReloadBayUID = 0;
 					}
@@ -412,7 +465,12 @@ void UShipHardwareInputComponent::OnConnectionChangedHandler(FName InShipId, boo
 		}
 	}
 
-	OnShipConnectionChanged.Broadcast(bConnected);
+		OnShipConnectionChanged.Broadcast(bConnected);
+
+		if (bConnected && PortMiniCRT)
+		{
+			PortMiniCRT->ForceRefreshMiniCRTDisplay();
+		}
 
 	UE_LOG(LogTemp, Log, TEXT("ShipHardwareInputComponent: ShipId '%s' connection changed: %s"),
 		*ShipId.ToString(), bConnected ? TEXT("Connected") : TEXT("Disconnected"));
@@ -437,13 +495,18 @@ bool UShipHardwareInputComponent::FindWeaponMagByTagId(int64 TagId, FWeaponMag& 
 
 bool UShipHardwareInputComponent::ApplyWeaponMag(const FWeaponMag& WeaponMag)
 {
-	if (!FiringComponent)
+	return ApplyWeaponMagToComponent(WeaponMag, FiringComponent.Get());
+}
+
+bool UShipHardwareInputComponent::ApplyWeaponMagToComponent(const FWeaponMag& WeaponMag, UFiringComponent* TargetFiring)
+{
+	if (!TargetFiring)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("ShipHardwareInputComponent: Cannot apply WeaponMag - FiringComponent not set"));
 		return false;
 	}
 
-	FiringComponent->ApplyWeaponMagConfig(
+	TargetFiring->ApplyWeaponMagConfig(
 		WeaponMag.bActive,
 		static_cast<uint8>(WeaponMag.FiringMode),
 		WeaponMag.Damage,
@@ -471,7 +534,7 @@ bool UShipHardwareInputComponent::ApplyWeaponMagByTagId(int64 TagId)
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("ShipHardwareInputComponent: No WeaponMag found for TagId: %lld"), TagId);
-	return false;
+        return false;
 }
 
 namespace ShipHardwareInputPrivate
@@ -589,17 +652,93 @@ void UShipHardwareInputComponent::ResolveFiringComponentRefs()
 		FiringComponent = FiringComponents[0];
 	}
 
-	UE_LOG(LogWeaponImu, Warning, TEXT("ShipHardwareInput[%s] weaponActor=%s: IMU routing -> Port=%s Starboard=%s Fallback=%s"),
+		UE_LOG(LogWeaponImu, Warning, TEXT("ShipHardwareInput[%s] weaponActor=%s: IMU routing -> Port=%s Starboard=%s Fallback=%s"),
 		*GetOwner()->GetName(),
 		*WeaponActor->GetName(),
 		FiringComponentPort ? *FiringComponentPort->GetName() : TEXT("<unset>"),
 		FiringComponentStarboard ? *FiringComponentStarboard->GetName() : TEXT("<unset>"),
-		FiringComponent ? *FiringComponent->GetName() : TEXT("<unset>"));
+			FiringComponent ? *FiringComponent->GetName() : TEXT("<unset>"));
+
+	UFiringComponent* PortFiring = FiringComponentPort ? FiringComponentPort.Get() : FiringComponent.Get();
+	if (PortFiring)
+	{
+		PortFiring->OnAmmoChanged.AddUniqueDynamic(this, &UShipHardwareInputComponent::OnPortAmmoChanged);
+	}
 
 	if (!bAutoApplyImuRotation && !bForwardAimToSendWeaponAim && FiringComponents.Num() > 1)
 	{
 		UE_LOG(LogWeaponImu, Warning, TEXT("ShipHardwareInput[%s]: Dual guns but bAutoApplyImuRotation=false — enable it or use bForwardAimToSendWeaponAim."),
 			*GetOwner()->GetName());
+	}
+}
+
+void UShipHardwareInputComponent::OnPortAmmoChanged(int32 CurrentAmmo, int32 MaxAmmo)
+{
+	if (!bPortWeaponTagPresent || ActivePortWeaponTagId == 0)
+	{
+		return;
+	}
+
+        const int32 ClampedAmmo = FMath::Clamp(CurrentAmmo, 0, FMath::Max(1, MaxAmmo));
+        LiveWeaponAmmoByTagId.Add(ActivePortWeaponTagId, ClampedAmmo);
+
+        for (FWeaponMag& Mag : WeaponMags)
+	{
+		if (Mag.TagId == ActivePortWeaponTagId)
+		{
+			Mag.CurrentAmmo = ClampedAmmo;
+			break;
+		}
+	}
+}
+
+void UShipHardwareInputComponent::ResolvePortMiniCRT()
+{
+	if (PortMiniCRT)
+	{
+		UFiringComponent* PortFiring = FiringComponentPort.Get();
+		if (!PortFiring)
+		{
+			PortFiring = FiringComponent.Get();
+		}
+		PortMiniCRT->SetSourceFiringComponent(PortFiring);
+		if (bPortWeaponTagPresent)
+		{
+			PortMiniCRT->SetMagazineLoaded(true);
+		}
+		else
+		{
+			PortMiniCRT->ClearMagazine();
+		}
+		return;
+	}
+
+	if (!bAutoResolvePortMiniCRT)
+	{
+		return;
+	}
+
+	AActor* WeaponActor = ResolveWeaponActor();
+	if (!WeaponActor)
+	{
+		return;
+	}
+
+	PortMiniCRT = WeaponActor->FindComponentByClass<UMiniCRTWeaponDisplayComponent>();
+	if (PortMiniCRT)
+	{
+		UFiringComponent* PortFiring = FiringComponentPort.Get();
+		if (!PortFiring)
+		{
+			PortFiring = FiringComponent.Get();
+		}
+		PortMiniCRT->SetSourceFiringComponent(PortFiring);
+		if (!bPortWeaponTagPresent)
+		{
+			PortMiniCRT->ClearMagazine();
+		}
+		UE_LOG(LogTemp, Log, TEXT("ShipHardwareInput[%s]: auto-resolved Port MiniCRT '%s'"),
+			*ShipId.ToString(), *PortMiniCRT->GetName());
 	}
 }
 
